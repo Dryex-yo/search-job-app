@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Jobs\ListAvailableJobsAction;
 use App\Actions\Jobs\GetJobDetailsAction;
 use App\Actions\Applications\SubmitApplicationAction;
+use App\Models\Job;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,12 +17,24 @@ class JobController extends Controller
      */
     public function index(Request $request, ListAvailableJobsAction $listJobsAction): Response
     {
-        // Mengambil input 'search' dari URL query string
-        $jobs = $listJobsAction->execute($request->input('search'));
+        // Mengambil semua filter dari URL query string
+        $filters = $request->only(['search', 'type', 'location', 'salary_min', 'salary_max']);
+        
+        // Jika hanya search diisi dan tidak ada filter lain, gunakan backward compatibility
+        $filterArray = array_filter($filters); // Hapus nilai kosong
+        
+        // Mengambil jobs dengan filter
+        $jobs = $listJobsAction->execute($filterArray);
+
+        // Mengambil data unik untuk dropdown filters
+        $jobTypes = Job::distinct()->pluck('type')->filter()->values();
+        $locations = Job::distinct()->pluck('location')->filter()->values();
 
         return Inertia::render('Jobs/Index', [
             'jobs' => $jobs,
-            'filters' => $request->only(['search']) // Kirim balik input ke Vue
+            'filters' => $filters,
+            'jobTypes' => $jobTypes,
+            'locations' => $locations,
         ]);
     }
 

@@ -1,6 +1,14 @@
 <script setup>
 import { computed } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
+import AnalyticsCounter from '@/Components/AnalyticsCounter.vue';
+
+defineProps({
+    analytics: {
+        type: Object,
+        required: true
+    }
+});
 
 // Mengambil info route saat ini untuk menentukan menu yang aktif secara otomatis
 const currentRoute = computed(() => route().current());
@@ -68,6 +76,50 @@ const menus = [
                 </header>
 
                 <div class="flex-grow p-12 pt-6 overflow-y-auto custom-scrollbar">
+                    <!-- Analytics Summary Grid -->
+                    <div class="mb-12">
+                        <h3 class="text-sm font-black text-gray-600 uppercase tracking-[0.3em] mb-8 italic">📊 Summary Analytics</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <AnalyticsCounter 
+                                icon="💼"
+                                label="Total Jobs Posted"
+                                :value="analytics.total_jobs"
+                                color="cyan"
+                            />
+                            <AnalyticsCounter 
+                                icon="📋"
+                                label="Total Applications"
+                                :value="analytics.total_applications"
+                                color="blue"
+                            />
+                            <AnalyticsCounter 
+                                icon="👥"
+                                label="Total Users"
+                                :value="analytics.total_users"
+                                color="green"
+                            />
+                            <AnalyticsCounter 
+                                icon="✨"
+                                label="Active Jobs"
+                                :value="analytics.active_jobs"
+                                color="purple"
+                            />
+                            <AnalyticsCounter 
+                                icon="⏳"
+                                label="Pending Applications"
+                                :value="analytics.pending_applications"
+                                color="orange"
+                            />
+                            <AnalyticsCounter 
+                                icon="✅"
+                                label="Hired Candidates"
+                                :value="analytics.hired_count"
+                                color="pink"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Additional Details Grid -->
                     <div class="grid grid-cols-12 gap-10">
                         
                         <div class="col-span-12 lg:col-span-8 bg-white/[0.01] border border-white/10 rounded-[3.5rem] p-12 relative shadow-inner glass-grain">
@@ -83,24 +135,42 @@ const menus = [
                             <div class="flex gap-16 justify-between">
                                 <div><p class="text-5xl font-extrabold text-white tracking-tighter">$14.5k</p><p class="text-[10px] font-black text-gray-700 uppercase tracking-widest mt-2">Revenue</p></div>
                                 <div><p class="text-5xl font-extrabold text-white tracking-tighter">92%</p><p class="text-[10px] font-black text-gray-700 uppercase tracking-widest mt-2">Success Rate</p></div>
-                                <div><p class="text-5xl font-extrabold text-white tracking-tighter">312</p><p class="text-[10px] font-black text-gray-600 uppercase tracking-widest mt-2 font-black italic">New Jobs</p></div>
+                                <div><p class="text-5xl font-extrabold text-white tracking-tighter">{{ analytics.active_jobs }}</p><p class="text-[10px] font-black text-gray-600 uppercase tracking-widest mt-2 font-black italic">Active Jobs</p></div>
                             </div>
                         </div>
 
                         <div class="col-span-12 lg:col-span-4 bg-white/[0.01] border border-white/10 rounded-[3.5rem] p-12 flex flex-col justify-between shadow-inner">
-                            <h4 class="text-[10px] font-black text-gray-700 uppercase tracking-[0.4em] text-center italic">Active Jobs Status</h4>
+                            <h4 class="text-[10px] font-black text-gray-700 uppercase tracking-[0.4em] text-center italic">Application Status Breakdown</h4>
                             <div class="space-y-10 py-6">
-                                <div v-for="(job, i) in ['Fullstack Laravel', 'React UI Designer', 'Marketing Lead']" :key="job">
+                                <div>
                                     <div class="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-500 mb-4">
-                                        <span>{{ job }}</span>
-                                        <span class="text-cyan-400">{{ 60 + (i * 10) }}%</span>
+                                        <span>Pending</span>
+                                        <span class="text-orange-400">{{ Math.round((analytics.pending_applications / analytics.total_applications) * 100) || 0 }}%</span>
                                     </div>
                                     <div class="h-1.5 w-full bg-white/5 rounded-full p-[1px]">
-                                        <div class="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.7)] transition-all duration-1000" :style="{width: (60 + (i * 10)) + '%'}"></div>
+                                        <div class="h-full bg-gradient-to-r from-orange-600 to-orange-400 rounded-full shadow-[0_0_20px_rgba(249,115,22,0.7)] transition-all duration-1000" :style="{width: Math.round((analytics.pending_applications / analytics.total_applications) * 100) + '%' || '0%'}"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-500 mb-4">
+                                        <span>Shortlisted</span>
+                                        <span class="text-blue-400">{{ Math.round((analytics.shortlisted_applications / analytics.total_applications) * 100) || 0 }}%</span>
+                                    </div>
+                                    <div class="h-1.5 w-full bg-white/5 rounded-full p-[1px]">
+                                        <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.7)] transition-all duration-1000" :style="{width: Math.round((analytics.shortlisted_applications / analytics.total_applications) * 100) + '%' || '0%'}"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-500 mb-4">
+                                        <span>Hired</span>
+                                        <span class="text-green-400">{{ Math.round((analytics.hired_count / analytics.total_applications) * 100) || 0 }}%</span>
+                                    </div>
+                                    <div class="h-1.5 w-full bg-white/5 rounded-full p-[1px]">
+                                        <div class="h-full bg-gradient-to-r from-green-600 to-green-400 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.7)] transition-all duration-1000" :style="{width: Math.round((analytics.hired_count / analytics.total_applications) * 100) + '%' || '0%'}"></div>
                                     </div>
                                 </div>
                             </div>
-                            <button class="w-full py-4.5 bg-white text-black rounded-3xl font-black text-[10px] uppercase tracking-widest hover:bg-cyan-400 transition-colors">Manage Listings</button>
+                            <button class="w-full py-4.5 bg-white text-black rounded-3xl font-black text-[10px] uppercase tracking-widest hover:bg-cyan-400 transition-colors">View Details</button>
                         </div>
 
                     </div>
