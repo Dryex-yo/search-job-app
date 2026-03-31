@@ -2,9 +2,15 @@
 import { computed } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AnalyticsCounter from '@/Components/AnalyticsCounter.vue';
+import ChartWeeklyApplicants from '@/Components/ChartWeeklyApplicants.vue';
+import ChartStatusDistribution from '@/Components/ChartStatusDistribution.vue';
 
 const props = defineProps({
     analytics: {
+        type: Object,
+        required: true
+    },
+    chartData: {
         type: Object,
         required: true
     }
@@ -110,6 +116,22 @@ const hiredPercent = computed(() => Math.round((props.analytics.hired_count / to
                                 :value="analytics.hired_count"
                                 color="pink"
                             />
+                        </div>
+                    </div>
+
+                    <!-- Data Visualization Charts -->
+                    <div class="mb-12">
+                        <h3 class="text-sm font-black text-gray-600 uppercase tracking-[0.3em] mb-8 italic">📊 Charts & Visualizations</h3>
+                        <div class="grid grid-cols-12 gap-10 mb-10">
+                            <!-- Weekly Applicants Line Chart -->
+                            <div class="col-span-12 lg:col-span-7">
+                                <ChartWeeklyApplicants :weeklyData="chartData.weeklyApplicants" />
+                            </div>
+                            
+                            <!-- Status Distribution Pie Chart -->
+                            <div class="col-span-12 lg:col-span-5">
+                                <ChartStatusDistribution :statusData="chartData.statusDistribution" />
+                            </div>
                         </div>
                     </div>
 

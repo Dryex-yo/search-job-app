@@ -1,14 +1,87 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AnalyticsCounter from '@/Components/AnalyticsCounter.vue';
+import { useRealtimeEvents } from '@/Composables/useRealtimeEvents';
+import { useSoundNotification } from '@/Composables/useSoundNotification';
+import { useNotification } from '@/Composables/useNotification';
 
-defineProps({
+const props = defineProps({
     analytics: {
         type: Object,
         required: true
     }
+});
+
+// Composables
+const { listenToApplications, stopListeningToApplications } = useRealtimeEvents();
+const { notify: playSound } = useSoundNotification();
+const { success, info } = useNotification();
+
+// Local state for real-time metrics
+const metrics = ref({
+    total_applications: props.analytics.total_applications,
+    pending_applications: props.analytics.pending_applications,
+    hired_count: props.analytics.hired_count,
+});
+
+/**
+ * Handle real-time application events
+ */
+const handleApplicationEvent = (event) => {
+    const { type, data } = event;
+
+    if (type === 'application.submitted') {
+        // Update total applications counter
+        metrics.value.total_applications += 1;
+        metrics.value.pending_applications += 1;
+
+        // Play sound and show notification
+        playSound();
+        success(
+            '📨 New Application!',
+            `${data.user.name} applied for "${data.job.title}"`,
+            5000
+        );
+
+        console.log('✨ New application received:', data);
+    } else if (type === 'application.status-changed') {
+        // Update metrics based on status change
+        if (data.previous_status !== 'hired' && data.status === 'hired') {
+            metrics.value.hired_count += 1;
+        } else if (data.previous_status === 'hired' && data.status !== 'hired') {
+            metrics.value.hired_count -= 1;
+        }
+
+        if (data.previous_status === 'pending' && data.status !== 'pending') {
+            metrics.value.pending_applications -= 1;
+        } else if (data.previous_status !== 'pending' && data.status === 'pending') {
+            metrics.value.pending_applications += 1;
+        }
+
+        // Play sound
+        playSound();
+        info(
+            '📊 Status Updated',
+            `${data.user.name}'s application is now "${data.status}"`,
+            5000
+        );
+
+        console.log('✨ Application status changed:', data);
+    }
+};
+
+// Initialize real-time listeners
+onMounted(() => {
+    console.log('🚀 Dashboard mounted - initializing real-time events');
+    listenToApplications(handleApplicationEvent);
+});
+
+// Cleanup on unmount
+onUnmounted(() => {
+    console.log('🧹 Dashboard unmounted - stopping listeners');
+    stopListeningToApplications();
 });
 </script>
 
@@ -25,32 +98,36 @@ defineProps({
                 <AnalyticsCounter 
                     icon="💼"
                     label="Total Jobs Posted"
-                    :value="analytics.total_jobs"
+                    :value="props.analytics.total_jobs"
                     color="cyan"
                 />
                 <AnalyticsCounter 
                     icon="📋"
                     label="Total Applications"
-                    :value="analytics.total_applications"
+                    :value="metrics.total_applications"
                     color="blue"
+                    :trend="metrics.total_applications > props.analytics.total_applications ? '+' + (metrics.total_applications - props.analytics.total_applications) : '0'"
+                    trendDirection="up"
                 />
                 <AnalyticsCounter 
                     icon="✨"
                     label="Active Jobs"
-                    :value="analytics.active_jobs"
+                    :value="props.analytics.active_jobs"
                     color="purple"
                 />
                 <AnalyticsCounter 
                     icon="⏳"
                     label="Pending Applications"
-                    :value="analytics.pending_applications"
+                    :value="metrics.pending_applications"
                     color="orange"
                 />
                 <AnalyticsCounter 
                     icon="✅"
                     label="Hired Candidates"
-                    :value="analytics.hired_count"
+                    :value="metrics.hired_count"
                     color="pink"
+                    :trend="metrics.hired_count > props.analytics.hired_count ? '+' + (metrics.hired_count - props.analytics.hired_count) : '0'"
+                    trendDirection="up"
                 />
             </div>
         </div>
@@ -78,7 +155,7 @@ defineProps({
                         <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">Success Rate</p>
                     </div>
                     <div>
-                        <p class="text-4xl font-extrabold text-white tracking-tighter">{{ analytics.active_jobs }}</p>
+                        <p class="text-4xl font-extrabold text-white tracking-tighter">{{ props.analytics.active_jobs }}</p>
                         <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">Active Jobs</p>
                     </div>
                 </div>
@@ -89,11 +166,11 @@ defineProps({
                 <div class="space-y-6 py-4">
                     <div>
                         <div class="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3">
-                            <span>Pending</span>
-                            <span class="text-orange-400">{{ Math.round((analytics.pending_applications / analytics.total_applications) * 100) || 0 }}%</span>
+                            <span>Active Jobs</span>
+                            <span class="text-purple-400">{{ Math.round((props.analytics.active_jobs / (props.analytics.total_applications || 1)) * 100) || 0 }}%</span>
                         </div>
                         <div class="h-1.5 w-full bg-white/5 rounded-full p-[1px]">
-                            <div class="h-full bg-gradient-to-r from-orange-600 to-orange-400 rounded-full shadow-[0_0_20px_rgba(249,115,22,0.7)] transition-all duration-1000" :style="{width: Math.round((analytics.pending_applications / analytics.total_applications) * 100) + '%' || '0%'}"></div>
+                            <div class="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full shadow-[0_0_20px_rgba(147,51,234,0.7)] transition-all duration-1000" :style="{width: Math.round((props.analytics.active_jobs / (props.analytics.total_applications || 1)) * 100) + '%' || '0%'}"></div>
                         </div>
                     </div>
                     <div>
@@ -108,10 +185,10 @@ defineProps({
                     <div>
                         <div class="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3">
                             <span>Hired</span>
-                            <span class="text-green-400">{{ Math.round((analytics.hired_count / analytics.total_applications) * 100) || 0 }}%</span>
+                            <span class="text-green-400">{{ Math.round((metrics.hired_count / (metrics.total_applications || 1)) * 100) || 0 }}%</span>
                         </div>
                         <div class="h-1.5 w-full bg-white/5 rounded-full p-[1px]">
-                            <div class="h-full bg-gradient-to-r from-green-600 to-green-400 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.7)] transition-all duration-1000" :style="{width: Math.round((analytics.hired_count / analytics.total_applications) * 100) + '%' || '0%'}"></div>
+                            <div class="h-full bg-gradient-to-r from-green-600 to-green-400 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.7)] transition-all duration-1000" :style="{width: Math.round((metrics.hired_count / (metrics.total_applications || 1)) * 100) + '%' || '0%'}"></div>
                         </div>
                     </div>
                 </div>

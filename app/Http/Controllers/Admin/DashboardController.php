@@ -10,6 +10,8 @@ use App\Actions\Applications\UpdateApplicationStatusAction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -46,12 +48,44 @@ class DashboardController extends Controller
     public function update(Request $request, $id, UpdateApplicationStatusAction $updateStatus)
     {
         $request->validate([
-            'status' => 'required|in:pending,shortlisted,rejected,interview,hired'
+            'status' => 'required|in:pending,shortlisted,rejected,interview,hired',
+            'notes' => 'nullable|string|max:5000'
         ]);
 
+        // Update using the action for status
         $updateStatus->execute($id, $request->status);
 
+        // Also update notes if provided
+        if ($request->has('notes')) {
+            Application::findOrFail($id)->update(['notes' => $request->notes]);
+        }
+
         return back()->with('message', 'Status pelamar berhasil diperbarui!');
+    }
+
+    /**
+     * Show detailed view of a single application
+     */
+    public function show($id)
+    {
+        $application = Application::with(['user', 'job'])->findOrFail($id);
+
+        return Inertia::render('Admin/ApplicationDetail', [
+            'application' => [
+                'id' => $application->id,
+                'user_name' => $application->user->name,
+                'user_email' => $application->user->email,
+                'job_title' => $application->job->title,
+                'job_type' => $application->job->type,
+                'job_location' => $application->job->location,
+                'job_salary' => $application->job->salary,
+                'status' => $application->status,
+                'cover_letter' => $application->cover_letter,
+                'resume_path' => $application->resume_path,
+                'notes' => $application->notes ?? '',
+                'created_at' => $application->created_at,
+            ]
+        ]);
     }
 
     public function downloadResume($id)
@@ -86,7 +120,11 @@ class DashboardController extends Controller
     public function analytics()
     {
         return Inertia::render('Admin/Analytics', [
-            'analytics' => $this->getAnalyticsData()
+            'analytics' => $this->getAnalyticsData(),
+            'chartData' => [
+                'weeklyApplicants' => $this->getWeeklyApplicantsData(),
+                'statusDistribution' => $this->getStatusDistribution(),
+            ]
         ]);
     }
 
@@ -102,5 +140,50 @@ class DashboardController extends Controller
         return Inertia::render('Admin/Settings', [
             'analytics' => $this->getAnalyticsData()
         ]);
+    }
+
+    /**
+     * Get weekly applicants data for line chart (last 12 weeks)
+     */
+    private function getWeeklyApplicantsData()
+    {
+        $weeksData = [];
+        $categories = [];
+        
+        // Get data for last 12 weeks
+        for ($i = 11; $i >= 0; $i--) {
+            $startDate = Carbon::now()->subWeeks($i)->startOfWeek();
+            $endDate = Carbon::now()->subWeeks($i)->endOfWeek();
+            
+            $count = Application::whereBetween('created_at', [$startDate, $endDate])->count();
+            $weeksData[] = $count;
+            $categories[] = $startDate->format('d M');
+        }
+        
+        return [
+            'series' => [
+                [
+                    'name' => 'Aplikasi Per Minggu',
+                    'data' => $weeksData
+                ]
+            ],
+            'categories' => $categories,
+        ];
+    }
+
+    /**
+     * Get status distribution for pie chart (Hired vs Rejected)
+     */
+    private function getStatusDistribution()
+    {
+        $hiredCount = Application::where('status', 'hired')->count();
+        $rejectedCount = Application::where('status', 'rejected')->count();
+        $otherCount = Application::whereNotIn('status', ['hired', 'rejected'])->count();
+        
+        return [
+            'series' => [$hiredCount, $rejectedCount, $otherCount],
+            'labels' => ['Hired 🎉', 'Rejected ❌', 'In Progress ⏳'],
+            'colors' => ['#10b981', '#ef4444', '#f59e0b'],
+        ];
     }
 }

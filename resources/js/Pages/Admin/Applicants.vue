@@ -134,15 +134,17 @@ const closeCVPreview = () => {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-white/5">
-                                <tr v-for="applicant in applicants" :key="applicant.id" class="group hover:bg-white/[0.02] transition-all duration-300">
+                                <tr v-for="applicant in applicants" :key="applicant.id" class="group hover:bg-white/[0.02] transition-all duration-300 cursor-pointer">
                                     <td class="py-7 px-6">
-                                        <div class="flex items-center gap-4">
+                                        <Link :href="route('admin.applicants.show', applicant.id)" class="flex items-center gap-4 hover:text-cyan-400 transition-colors">
                                             <div class="w-11 h-11 rounded-2xl bg-white/5 flex items-center justify-center font-black text-[10px] text-cyan-400 border border-white/10 shadow-lg group-hover:border-cyan-500/30 transition-colors">{{ applicant.avatar }}</div>
                                             <span class="font-bold text-sm tracking-tight text-white/90 group-hover:text-white transition-colors">{{ applicant.name }}</span>
-                                        </div>
+                                        </Link>
                                     </td>
                                     <td class="py-7 px-6">
-                                        <span class="text-gray-400 text-sm italic group-hover:text-gray-300 transition-colors">{{ applicant.role }}</span>
+                                        <Link :href="route('admin.applicants.show', applicant.id)" class="text-gray-400 text-sm italic group-hover:text-gray-300 transition-colors">
+                                            {{ applicant.role }}
+                                        </Link>
                                     </td>
                                     <td class="py-7 px-6">
                                         <span :class="getStatusClass(applicant.status)" class="px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all duration-500 shadow-sm">
@@ -158,10 +160,10 @@ const closeCVPreview = () => {
                                                class="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black text-cyan-400 uppercase tracking-tighter hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all flex items-center gap-1.5">
                                                 👁 Preview
                                             </button>
-                                            <button @click="updateStatus(applicant.id, 'shortlisted')"
-                                                    class="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black text-green-400 uppercase tracking-tighter hover:bg-green-500/20 hover:border-green-500/50 transition-all">
-                                                Accept
-                                            </button>
+                                            <Link :href="route('admin.applicants.show', applicant.id)"
+                                                    class="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black text-blue-400 uppercase tracking-tighter hover:bg-blue-500/20 hover:border-blue-500/50 transition-all">
+                                                Review
+                                            </Link>
                                         </div>
                                     </td>
                                 </tr>

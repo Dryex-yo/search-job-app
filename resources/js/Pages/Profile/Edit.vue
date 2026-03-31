@@ -41,5 +41,6 @@ defineProps({
                     <DeleteUserForm />
                 </div>
             </div>
-        </UserLayout>
-    </template>
+        </div>
+    </UserLayout>
+</template>

@@ -42,8 +42,9 @@ class JobController extends Controller
     {
         $job = $getJobDetails->execute($id);
 
-        // Kita kembalikan sebagai response JSON agar modal di Vue bisa mengambil datanya
-        return response()->json($job);
+        return Inertia::render('Jobs/Show', [
+            'job' => $job,
+        ]);
     }
 
     public function apply(Request $request, SubmitApplicationAction $submitAction)

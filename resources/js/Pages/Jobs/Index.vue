@@ -74,18 +74,8 @@ const resetFilters = () => {
 };
 
 // 7. Fungsi Modal & Detail
-const openDetail = async (id) => {
-    isLoading.value = true;
-    try {
-        const response = await axios.get(`/jobs/${id}`);
-        selectedJob.value = response.data;
-        isModalOpen.value = true;
-    } catch (err) {
-        console.error("Gagal mengambil detail job", err);
-        showError('Gagal Memuat', 'Tidak dapat mengambil detail lowongan. Silakan coba lagi.');
-    } finally {
-        isLoading.value = false;
-    }
+const openDetail = (id) => {
+    router.visit(route('jobs.show', id));
 };
 
 const closeModal = () => {

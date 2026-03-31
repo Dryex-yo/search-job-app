@@ -29,6 +29,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Ini akan jadi: admin.applicants (URL: /admin/applicants)
     Route::get('/applicants', [AdminDashboard::class, 'index'])->name('applicants');
+    Route::get('/applicants/{id}', [AdminDashboard::class, 'show'])->name('applicants.show');
     Route::get('/applicants/download/{id}', [AdminDashboard::class, 'downloadResume'])->name('applicants.download');
     Route::patch('/applications/{id}', [AdminDashboard::class, 'update'])->name('applications.update');
         
