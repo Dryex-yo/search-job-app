@@ -31,6 +31,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/applicants', [AdminDashboard::class, 'index'])->name('applicants');
     Route::get('/applicants/{id}', [AdminDashboard::class, 'show'])->name('applicants.show');
     Route::get('/applicants/download/{id}', [AdminDashboard::class, 'downloadResume'])->name('applicants.download');
+    Route::get('/applicants/export/excel', [AdminDashboard::class, 'exportExcel'])->name('applicants.export.excel');
     Route::patch('/applications/{id}', [AdminDashboard::class, 'update'])->name('applications.update');
         
     Route::get('/analytics', [AdminDashboard::class, 'analytics'])->name('analytics');

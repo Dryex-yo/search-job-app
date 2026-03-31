@@ -7,12 +7,14 @@ use App\Models\Application;
 use App\Models\Job;
 use App\Models\User;
 use App\Actions\Applications\UpdateApplicationStatusAction;
+use App\Exports\ApplicationsExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DashboardController extends Controller
 {
@@ -169,6 +171,15 @@ class DashboardController extends Controller
             ],
             'categories' => $categories,
         ];
+    }
+
+    /**
+     * Export all applications to Excel
+     */
+    public function exportExcel()
+    {
+        $timestamp = Carbon::now()->format('d_m_Y_H_i_s');
+        return Excel::download(new ApplicationsExport, "applicants_report_{$timestamp}.xlsx");
     }
 
     /**

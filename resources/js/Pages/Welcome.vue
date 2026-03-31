@@ -1,5 +1,6 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import DarkModeToggle from '@/Components/DarkModeToggle.vue';
 
 defineProps({
     canLogin: {
@@ -17,6 +18,8 @@ defineProps({
         required: true,
     },
 });
+
+const page = usePage();
 
 function handleImageError() {
     document.getElementById('screenshot-container')?.classList.add('!hidden');
@@ -54,9 +57,11 @@ function handleImageError() {
                             />
                         </svg>
                     </div>
-                    <nav v-if="canLogin" class="-mx-3 flex flex-1 justify-end">
+                    <nav v-if="canLogin" class="-mx-3 flex flex-1 justify-end items-center gap-2">
+                        <DarkModeToggle />
+
                         <Link
-                            v-if="$page.props.auth.user"
+                            v-if="page.props.auth.user"
                             :href="route('dashboard')"
                             class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
                         >

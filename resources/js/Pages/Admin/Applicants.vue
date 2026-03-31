@@ -70,6 +70,10 @@ const closeCVPreview = () => {
     selectedApplicantCV.value = null;
     selectedApplicantName.value = '';
 };
+
+const exportToExcel = () => {
+    window.location.href = route('admin.applicants.export.excel');
+};
 </script>
 
 <template>
@@ -112,11 +116,19 @@ const closeCVPreview = () => {
                         <p class="text-gray-600 text-sm mt-1 font-medium italic leading-relaxed">Review and track your job candidates efficiently.</p>
                     </div>
 
-                    <div class="flex items-center gap-5 bg-white/[0.02] border border-white/10 p-2.5 pr-8 rounded-3xl shadow-inner">
-                        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/20">D</div>
-                        <div class="text-left leading-tight">
-                            <p class="text-xs font-black">Dery Supriyadi</p>
-                            <p class="text-[9px] text-cyan-400 uppercase tracking-[0.2em] font-black italic">Administrator</p>
+                    <div class="flex items-center gap-5">
+                        <button @click="exportToExcel"
+                            class="px-6 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/50 rounded-2xl text-sm font-bold text-green-400 uppercase tracking-widest hover:from-green-500/30 hover:to-emerald-500/30 hover:border-green-500/70 transition-all duration-300 flex items-center gap-2 shadow-lg shadow-green-500/10">
+                            <span>📊</span>
+                            Export Report
+                        </button>
+
+                        <div class="flex items-center gap-5 bg-white/[0.02] border border-white/10 p-2.5 pr-8 rounded-3xl shadow-inner">
+                            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/20">D</div>
+                            <div class="text-left leading-tight">
+                                <p class="text-xs font-black">Dery Supriyadi</p>
+                                <p class="text-[9px] text-cyan-400 uppercase tracking-[0.2em] font-black italic">Administrator</p>
+                            </div>
                         </div>
                     </div>
                 </header>

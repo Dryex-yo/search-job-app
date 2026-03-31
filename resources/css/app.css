@@ -1,3 +1,296 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    html {
+        @apply transition-colors duration-500 ease-smooth;
+        scroll-behavior: smooth;
+        --theme-transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Light mode - Premium gradient background */
+    body {
+        @apply bg-gradient-light text-light-gray-text transition-all duration-500 ease-smooth;
+    }
+
+    /* Dark mode - Deep solid background */
+    body.dark {
+        @apply bg-deep-blue text-gray-100 transition-all duration-500 ease-smooth;
+    }
+}
+
+@layer components {
+    /* Smooth transitions for all elements */
+    * {
+        @apply transition-colors duration-300 ease-smooth;
+    }
+
+    /* Prevent transition on animations themselves */
+    *[class*="animate-"] {
+        @apply transition-none;
+    }
+
+    /* Light Mode Card styling - Premium look */
+    .card-light {
+        @apply bg-white border border-light-gray-border rounded-xl shadow-light-md;
+        @apply hover:shadow-light-lg transition-all duration-300 ease-smooth;
+    }
+
+    .card-light:hover {
+        @apply border-light-accent/30;
+    }
+
+    /* Dark Mode Card styling */
+    .dark .card-light {
+        @apply bg-deep-blue-light border border-gray-700 shadow-dark-md;
+        @apply hover:shadow-dark-lg;
+    }
+
+    /* Light Mode Buttons with accent colors */
+    .btn-light-primary {
+        @apply bg-light-accent text-white font-semibold rounded-lg px-5 py-2.5;
+        @apply hover:bg-light-accent-hover transition-all duration-300 ease-smooth;
+        @apply active:scale-95 focus:outline-none focus:ring-2 focus:ring-light-accent/50;
+    }
+
+    /* Dark Mode Button override */
+    .dark .btn-light-primary {
+        @apply bg-cyan-500 hover:bg-cyan-600;
+        @apply focus:ring-cyan-500/50;
+    }
+
+    /* Light Mode Secondary Button */
+    .btn-light-secondary {
+        @apply bg-light-tertiary text-light-gray-text border border-light-gray-border;
+        @apply hover:bg-light-gray-border transition-all duration-300 ease-smooth;
+    }
+
+    .dark .btn-light-secondary {
+        @apply bg-gray-800 text-gray-100 border-gray-700;
+        @apply hover:bg-gray-700;
+    }
+
+    /* Light Mode Input styling */
+    .input-light {
+        @apply w-full bg-white border border-light-gray-border text-light-gray-text;
+        @apply rounded-lg px-4 py-2.5 transition-all duration-300 ease-smooth;
+        @apply focus:outline-none focus:ring-2 focus:ring-light-accent/50 focus:border-light-accent;
+    }
+
+    .dark .input-light {
+        @apply bg-deep-blue-light border-gray-700 text-gray-100;
+        @apply focus:ring-cyan-500/50 focus:border-cyan-500;
+    }
+
+    /* Light Mode Navigation styling */
+    .nav-light {
+        @apply bg-white/80 backdrop-blur-md border-b border-light-gray-border;
+        @apply transition-all duration-300 ease-smooth;
+    }
+
+    .dark .nav-light {
+        @apply bg-deep-blue-light/80 border-gray-700;
+    }
+
+    /* Light Mode Badge styling */
+    .badge-light {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+        @apply bg-light-tertiary text-light-gray-text transition-all duration-300 ease-smooth;
+    }
+
+    .dark .badge-light {
+        @apply bg-gray-800 text-gray-300;
+    }
+
+    /* Theme toggle button with smooth animation */
+    .theme-toggle {
+        @apply relative inline-flex items-center justify-center w-10 h-10 rounded-lg;
+        @apply transition-all duration-300 ease-smooth;
+        @apply hover:bg-light-tertiary dark:hover:bg-gray-800;
+        @apply active:scale-90;
+    }
+
+    .theme-toggle svg {
+        @apply w-5 h-5 transition-all duration-300 ease-smooth;
+    }
+
+    /* Smooth backdrop blur transition */
+    .backdrop-blur-light {
+        @apply backdrop-blur-md transition-all duration-300 ease-smooth;
+        background: rgba(255, 255, 255, 0.7);
+    }
+
+    .dark .backdrop-blur-light {
+        background: rgba(3, 7, 18, 0.7);
+    }
+
+    /* Light Mode Premium Shadow */
+    .shadow-light-premium {
+        @apply shadow-light-lg transition-shadow duration-300 ease-smooth;
+    }
+
+    .dark .shadow-light-premium {
+        @apply shadow-dark-lg;
+    }
+
+    /* Responsive text sizing */
+    .text-responsive {
+        @apply text-sm sm:text-base md:text-lg lg:text-xl;
+    }
+
+    /* Responsive spacing */
+    .spacing-responsive {
+        @apply space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-5;
+    }
+
+    /* Responsive padding */
+    .p-responsive {
+        @apply p-4 sm:p-6 md:p-8 lg:p-12;
+    }
+
+    /* Responsive rounded corners */
+    .rounded-responsive {
+        @apply rounded-lg sm:rounded-xl md:rounded-2xl lg:rounded-[2rem];
+    }
+
+    /* Touch-friendly button sizing */
+    .btn-touch-friendly {
+        @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+    }
+
+    /* Responsive gap */
+    .gap-responsive {
+        @apply gap-3 sm:gap-4 md:gap-6 lg:gap-8;
+    }
+
+    /* Mobile-friendly input focus */
+    input, select, textarea {
+        @apply focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-light-accent/50 transition-all duration-200 ease-smooth;
+    }
+
+    .dark input, 
+    .dark select, 
+    .dark textarea {
+        @apply focus:ring-cyan-500/50;
+    }
+
+    @media (max-width: 640px) {
+        input, select, textarea {
+            @apply text-base; /* Prevents zoom on iOS */
+        }
+    }
+
+    /* Light Mode Table styling */
+    table {
+        @apply w-full text-light-gray-text transition-colors duration-300 ease-smooth;
+    }
+
+    .dark table {
+        @apply text-gray-100;
+    }
+
+    table thead {
+        @apply bg-light-tertiary border-b border-light-gray-border;
+    }
+
+    .dark table thead {
+        @apply bg-deep-blue-light border-gray-700;
+    }
+
+    table tbody tr {
+        @apply border-b border-light-gray-border hover:bg-light-tertiary transition-colors duration-200;
+    }
+
+    .dark table tbody tr {
+        @apply border-gray-700 hover:bg-deep-blue-light/50;
+    }
+}
+
+/* Prevent flash of unstyled content on dark mode */
+.no-floc {
+    @apply dark:bg-deep-blue dark:text-gray-100;
+}
+
+/* Color transmission animations (Deep Blue to Soft White) */
+@keyframes colorTransmission {
+    0% {
+        background-color: #030712;
+        color: #f8f9fa;
+    }
+    50% {
+        background-color: #1a1f36;
+        color: #e8e9eb;
+    }
+    100% {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafb 100%);
+        color: #1a202c;
+    }
+}
+
+@keyframes themeSwitchIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes themeSwitchOut {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.05);
+    }
+}
+
+/* Blur effect that's maintained across transitions */
+.blur-transition {
+    @apply backdrop-blur-md transition-all duration-500 ease-smooth;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.dark .blur-transition {
+    background: rgba(3, 7, 18, 0.7);
+}
+
+/* Smooth page transitions */
+.page-transition {
+    @apply transition-all duration-500 ease-smooth animate-fade-in;
+}
+
+/* Light mode specific gradient backgrounds */
+.bg-gradient-light {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafb 100%);
+}
+
+.dark .bg-gradient-light {
+    background: #030712;
+}
+
+/* Smooth ease timing function */
+.ease-smooth {
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Premium glow effect for light mode */
+.glow-light {
+    @apply bg-light-tertiary relative overflow-hidden;
+}
+
+.glow-light::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-light-accent/0 via-light-accent/10 to-light-accent/0;
+    @apply animate-pulse-soft;
+}
+
+.dark .glow-light::before {
+    @apply from-cyan-500/0 via-cyan-500/5 to-cyan-500/0;
+}
+

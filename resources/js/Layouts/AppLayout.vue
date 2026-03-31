@@ -3,7 +3,7 @@ import NotificationContainer from '@/Components/NotificationContainer.vue';
 </script>
 
 <template>
-    <div>
+    <div class="overflow-x-hidden">
         <!-- Notification Container -->
         <NotificationContainer />
 
