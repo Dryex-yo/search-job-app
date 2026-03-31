@@ -7,53 +7,137 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## About Laravel
+## Tentang Search Job App
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+**Search Job App** adalah aplikasi web modern untuk mencari dan melamar pekerjaan yang dibangun dengan teknologi terkini. Aplikasi ini memungkinkan pencari kerja untuk menemukan peluang karir yang sesuai dengan keterampilan mereka, sambil memberikan pengusaha alat untuk mengelola lowongan pekerjaan dan aplikasi secara efisien.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Fitur Utama
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Job Search & Filter** - Cari lowongan pekerjaan dengan filter lanjutan berdasarkan kategori, lokasi, dan kriteria lainnya
+- **Job Applications** - Ajukan aplikasi dengan mudah dan lacak status aplikasi Anda secara real-time
+- **Admin Dashboard** - Dashboard komprehensif untuk mengelola lowongan, aplikasi, dan pengguna
+- **Notifikasi Real-time** - Notifikasi instan melalui WebSocket menggunakan Laravel Reverb untuk update status aplikasi
+- **Email Notifications** - Sistem email otomatis untuk penerimaan aplikasi dan perubahan status
+- **Analytics & Statistics** - Visualisasi data dengan grafik dan counter untuk performa aplikasi dan lowongan
+- **CV Preview Modal** - Pratinjau CV pelamar dalam modal dialog
+- **Excel Export** - Export aplikasi dan data lowongan ke format Excel
+- **Dark/Light Mode** - Toggle tema gelap dan terang untuk kenyamanan pengguna
+- **Authentication System** - Sistem autentikasi aman dengan role-based access control
+- **Responsive Design** - Desain responsif yang sempurna di semua perangkat
 
-## Learning Laravel
+## Tech Stack
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- **Backend**: Laravel 11 dengan PHP
+- **Frontend**: Inertia.js & Vue.js 3
+- **Database**: MySQL/PostgreSQL
+- **Styling**: Tailwind CSS
+- **Real-time**: Laravel Reverb (WebSocket Broadcasting)
+- **Export**: Laravel Excel (Maatwebsite)
+- **Build Tool**: Vite
+- **Email**: Laravel Mail System
+- **Queue**: Laravel Queue untuk background jobs
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Instalasi
 
-## Laravel Sponsors
+### Prerequisites
+- PHP 8.2 atau lebih tinggi
+- Composer
+- Node.js & npm
+- Database (MySQL/PostgreSQL)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Setup
 
-### Premium Partners
+1. **Clone repository**
+```bash
+git clone <repository-url>
+cd search-job-app
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+2. **Install PHP dependencies**
+```bash
+composer install
+```
 
-## Contributing
+3. **Install JavaScript dependencies**
+```bash
+npm install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+4. **Setup environment**
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## Code of Conduct
+5. **Configure database** di file `.env` kemudian jalankan:
+```bash
+php artisan migrate
+php artisan db:seed
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+6. **Setup Reverb untuk WebSocket** (optional untuk real-time notifications)
+```bash
+php artisan reverb:install
+```
 
-## Security Vulnerabilities
+7. **Start development server**
+```bash
+# Terminal 1: Laravel development server
+php artisan serve
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Terminal 2: Vite development server
+npm run dev
 
-## License
+# Terminal 3: WebSocket server (jika menggunakan Reverb)
+php artisan reverb:start
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Struktur Project
+
+```
+├── app/
+│   ├── Actions/          # Business logic actions
+│   ├── Http/             # Controllers, Requests, Middleware
+│   ├── Models/           # Eloquent Models (User, Job, Application)
+│   ├── Events/           # Application events
+│   ├── Listeners/        # Event listeners
+│   ├── Mail/             # Mailable classes
+│   ├── Notifications/    # Notification classes
+│   └── Exports/          # Laravel Excel exports
+├── resources/
+│   ├── js/               # Vue components
+│   ├── css/              # Tailwind styles
+│   └── views/            # Blade templates
+├── routes/               # API dan web routes
+├── database/
+│   ├── migrations/       # Database migrations
+│   ├── factories/        # Model factories
+│   └── seeders/          # Database seeders
+└── config/               # Configuration files
+```
+
+## Pengembangan
+
+### Running Tests
+```bash
+php artisan test
+```
+
+### Code Quality
+```bash
+./vendor/bin/phpunit
+```
+
+### Build for Production
+```bash
+npm run build
+php artisan optimize
+```
+
+## Kontribusi
+
+Kami menerima kontribusi! Silakan buat pull request dengan deskripsi perubahan yang jelas. Pastikan code Anda mengikuti style guide project dan semua test lulus.
+
+## Lisensi
+
+Project ini dilisensikan di bawah [MIT license](https://opensource.org/licenses/MIT).
