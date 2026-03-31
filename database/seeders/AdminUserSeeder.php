@@ -13,28 +13,17 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create admin user if not exists
+        // Create only admin user
         User::updateOrCreate(
             ['email' => 'admin@dryex.com'],
             [
                 'name' => 'Administrator Dryex',
-                'password' => bcrypt('admin123'),
+                'password' => bcrypt('admin909'),
                 'role' => 'admin',
                 'email_verified_at' => now(),
             ]
         );
 
-        // Create regular user if not exists
-        User::updateOrCreate(
-            ['email' => 'user@dryex.com'],
-            [
-                'name' => 'Regular User',
-                'password' => bcrypt('user123'),
-                'role' => 'user',
-                'email_verified_at' => now(),
-            ]
-        );
-
-        $this->command->info('Admin and user accounts created successfully!');
+        $this->command->info('Admin account created successfully!');
     }
 }

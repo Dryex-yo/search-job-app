@@ -3,9 +3,9 @@ import { ref, watch, computed } from 'vue';
 import { router, Head, useForm } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import axios from 'axios';
-import CVPreviewModal from '@/Components/CVPreviewModal.vue';
-import NotificationContainer from '@/Components/NotificationContainer.vue';
-import { useNotification } from '@/Composables/useNotification';
+import CVPreviewModal from '../../Components/CVPreviewModal.vue';
+import UserLayout from '../../Layouts/UserLayout.vue';
+import { useNotification } from '../../Composables/useNotification';
 
 // 1. Definisikan Props
 const props = defineProps({ 
@@ -132,16 +132,13 @@ const closeCVPreview = () => {
 
 <template>
     <Head title="Dryex - Temukan Karir Impianmu" />
-    
-    <!-- Notification Container -->
-    <NotificationContainer />
-    
-    <div class="min-h-screen bg-[#0b0f1a] text-white p-6 md:p-12 font-sans relative overflow-hidden">
-        
-        <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-cyan-500/10 blur-[150px] rounded-full"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-600/10 blur-[150px] rounded-full"></div>
 
-        <div class="max-w-7xl mx-auto relative z-10">
+    <UserLayout>
+        <div class="bg-[#0b0f1a] text-white font-sans relative">
+            <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-cyan-500/10 blur-[150px] rounded-full"></div>
+            <div class="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-600/10 blur-[150px] rounded-full"></div>
+
+            <div class="max-w-7xl mx-auto relative z-10 p-6 md:p-12">
             
             <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-6">
                 <div>
@@ -384,16 +381,17 @@ const closeCVPreview = () => {
             </div>
             </div>
         </div>
-    </div>
 
-    <!-- CV Preview Modal -->
-    <CVPreviewModal 
-        :show="showCVPreview"
-        :cv-path="previewResumePath"
-        candidate-name="Your CV"
-        title="Preview CV"
-        @close="closeCVPreview"
-    />
+        <!-- CVPreviewModal -->
+            <CVPreviewModal 
+                :show="showCVPreview"
+                :cv-path="previewResumePath"
+                candidate-name="Your CV"
+                title="Preview CV"
+                @close="closeCVPreview"
+            />
+        </div>
+    </UserLayout>
 </template>
 
 <style scoped>
