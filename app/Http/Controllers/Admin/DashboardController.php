@@ -144,7 +144,9 @@ class DashboardController extends Controller
             'chartData' => [
                 'weeklyApplicants' => $this->getWeeklyApplicantsData(),
                 'statusDistribution' => $this->getStatusDistribution(),
-            ]
+                'monthlyApplications' => $this->getMonthlyApplicationsChart(),
+            ],
+            'topPerformingJobs' => $this->getTopPerformingJobs(),
         ]);
     }
 
@@ -330,5 +332,62 @@ class DashboardController extends Controller
             'labels' => ['Hired 🎉', 'Rejected ❌', 'In Progress ⏳'],
             'colors' => ['#10b981', '#ef4444', '#f59e0b'],
         ];
+    }
+
+    /**
+     * Get monthly applications data for bar chart
+     */
+    private function getMonthlyApplicationsChart()
+    {
+        $monthlyData = [];
+        $categories = [];
+        
+        for ($i = 11; $i >= 0; $i--) {
+            $startDate = Carbon::now()->subMonths($i)->startOfMonth();
+            $endDate = Carbon::now()->subMonths($i)->endOfMonth();
+            
+            $count = Application::whereBetween('created_at', [$startDate, $endDate])->count();
+            $monthlyData[] = $count;
+            $categories[] = $startDate->format('M Y');
+        }
+        
+        return [
+            'series' => [
+                [
+                    'name' => 'Aplikasi',
+                    'data' => $monthlyData
+                ]
+            ],
+            'categories' => $categories,
+        ];
+    }
+
+    /**
+     * Get top 5 performing jobs by applications count
+     */
+    private function getTopPerformingJobs()
+    {
+        return Job::withCount('applications')
+            ->withCount(['applications as hired_count' => function($query) {
+                $query->where('status', 'hired');
+            }])
+            ->orderByDesc('applications_count')
+            ->limit(5)
+            ->get()
+            ->map(function($job) {
+                $totalApps = $job->applications_count ?? 0;
+                $hiredApps = $job->hired_count ?? 0;
+                $conversionRate = $totalApps > 0 ? round(($hiredApps / $totalApps) * 100, 1) : 0;
+                
+                return [
+                    'id' => $job->id,
+                    'title' => $job->title,
+                    'company_name' => $job->company_name,
+                    'applications_count' => $totalApps,
+                    'hired_count' => $hiredApps,
+                    'conversion_rate' => $conversionRate,
+                    'status' => $job->status,
+                ];
+            });
     }
 }

@@ -23,6 +23,10 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'phone',
+        'bio',
+        'resume_path',
+        'profile_photo_path',
     ];
 
     /**
@@ -62,5 +66,21 @@ class User extends Authenticatable
     public function isUser(): bool
     {
         return $this->role === 'user';
+    }
+
+    /**
+     * Get profile views for this user
+     */
+    public function profileViews()
+    {
+        return $this->hasMany(ProfileView::class);
+    }
+
+    /**
+     * Get applications for this user
+     */
+    public function applications()
+    {
+        return $this->hasMany(Application::class);
     }
 }
