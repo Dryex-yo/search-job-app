@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import DarkModeToggle from '@/Components/DarkModeToggle.vue';
+import AdminUserDropdown from '@/Components/AdminUserDropdown.vue';
 
 const showingSidebar = ref(false);
 const page = usePage();
@@ -19,10 +20,6 @@ const menus = [
     { name: 'Applicants', icon: '👥', route: 'admin.applicants' },
     { name: 'Settings', icon: '⚙️', route: 'admin.settings' },
 ];
-
-const handleLogout = () => {
-    router.post(route('logout'));
-};
 </script>
 
 <template>
@@ -84,15 +81,9 @@ const handleLogout = () => {
                     </Link>
                 </nav>
 
-                <!-- Logout Button -->
-                <div class="border-t border-gray-200 dark:border-white/10 pt-4 sm:pt-6 mt-6 sm:mt-8">
-                    <button
-                        @click="handleLogout"
-                        class="w-full flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-2 sm:py-3 rounded-2xl text-sm sm:text-base text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-red-100 dark:hover:bg-red-500/10 border border-transparent hover:border-red-300 dark:hover:border-red-500/30 transition-all duration-300"
-                    >
-                        <span class="text-lg sm:text-xl">🚪</span>
-                        <span class="font-semibold">Logout</span>
-                    </button>
+                <!-- Divider -->
+                <div class="border-t border-gray-200 dark:border-white/10 mt-6 sm:mt-8 pt-4 sm:pt-6">
+                    <p class="text-xs text-gray-500 dark:text-gray-600 font-semibold uppercase tracking-widest px-4 sm:px-6">Use profile menu for logout →</p>
                 </div>
             </aside>
 
@@ -116,13 +107,8 @@ const handleLogout = () => {
                         <!-- Dark Mode Toggle -->
                         <DarkModeToggle />
 
-                        <div class="text-right hidden sm:block">
-                            <p class="text-xs sm:text-sm text-gray-900 dark:text-white font-semibold">{{ auth.user?.name }}</p>
-                            <p class="text-xs text-gray-600 dark:text-slate-400">{{ auth.user?.email }}</p>
-                        </div>
-                        <div class="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white text-xs sm:text-sm">
-                            {{ auth.user?.name?.charAt(0) || 'A' }}
-                        </div>
+                        <!-- User Profile Dropdown -->
+                        <AdminUserDropdown />
                     </div>
                 </header>
 

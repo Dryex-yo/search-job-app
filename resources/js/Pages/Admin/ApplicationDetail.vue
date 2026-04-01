@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
+import AdminPageLayout from '@/Layouts/AdminPageLayout.vue';
 import CVPreviewModal from '@/Components/CVPreviewModal.vue';
 import NotificationContainer from '@/Components/NotificationContainer.vue';
 import { useNotification } from '@/Composables/useNotification';
@@ -133,43 +134,21 @@ const formatDate = (date) => {
         @close="closeCVPreview"
     />
 
-    <div class="fixed inset-0 bg-[#080B14] flex items-center justify-center p-4 md:p-8 font-sans overflow-y-auto text-white selection:bg-cyan-500/30">
-        
-        <!-- Background Effects -->
-        <div class="absolute inset-0 opacity-[0.03] pointer-events-none grain-bg"></div>
-        <div class="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-cyan-500/10 blur-[130px] rounded-full animate-pulse-slow"></div>
-        <div class="absolute bottom-[-10%] right-[-5%] w-[700px] h-[700px] bg-blue-600/10 blur-[150px] rounded-full animate-pulse-slow"></div>
-
-        <!-- Main Container -->
-        <div class="w-full max-w-4xl my-8 bg-white/[0.005] backdrop-blur-[60px] border border-white/20 rounded-[2rem] shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden relative z-10 glowing-border">
-            
-            <!-- Header with Back Button -->
-            <div class="border-b border-white/10 p-8 bg-white/[0.003]">
-                <div class="flex items-center justify-between mb-6">
-                    <Link 
-                        href="/admin/applicants"
-                        class="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors"
-                    >
-                        <span>←</span>
-                        <span>Kembali ke Daftar</span>
-                    </Link>
-                    <span class="text-xs uppercase tracking-widest text-gray-500">Aplikasi #{{ application.id }}</span>
-                </div>
-
-                <div class="flex items-start justify-between">
-                    <div>
-                        <h1 class="text-4xl font-black text-white mb-2">{{ application.user_name }}</h1>
-                        <p class="text-gray-400 text-sm">Melamar untuk posisi: <span class="text-cyan-400 font-bold">{{ application.job_title }}</span></p>
-                    </div>
-                    <div :class="['px-6 py-3 rounded-xl border font-bold text-sm flex items-center gap-2', getStatusClass(application.status)]">
-                        <span>{{ getStatusIcon(application.status) }}</span>
-                        <span class="uppercase text-xs">{{ application.status }}</span>
-                    </div>
-                </div>
+    <AdminPageLayout :title="`${application.user_name} 👤`" :subtitle="`Melamar untuk: ${application.job_title}`">
+        <!-- Back Button & Status -->
+        <div class="flex items-center justify-between mb-8">
+            <Link 
+                href="/admin/applicants"
+                class="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors text-sm"
+            >
+                <span>←</span>
+                <span>Kembali ke Daftar</span>
+            </Link>
+            <div :class="['px-6 py-2 rounded-xl border font-bold text-sm flex items-center gap-2', getStatusClass(application.status)]">
+                <span>{{ getStatusIcon(application.status) }}</span>
+                <span class="uppercase text-xs">{{ application.status }}</span>
             </div>
-
-            <!-- Content Area -->
-            <div class="p-8 space-y-8">
+        </div>
                 
                 <!-- Applicant Information Card -->
                 <div class="bg-white/[0.003] border border-white/10 rounded-2xl p-6 space-y-4">
@@ -308,9 +287,7 @@ const formatDate = (date) => {
                         <span v-else>💾 Menyimpan...</span>
                     </button>
                 </div>
-            </div>
-        </div>
-    </div>
+            </AdminPageLayout>
 </template>
 
 <style scoped>

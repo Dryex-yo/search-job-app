@@ -26,6 +26,10 @@ const props = defineProps({
         type: String,
         enum: ['up', 'down', 'neutral'],
         default: 'neutral'
+    },
+    isUpdating: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -78,8 +82,8 @@ const trendIcon = computed(() => {
 </script>
 
 <template>
-    <div :class="[`bg-gradient-to-br ${currentColor.bg} ${currentColor.border}`, 'border rounded-[2rem] p-10 relative overflow-hidden group cursor-pointer hover:shadow-2xl transition-all duration-300']"
-        :style="{ boxShadow: `0 20px 40px ${currentColor.shadow}` }">
+    <div :class="[`bg-gradient-to-br ${currentColor.bg} ${currentColor.border}`, 'border rounded-[2rem] p-10 relative overflow-hidden group cursor-pointer hover:shadow-2xl transition-all duration-300', isUpdating ? 'ring-2 ring-offset-2 ring-offset-[#080B14]' : '']"
+        :style="{ boxShadow: isUpdating ? `0 0 30px ${currentColor.text}, 0 20px 40px ${currentColor.shadow}` : `0 20px 40px ${currentColor.shadow}`, ringColor: currentColor.text }">
         
         <!-- Background glow effect -->
         <div class="absolute -top-1/2 -right-1/2 w-full h-full rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"
@@ -98,7 +102,7 @@ const trendIcon = computed(() => {
 
             <!-- Value -->
             <div class="mb-2">
-                <p class="text-5xl font-black text-white tracking-tighter">{{ value }}</p>
+                <p class="text-5xl font-black text-white tracking-tighter transition-transform duration-300" :class="{ 'scale-110': isUpdating }">{{ value }}</p>
             </div>
 
             <!-- Label -->
