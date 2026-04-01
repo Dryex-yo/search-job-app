@@ -89,43 +89,62 @@ const openDeleteModal = (job) => {
     showDeleteModal.value = true;
 };
 
-const submitForm = () => {
-    if (showEditModal.value && selectedJob.value) {
-        form.patch(route('admin.jobs.update', selectedJob.value.id), {
-            onSuccess: () => {
-                showEditModal.value = false;
-                form.reset();
-                selectedJob.value = null;
-                window.location.reload();
-            },
-            onError: (errors) => {
-                console.error('Update error:', errors);
-            }
-        });
-    } else {
-        form.post(route('admin.jobs.store'), {
-            onSuccess: () => {
-                showCreateModal.value = false;
-                form.reset();
-                window.location.reload();
-            },
-            onError: (errors) => {
-                console.error('Create error:', errors);
-            }
-        });
+const submitForm = async () => {
+    console.log('Form submitted:', { 
+        isEdit: showEditModal.value, 
+        jobId: selectedJob.value?.id,
+        formData: form.data()
+    });
+    
+    try {
+        if (showEditModal.value && selectedJob.value) {
+            await form.patch(route('admin.jobs.update', selectedJob.value.id), {
+                onSuccess: () => {
+                    console.log('Job updated successfully');
+                    showEditModal.value = false;
+                    form.reset();
+                    selectedJob.value = null;
+                    setTimeout(() => window.location.reload(), 500);
+                },
+                onError: (errors) => {
+                    console.error('Update error:', errors);
+                    alert('Error updating job: ' + JSON.stringify(errors));
+                }
+            });
+        } else {
+            await form.post(route('admin.jobs.store'), {
+                onSuccess: () => {
+                    console.log('Job created successfully');
+                    showCreateModal.value = false;
+                    form.reset();
+                    setTimeout(() => window.location.reload(), 500);
+                },
+                onError: (errors) => {
+                    console.error('Create error:', errors);
+                    alert('Error creating job: ' + JSON.stringify(errors));
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Form submission error:', error);
+        alert('Error: ' + error.message);
     }
 };
 
 const confirmDelete = () => {
     if (selectedJob.value) {
+        console.log('Deleting job:', selectedJob.value.id);
         router.delete(route('admin.jobs.destroy', selectedJob.value.id), {
             onSuccess: () => {
+                console.log('Job deleted successfully');
                 showDeleteModal.value = false;
                 selectedJob.value = null;
-                window.location.reload();
+                setTimeout(() => window.location.reload(), 500);
             },
             onError: (errors) => {
                 console.error('Delete error:', errors);
+                alert('Error deleting job: ' + JSON.stringify(errors));
+                showDeleteModal.value = false;
             }
         });
     }
@@ -133,12 +152,19 @@ const confirmDelete = () => {
 
 const toggleStatus = (job) => {
     const newStatus = job.status === 'active' ? 'inactive' : 'active';
+    console.log('Toggling job status:', { jobId: job.id, currentStatus: job.status, newStatus: newStatus });
+    
     router.patch(route('admin.jobs.update', job.id), { 
         ...job,
         status: newStatus 
     }, {
+        onSuccess: () => {
+            console.log('Status toggled successfully');
+            setTimeout(() => window.location.reload(), 300);
+        },
         onError: (errors) => {
             console.error('Status toggle error:', errors);
+            alert('Error toggling status: ' + JSON.stringify(errors));
         }
     });
 };
