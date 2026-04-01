@@ -157,6 +157,5 @@ const handleSave = () => {
                             </div>
                         </div>
                     </div>
-                </div>
     </AdminPageLayout>
 </template>
