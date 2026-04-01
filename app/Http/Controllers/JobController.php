@@ -6,12 +6,15 @@ use App\Actions\Jobs\ListAvailableJobsAction;
 use App\Actions\Jobs\GetJobDetailsAction;
 use App\Actions\Applications\SubmitApplicationAction;
 use App\Models\Job;
+use App\Traits\CalculatesProfileCompletion;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class JobController extends Controller
 {
+    use CalculatesProfileCompletion;
     /**
      * Menampilkan halaman daftar lowongan kerja dengan Inertia.
      */
@@ -41,9 +44,17 @@ class JobController extends Controller
     public function show(int $id, GetJobDetailsAction $getJobDetails)
     {
         $job = $getJobDetails->execute($id);
+        
+        // Get profile completion if user is authenticated
+        $profileCompletion = 0;
+        $user = Auth::user();
+        if ($user) {
+            $profileCompletion = $this->calculateProfileCompletion($user);
+        }
 
         return Inertia::render('Jobs/Show', [
             'job' => $job,
+            'profileCompletion' => $profileCompletion,
         ]);
     }
 
@@ -51,7 +62,7 @@ class JobController extends Controller
     {
         $request->validate([
             'job_id' => 'required|exists:jobs,id',
-            'resume' => 'required|mimes:pdf|max:2048', // Maksimal 2MB PDF
+            'resume' => 'nullable|mimes:pdf|max:2048', // Maksimal 2MB PDF, optional jika ada di profile
             'cover_letter' => 'nullable|string',
         ]);
 

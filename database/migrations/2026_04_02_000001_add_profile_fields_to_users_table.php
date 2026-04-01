@@ -12,11 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('phone')->nullable()->after('email');
-            $table->string('bio')->nullable()->after('phone');
-            $table->string('resume_path')->nullable()->after('bio');
-            $table->string('profile_photo_path')->nullable()->after('resume_path');
-            $table->string('role')->default('user')->after('profile_photo_path');
+            if (!Schema::hasColumn('users', 'phone')) {
+                $table->string('phone')->nullable()->after('email');
+            }
+            if (!Schema::hasColumn('users', 'bio')) {
+                $table->string('bio')->nullable()->after('phone');
+            }
+            if (!Schema::hasColumn('users', 'resume_path')) {
+                $table->string('resume_path')->nullable()->after('bio');
+            }
+            if (!Schema::hasColumn('users', 'profile_photo_path')) {
+                $table->string('profile_photo_path')->nullable()->after('resume_path');
+            }
+            if (!Schema::hasColumn('users', 'role')) {
+                $table->string('role')->default('user')->after('profile_photo_path');
+            }
         });
     }
 

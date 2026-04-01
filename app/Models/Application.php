@@ -14,10 +14,13 @@ class Application extends Model
     protected $fillable = [
         'job_id',
         'user_id',
+        'admin_id',
         'resume_path',
         'cover_letter',
         'status',
-        'notes'
+        'notes',
+        'reviewed_at',
+        'admin_notes'
     ];
 
     /**
@@ -54,5 +57,11 @@ class Application extends Model
     public function job()
     {
         return $this->belongsTo(Job::class);
+    }
+
+    // Relasi ke Admin yang melakukan review
+    public function admin()
+    {
+        return $this->belongsTo(User::class, 'admin_id');
     }
 }

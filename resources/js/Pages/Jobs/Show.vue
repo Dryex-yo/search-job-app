@@ -9,6 +9,10 @@ const props = defineProps({
     job: {
         type: Object,
         required: true,
+    },
+    profileCompletion: {
+        type: Number,
+        default: 0,
     }
 });
 
@@ -18,12 +22,20 @@ const { success: showSuccess, error: showError, warning: showWarning } = useNoti
 // Auth check
 const page = usePage();
 const isAuthenticated = computed(() => !!page.props.auth?.user);
+const currentUser = computed(() => page.props.auth?.user);
+const isProfileComplete = computed(() => props.profileCompletion === 100);
+const profileCompletionText = computed(() => {
+    if (!isAuthenticated.value) return 'Login diperlukan';
+    if (isProfileComplete.value) return 'Profile Anda 100% Lengkap ✓';
+    return `Profile Anda ${props.profileCompletion}% Lengkap - Selesaikan untuk Apply`;
+});
 
 // State
 const cvFile = ref(null);
 const cvFileName = ref('');
 const isSubmitting = ref(false);
 const showPreview = ref(false);
+const userProfileCV = computed(() => currentUser.value?.resume_path);
 
 // Form for applying
 const applyForm = useForm({
@@ -86,8 +98,18 @@ const submitApplication = () => {
         return;
     }
 
-    if (!cvFile.value) {
-        showError('CV Diperlukan', 'Silakan pilih file CV Anda terlebih dahulu.');
+    // Check if profile is complete (100%)
+    if (!isProfileComplete.value) {
+        showError(
+            'Profile Belum Lengkap!', 
+            `Profil Anda baru ${props.profileCompletion}% lengkap. Silakan lengkapi semua field profil Anda hingga 100% sebelum melamar pekerjaan. Klik "Edit Profile" untuk melengkapi.`
+        );
+        return;
+    }
+
+    // Check if user has CV in profile or has selected a file
+    if (!cvFile.value && !userProfileCV.value) {
+        showError('CV Diperlukan', 'Silakan upload CV Anda di profile terlebih dahulu atau pilih file CV sekarang.');
         return;
     }
 
@@ -96,7 +118,11 @@ const submitApplication = () => {
     }
 
     isSubmitting.value = true;
-    applyForm.resume = cvFile.value;
+    
+    // Use uploaded file if available, otherwise use profile CV
+    if (cvFile.value) {
+        applyForm.resume = cvFile.value;
+    }
 
     applyForm.post(route('jobs.apply'), {
         onSuccess: () => {
@@ -116,7 +142,23 @@ const submitApplication = () => {
 // Utility functions
 const formatSalary = (salary) => {
     if (!salary) return 'Sesuai Kesepakatan';
-    return 'Rp ' + salary.toLocaleString('id-ID');
+    
+    // Convert to string if it's a number
+    let salaryStr = String(salary).trim();
+    
+    // Remove existing "Rp" prefix if any
+    if (salaryStr.startsWith('Rp')) {
+        salaryStr = salaryStr.replace(/^Rp\s*/i, '').trim();
+    }
+    
+    // Try to parse as number and format
+    const salaryNum = parseInt(salaryStr.replace(/\D/g, ''), 10);
+    if (!isNaN(salaryNum)) {
+        return 'Rp ' + salaryNum.toLocaleString('id-ID');
+    }
+    
+    // If not a number, return as is with Rp prefix
+    return salaryStr || 'Sesuai Kesepakatan';
 };
 
 const formatDate = (date) => {
@@ -240,12 +282,67 @@ const formatDate = (date) => {
                                 <template v-else>
                                     <h3 class="text-lg font-bold text-slate-900 dark:text-white transition-colors duration-300">Kirim Lamaran</h3>
 
+                                    <!-- Profile Completion Status -->
+                                    <div class="bg-white dark:bg-white/[0.003] border border-slate-200 dark:border-white/10 rounded-lg p-4 transition-colors duration-300">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <p class="text-sm font-semibold text-slate-700 dark:text-gray-300 transition-colors duration-300">
+                                                Status Profile
+                                            </p>
+                                            <span :class="isProfileComplete ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'" class="text-sm font-bold transition-colors duration-300">
+                                                {{ props.profileCompletion }}%
+                                            </span>
+                                        </div>
+                                        <div class="w-full h-2 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+                                            <div 
+                                                :style="{ width: props.profileCompletion + '%' }"
+                                                :class="isProfileComplete ? 'bg-green-500' : 'bg-orange-500'"
+                                                class="h-full transition-all duration-300"
+                                            ></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Profile Not Complete Warning -->
+                                    <div v-if="!isProfileComplete" class="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-400/30 rounded-lg p-4 transition-colors duration-300">
+                                        <p class="text-sm font-semibold text-red-600 dark:text-red-400 flex items-center gap-2 mb-2 transition-colors duration-300">
+                                            <span>⚠️</span> Profile Belum Lengkap
+                                        </p>
+                                        <p class="text-xs text-red-700 dark:text-red-300 mb-3 transition-colors duration-300">
+                                            Profil Anda hanya {{ props.profileCompletion }}% lengkap. Silakan lengkapi semua informasi di profil Anda untuk dapat melamar pekerjaan.
+                                        </p>
+                                        <Link 
+                                            href="/profile"
+                                            class="inline-block w-full px-4 py-2 bg-red-100 dark:bg-red-500/30 border border-red-300 dark:border-red-400/50 text-red-700 dark:text-red-400 rounded-lg text-center font-bold hover:bg-red-200 dark:hover:bg-red-500/40 transition-colors text-sm"
+                                        >
+                                            → Edit Profile Sekarang
+                                        </Link>
+                                    </div>
+
+                                    <!-- Profile Complete Success -->
+                                    <div v-else class="bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-400/30 rounded-lg p-4 transition-colors duration-300">
+                                        <p class="text-sm font-semibold text-green-600 dark:text-green-400 flex items-center gap-2 transition-colors duration-300">
+                                            <span>✓</span> Profile Lengkap 100%
+                                        </p>
+                                    </div>
+
+                                    <!-- CV Info Section -->
+                                    <div v-if="userProfileCV" class="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-400/30 rounded-lg p-4 transition-colors duration-300">
+                                        <p class="text-sm font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-2 mb-2 transition-colors duration-300">
+                                            <span>✓</span> CV dari Profile Tersedia
+                                        </p>
+                                        <p class="text-xs text-blue-700 dark:text-blue-300 transition-colors duration-300">
+                                            Kami akan menggunakan CV yang sudah Anda upload di profil. Untuk mengubah CV, silakan update di halaman profile Anda.
+                                        </p>
+                                    </div>
+
                                     <!-- CV Upload Section -->
                                     <div class="space-y-3">
                                         <label class="text-sm font-semibold text-slate-700 dark:text-gray-300 flex items-center gap-1 transition-colors duration-300">
-                                            <span>📄</span> Upload CV (PDF)
-                                            <span class="text-red-400">*</span>
+                                            <span>📄</span> Upload CV Baru (Opsional)
+                                            <span v-if="!userProfileCV" class="text-red-400">*</span>
                                         </label>
+                                        <p class="text-xs text-slate-500 dark:text-gray-500 transition-colors duration-300">
+                                            {{ userProfileCV ? 'Abaikan bagian ini jika ingin menggunakan CV dari profile' : 'Silakan upload CV Anda' }}
+                                        </p>
                                         
                                         <div v-if="!cvFile" class="border-2 border-dashed border-cyan-300 dark:border-cyan-400/50 rounded-lg p-4 text-center cursor-pointer hover:border-cyan-400 dark:hover:border-cyan-300 transition-colors"
                                              @click="() => document.getElementById('cv-upload')?.click()">
@@ -306,16 +403,25 @@ const formatDate = (date) => {
                                     <button 
                                         type="button"
                                         @click="submitApplication"
-                                        :disabled="isSubmitting || !cvFile"
-                                        class="w-full px-6 py-3 bg-cyan-100 dark:bg-cyan-500/30 border border-cyan-300 dark:border-cyan-400/50 text-cyan-700 dark:text-cyan-400 font-bold rounded-lg hover:bg-cyan-200 dark:hover:bg-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                        :disabled="isSubmitting || (!cvFile && !userProfileCV) || !isProfileComplete"
+                                        class="w-full px-6 py-3 font-bold rounded-lg transition-all"
+                                        :class="isProfileComplete 
+                                            ? 'bg-cyan-100 dark:bg-cyan-500/30 border border-cyan-300 dark:border-cyan-400/50 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-200 dark:hover:bg-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed'
+                                            : 'bg-gray-100 dark:bg-gray-500/20 border border-gray-300 dark:border-gray-400/30 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-50'"
                                     >
-                                        <span v-if="!isSubmitting">✓ Kirim Lamaran</span>
+                                        <span v-if="!isSubmitting">
+                                            <span v-if="isProfileComplete">✓ Kirim Lamaran</span>
+                                            <span v-else>⏳ Lengkapi Profile ({{ props.profileCompletion }}%)</span>
+                                        </span>
                                         <span v-else>⏳ Mengirim...</span>
                                     </button>
 
                                     <!-- Info Text -->
                                     <p class="text-xs text-slate-500 dark:text-gray-500 text-center transition-colors duration-300">
-                                        Dengan mengirim lamaran, Anda menerima Kebijakan Privasi kami.
+                                        {{ isProfileComplete 
+                                            ? 'Dengan mengirim lamaran, Anda menerima Kebijakan Privasi kami.' 
+                                            : 'Lengkapi profil Anda untuk dapat melamar pekerjaan' 
+                                        }}
                                     </p>
                                 </template>
                             </div>

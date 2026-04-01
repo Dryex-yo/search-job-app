@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Application;
 use App\Models\Job;
 use App\Models\ProfileView;
+use App\Traits\CalculatesProfileCompletion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -12,6 +13,7 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    use CalculatesProfileCompletion;
     /**
      * Show dashboard based on user role
      */
@@ -136,46 +138,6 @@ class DashboardController extends Controller
             'statusTrend' => $statusTrend,
             'jobCategories' => $jobCategories->toArray(),
         ];
-    }
-
-    /**
-     * Calculate profile completion based on real profile data
-     */
-    private function calculateProfileCompletion($user)
-    {
-        $completion = 0;
-        $totalFields = 5; // Total profile fields
-        $completedFields = 0;
-
-        // 1. Name completion (20%)
-        if ($user->name && strlen($user->name) > 0) {
-            $completedFields++;
-        }
-
-        // 2. Email verification (20%)
-        if ($user->email_verified_at) {
-            $completedFields++;
-        }
-
-        // 3. Phone number (20%)
-        if ($user->phone && strlen($user->phone) > 0) {
-            $completedFields++;
-        }
-
-        // 4. Bio/Profile summary (20%)
-        if ($user->bio && strlen($user->bio) > 0) {
-            $completedFields++;
-        }
-
-        // 5. Resume uploaded (20%)
-        if ($user->resume_path && strlen($user->resume_path) > 0) {
-            $completedFields++;
-        }
-
-        // Calculate percentage
-        $completion = ($completedFields / $totalFields) * 100;
-
-        return min(round($completion), 100);
     }
 
     /**

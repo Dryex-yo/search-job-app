@@ -2,6 +2,7 @@
 import UserLayout from '@/Layouts/UserLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import { router } from '@inertiajs/vue3';
 
 const props = defineProps({
     dashboardData: {
@@ -23,6 +24,21 @@ const stats = computed(() => props.dashboardData.statistics);
 const recentApps = computed(() => props.dashboardData.recentApplications);
 const recommendedJobs = computed(() => props.dashboardData.recommendedJobs);
 const user = computed(() => props.dashboardData.user);
+
+// Navigate to job details page
+const viewJobDetails = (jobId) => {
+    router.visit(`/jobs/${jobId}`);
+};
+
+// Navigate to jobs listing
+const browseJobs = () => {
+    router.visit('/jobs');
+};
+
+// Navigate to profile
+const editProfile = () => {
+    router.visit('/profile');
+};
 </script>
 
 <template>
@@ -240,6 +256,7 @@ const user = computed(() => props.dashboardData.user);
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div v-for="job in recommendedJobs" :key="job.id"
+                         @click="viewJobDetails(job.id)"
                          class="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/[0.08] hover:border-white/20 transition-all cursor-pointer group">
                         <div class="mb-4">
                             <h4 class="text-white font-bold group-hover:text-cyan-400 transition-colors">{{ job.title }}</h4>
@@ -260,8 +277,11 @@ const user = computed(() => props.dashboardData.user);
 
                         <div class="pt-4 border-t border-white/10 flex items-center justify-between">
                             <span class="text-xs text-slate-500">{{ job.applications_count }} applicants</span>
-                            <button class="px-3 py-1 bg-cyan-500/20 text-cyan-300 text-xs rounded hover:bg-cyan-500/30 transition-colors">
-                                Apply Now
+                            <button 
+                                @click.stop="viewJobDetails(job.id)"
+                                type="button"
+                                class="px-3 py-1 bg-cyan-500/20 text-cyan-300 text-xs rounded hover:bg-cyan-500/30 transition-colors font-medium">
+                                Apply Now →
                             </button>
                         </div>
                     </div>
@@ -270,17 +290,23 @@ const user = computed(() => props.dashboardData.user);
 
             <!-- Quick Actions -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <a href="/jobs" class="bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 border border-cyan-500/30 rounded-xl p-6 hover:from-cyan-500/20 hover:to-cyan-500/10 transition-all">
+                <button 
+                    @click="browseJobs"
+                    type="button"
+                    class="bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 border border-cyan-500/30 rounded-xl p-6 hover:from-cyan-500/20 hover:to-cyan-500/10 transition-all text-left">
                     <p class="text-2xl mb-2">🔍</p>
                     <h4 class="text-white font-semibold">Browse Jobs</h4>
                     <p class="text-sm text-slate-400 mt-1">Explore more opportunities</p>
-                </a>
+                </button>
 
-                <a href="/profile" class="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/30 rounded-xl p-6 hover:from-purple-500/20 hover:to-purple-500/10 transition-all">
+                <button 
+                    @click="editProfile"
+                    type="button"
+                    class="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/30 rounded-xl p-6 hover:from-purple-500/20 hover:to-purple-500/10 transition-all text-left">
                     <p class="text-2xl mb-2">👤</p>
                     <h4 class="text-white font-semibold">Edit Profile</h4>
                     <p class="text-sm text-slate-400 mt-1">Improve your chances</p>
-                </a>
+                </button>
 
                 <div class="bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/30 rounded-xl p-6">
                     <p class="text-2xl mb-2">📊</p>

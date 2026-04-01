@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,7 +28,7 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(ProfileUpdateRequest $request)
     {
         $request->user()->fill($request->validated());
 
@@ -37,7 +38,37 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit');
+        // Return the edit page dengan updated user data
+        return Inertia::render('Profile/Edit', [
+            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'status' => 'Profil berhasil diperbarui',
+        ]);
+    }
+
+    /**
+     * Upload user's CV/Resume
+     */
+    public function uploadResume(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'resume' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
+        ]);
+
+        $user = $request->user();
+
+        // Delete old resume if exists
+        if ($user->resume_path && Storage::disk('public')->exists($user->resume_path)) {
+            Storage::disk('public')->delete($user->resume_path);
+        }
+
+        // Store new resume
+        $path = $request->file('resume')->store('resumes', 'public');
+
+        $user->update([
+            'resume_path' => $path,
+        ]);
+
+        return Redirect::route('profile.edit')->with('status', 'CV berhasil diupload');
     }
 
     /**

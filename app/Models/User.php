@@ -27,6 +27,24 @@ class User extends Authenticatable
         'bio',
         'resume_path',
         'profile_photo_path',
+        'address',
+        'city',
+        'province',
+        'postal_code',
+        'date_of_birth',
+        'gender',
+        'education',
+        'education_level',
+        'education_institution',
+        'education_year_graduated',
+        'education_major',
+        'education_grade',
+        'experience',
+        'experiences',
+        'skills',
+        'id_number',
+        'emergency_contact_name',
+        'emergency_contact_phone',
     ];
 
     /**
@@ -49,6 +67,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'experiences' => 'array',
         ];
     }
 
