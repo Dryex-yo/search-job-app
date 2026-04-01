@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { usePage, Link } from '@inertiajs/vue3';
 import ProfileDropdown from '@/Components/ProfileDropdown.vue';
 
 const page = usePage();
@@ -49,14 +49,14 @@ const menus = [
                 </div>
 
                 <nav class="flex-grow space-y-3">
-                    <router-link v-for="menu in menus" :key="menu.name"
-                        :to="{ name: menu.route }"
+                    <Link v-for="menu in menus" :key="menu.name"
+                        :href="route(menu.route)"
                         :class="[currentRoute === menu.route ? 'bg-white/10 text-white shadow-inner border-white/10' : 'text-gray-500 hover:text-gray-300 border-transparent']"
                         class="w-full flex items-center gap-4 px-6 py-4 rounded-2xl border transition-all duration-500 font-bold text-xs uppercase tracking-widest group"
                     >
                         <span class="opacity-70 group-hover:opacity-100">{{ menu.icon }}</span>
                         {{ menu.name }}
-                    </router-link>
+                    </Link>
                 </nav>
 
                 <div class="border-t border-white/10 pt-6 mt-8">

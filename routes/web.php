@@ -37,6 +37,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/analytics', [AdminDashboard::class, 'analytics'])->name('analytics');
 
     Route::get('/jobs', [AdminDashboard::class, 'jobs'])->name('jobs');
+    Route::post('/jobs', [AdminDashboard::class, 'storeJob'])->name('jobs.store');
+    Route::patch('/jobs/{id}', [AdminDashboard::class, 'updateJob'])->name('jobs.update');
+    Route::delete('/jobs/{id}', [AdminDashboard::class, 'deleteJob'])->name('jobs.destroy');
 
     Route::get('/settings', [AdminDashboard::class, 'settings'])->name('settings');
 });

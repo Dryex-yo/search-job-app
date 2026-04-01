@@ -107,15 +107,33 @@ class DashboardController extends Controller
      */
     private function getAnalyticsData()
     {
+        $totalApplications = Application::count();
+        $hiredCount = Application::where('status', 'hired')->count();
+        $rejectedCount = Application::where('status', 'rejected')->count();
+        $shortlistedCount = Application::where('status', 'shortlisted')->count();
+        $pendingCount = Application::where('status', 'pending')->count();
+        
+        // Calculate success rate (hired / total * 100)
+        $successRate = $totalApplications > 0 ? round(($hiredCount / $totalApplications) * 100, 1) : 0;
+        
+        // Calculate revenue from hired applications (estimated at $500 per hire)
+        $totalRevenue = $hiredCount * 500;
+        
+        // Get monthly applications data for the last 12 months
+        $monthlyData = $this->getMonthlyApplicationsData();
+        
         return [
             'total_jobs' => Job::count(),
-            'total_applications' => Application::count(),
+            'total_applications' => $totalApplications,
             'total_users' => User::whereNotIn('id', [Auth::id()])->count(),
             'active_jobs' => Job::where('status', 'active')->count(),
-            'pending_applications' => Application::where('status', 'pending')->count(),
-            'shortlisted_applications' => Application::where('status', 'shortlisted')->count(),
-            'rejected_applications' => Application::where('status', 'rejected')->count(),
-            'hired_count' => Application::where('status', 'hired')->count(),
+            'pending_applications' => $pendingCount,
+            'shortlisted_applications' => $shortlistedCount,
+            'rejected_applications' => $rejectedCount,
+            'hired_count' => $hiredCount,
+            'success_rate' => $successRate,
+            'total_revenue' => $totalRevenue,
+            'monthly_applications' => $monthlyData,
         ];
     }
 
@@ -130,11 +148,104 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function jobs()
+    public function jobs(Request $request)
     {
+        $search = $request->get('search', '');
+        $status = $request->get('status', '');
+        $type = $request->get('type', '');
+
+        $jobsQuery = Job::query();
+
+        // Search filter
+        if ($search) {
+            $jobsQuery->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%");
+            });
+        }
+
+        // Status filter
+        if ($status) {
+            $jobsQuery->where('status', $status);
+        }
+
+        // Type filter
+        if ($type) {
+            $jobsQuery->where('type', $type);
+        }
+
+        $jobs = $jobsQuery->latest()->get()->map(function($job) {
+            return [
+                'id' => $job->id,
+                'title' => $job->title,
+                'company_name' => $job->company_name,
+                'location' => $job->location,
+                'salary' => $job->salary,
+                'type' => $job->type,
+                'status' => $job->status,
+                'applications_count' => Application::where('job_id', $job->id)->count(),
+                'hired_count' => Application::where('job_id', $job->id)->where('status', 'hired')->count(),
+                'shortlisted_count' => Application::where('job_id', $job->id)->where('status', 'shortlisted')->count(),
+                'created_at' => $job->created_at->format('d M Y'),
+                'created_at_raw' => $job->created_at,
+            ];
+        });
+
         return Inertia::render('Admin/Jobs', [
-            'analytics' => $this->getAnalyticsData()
+            'analytics' => $this->getAnalyticsData(),
+            'jobs' => $jobs,
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+                'type' => $type,
+            ]
         ]);
+    }
+
+    public function storeJob(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'company_name' => 'required|string|max:255',
+            'location' => 'required|string|max:255',
+            'salary' => 'required|string',
+            'description' => 'required|string',
+            'type' => 'required|in:Full-time,Part-time,Contract,Freelance',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        Job::create($validated);
+
+        return back()->with('message', 'Job berhasil ditambahkan!');
+    }
+
+    public function updateJob(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'company_name' => 'required|string|max:255',
+            'location' => 'required|string|max:255',
+            'salary' => 'required|string',
+            'description' => 'required|string',
+            'type' => 'required|in:Full-time,Part-time,Contract,Freelance',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        Job::findOrFail($id)->update($validated);
+
+        return back()->with('message', 'Job berhasil diperbarui!');
+    }
+
+    public function deleteJob($id)
+    {
+        $job = Job::findOrFail($id);
+        
+        // Hapus semua applications yang terkait
+        Application::where('job_id', $id)->delete();
+        
+        $job->delete();
+
+        return back()->with('message', 'Job berhasil dihapus!');
     }
 
     public function settings()
@@ -142,6 +253,29 @@ class DashboardController extends Controller
         return Inertia::render('Admin/Settings', [
             'analytics' => $this->getAnalyticsData()
         ]);
+    }
+
+    /**
+     * Get monthly applications data for the last 12 months
+     */
+    private function getMonthlyApplicationsData()
+    {
+        $monthlyData = [];
+        $categories = [];
+        
+        for ($i = 11; $i >= 0; $i--) {
+            $startDate = Carbon::now()->subMonths($i)->startOfMonth();
+            $endDate = Carbon::now()->subMonths($i)->endOfMonth();
+            
+            $count = Application::whereBetween('created_at', [$startDate, $endDate])->count();
+            $monthlyData[] = $count;
+            $categories[] = $startDate->format('M');
+        }
+        
+        return [
+            'data' => $monthlyData,
+            'categories' => $categories,
+        ];
     }
 
     /**

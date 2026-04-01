@@ -211,9 +211,10 @@ onUnmounted(() => {
                 
                 <!-- Animated bars -->
                 <div class="h-56 flex items-end gap-3 mb-8 border-b border-white/10 pb-4 px-2">
-                    <div v-for="(n, idx) in 12" :key="n" 
+                    <div v-for="(monthValue, idx) in props.analytics.monthly_applications.data" :key="idx" 
                         class="flex-grow bg-gradient-to-t from-cyan-500/60 via-cyan-500/30 to-transparent border border-cyan-400/40 rounded-t-2xl transition-all duration-1000 hover:from-cyan-400/80 hover:via-cyan-400/50 cursor-pointer shadow-[0_-12px_40px_rgba(6,182,212,0.25)] hover:shadow-[0_-16px_60px_rgba(6,182,212,0.4)]"
-                        :style="{height: Math.floor(Math.random() * 60 + 30) + '%'}"
+                        :style="{height: (Math.max(...props.analytics.monthly_applications.data) > 0 ? (monthValue / Math.max(...props.analytics.monthly_applications.data) * 100) : 0) + '%'}"
+                        :title="`${props.analytics.monthly_applications.categories[idx]}: ${monthValue} aplikasi`"
                         @mouseenter="$event.target.style.transform = 'scaleY(1.1)'"
                         @mouseleave="$event.target.style.transform = 'scaleY(1)'">
                     </div>
@@ -222,11 +223,11 @@ onUnmounted(() => {
                 <!-- Stats row -->
                 <div class="grid grid-cols-3 gap-8">
                     <div>
-                        <p class="text-4xl font-black text-white tracking-tighter">$14.5k</p>
+                        <p class="text-4xl font-black text-white tracking-tighter">${{ (props.analytics.total_revenue / 1000).toFixed(1) }}k</p>
                         <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-3">Revenue</p>
                     </div>
                     <div>
-                        <p class="text-4xl font-black text-white tracking-tighter">92%</p>
+                        <p class="text-4xl font-black text-white tracking-tighter">{{ props.analytics.success_rate }}%</p>
                         <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-3">Success Rate</p>
                     </div>
                     <div>
@@ -258,10 +259,10 @@ onUnmounted(() => {
                                 <span class="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style="animation-delay: 0.5s;"></span>
                                 Shortlisted
                             </span>
-                            <span class="text-blue-400 font-bold">50%</span>
+                            <span class="text-blue-400 font-bold">{{ Math.round((props.analytics.shortlisted_applications / (props.analytics.total_applications || 1)) * 100) || 0 }}%</span>
                         </div>
                         <div class="h-2 w-full bg-white/5 rounded-full p-[1px] overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.8)]" style="width: 50%"></div>
+                            <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.8)]" :style="{width: Math.round((props.analytics.shortlisted_applications / (props.analytics.total_applications || 1)) * 100) + '%' || '0%'}"></div>
                         </div>
                     </div>
                     <div>
