@@ -96,6 +96,10 @@ const submitForm = () => {
                 showEditModal.value = false;
                 form.reset();
                 selectedJob.value = null;
+                window.location.reload();
+            },
+            onError: (errors) => {
+                console.error('Update error:', errors);
             }
         });
     } else {
@@ -103,6 +107,10 @@ const submitForm = () => {
             onSuccess: () => {
                 showCreateModal.value = false;
                 form.reset();
+                window.location.reload();
+            },
+            onError: (errors) => {
+                console.error('Create error:', errors);
             }
         });
     }
@@ -114,6 +122,10 @@ const confirmDelete = () => {
             onSuccess: () => {
                 showDeleteModal.value = false;
                 selectedJob.value = null;
+                window.location.reload();
+            },
+            onError: (errors) => {
+                console.error('Delete error:', errors);
             }
         });
     }
@@ -124,6 +136,10 @@ const toggleStatus = (job) => {
     router.patch(route('admin.jobs.update', job.id), { 
         ...job,
         status: newStatus 
+    }, {
+        onError: (errors) => {
+            console.error('Status toggle error:', errors);
+        }
     });
 };
 
@@ -155,7 +171,7 @@ const resetFilters = () => {
                 <p class="text-xs text-gray-500">Add a new job listing to the platform</p>
             </button>
 
-            <button class="bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 hover:border-blue-500/60 rounded-2xl p-6 text-left transition-all hover:shadow-lg hover:shadow-blue-500/20">
+            <button @click="statusFilter = 'active'; applyFilters()" class="bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 hover:border-blue-500/60 rounded-2xl p-6 text-left transition-all hover:shadow-lg hover:shadow-blue-500/20">
                 <p class="text-3xl mb-2">📋</p>
                 <p class="font-bold text-white mb-1">Active Listings</p>
                 <p class="text-lg font-black text-blue-400">{{ analytics.active_jobs }}</p>
