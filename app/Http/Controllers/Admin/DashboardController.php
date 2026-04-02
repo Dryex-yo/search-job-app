@@ -43,12 +43,20 @@ class DashboardController extends Controller
                 return [
                     'id' => $app->id,
                     'name' => $app->user->name ?? 'Unknown User',
-                    'role' => $app->job->title ?? 'Unknown Role', 
-                    'status' => ucfirst($app->status), 
+                    'email' => $app->user->email ?? 'N/A',
+                    'role' => $app->job->title ?? 'Unknown Role',
+                    'job' => [
+                        'title' => $app->job->title ?? 'Unknown Role'
+                    ],
+                    'status' => $app->status, 
                     'date' => $app->created_at->format('d M Y'),
+                    'created_at' => $app->created_at,
                     'avatar' => strtoupper(substr($app->user->name ?? '??', 0, 2)),
                     'resume_path' => $app->resume_path,
                     'cover_letter' => $app->cover_letter ?? null,
+                    'ai_match_score' => $app->ai_match_score,
+                    'ai_analysis_status' => $app->ai_analysis_status,
+                    'ai_analysis_details' => $app->ai_analysis_details,
                 ];
             });
 

@@ -6,6 +6,7 @@ use App\Actions\Jobs\ListAvailableJobsAction;
 use App\Actions\Jobs\GetJobDetailsAction;
 use App\Actions\Applications\SubmitApplicationAction;
 use App\Models\Job;
+use App\Models\Application;
 use App\Traits\CalculatesProfileCompletion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -75,5 +76,27 @@ class JobController extends Controller
         $submitAction->execute($request->all());
 
         return back()->with('message', 'Lamaran kamu berhasil dikirim!');
+    }
+
+    public function trackApplication(int $id)
+    {
+        $application = Application::with(['user', 'job'])
+            ->findOrFail($id);
+
+        return Inertia::render('Applications/Track', [
+            'application' => [
+                'id' => $application->id,
+                'status' => $application->status,
+                'ai_match_score' => $application->ai_match_score,
+                'ai_analysis_status' => $application->ai_analysis_status,
+                'ai_analysis_details' => $application->ai_analysis_details,
+                'ai_analyzed_at' => $application->ai_analyzed_at,
+                'job_title' => $application->job->title,
+                'company_name' => $application->job->company_name,
+                'location' => $application->job->location,
+                'created_at' => $application->created_at,
+                'updated_at' => $application->updated_at,
+            ]
+        ]);
     }
 }

@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Cache\RateLimiting\Limit;
 
-class RateLimitRequests
+class RateLimitMiddleware
 {
     /**
      * Handle an incoming request.

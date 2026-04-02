@@ -122,7 +122,7 @@ const closeCVPreview = () => {
 
 <template>
     <Head title="Dryex - Temukan Karir Impianmu" />
-
+    
     <UserLayout>
         <div class="min-h-screen bg-slate-50 dark:bg-[#0b0f1a] text-slate-900 dark:text-white font-sans relative overflow-hidden transition-colors duration-300">
             <!-- Responsive background gradients -->
@@ -155,7 +155,7 @@ const closeCVPreview = () => {
                     </div>
                 </div>
             </header>
-
+            
             <!-- Filter Section -->
             <div class="mb-6 sm:mb-8 bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl md:rounded-[2rem] p-4 sm:p-6 shadow-sm dark:shadow-none transition-colors duration-300">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4">

@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\RegisteredRecruiterController;
 // --- Public Routes ---
 Route::get('/', [JobController::class, 'index'])->name('jobs.index');
 Route::get('/jobs/{id}', [JobController::class, 'show'])->name('jobs.show');
+Route::get('/applications/{id}', [JobController::class, 'trackApplication'])->name('applications.track');
 
 // --- User Auth Routes ---
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');

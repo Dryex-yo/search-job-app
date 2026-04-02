@@ -20,7 +20,11 @@ class Application extends Model
         'status',
         'notes',
         'reviewed_at',
-        'admin_notes'
+        'admin_notes',
+        'ai_match_score',
+        'ai_analysis_status',
+        'ai_analysis_details',
+        'ai_analyzed_at'
     ];
 
     /**

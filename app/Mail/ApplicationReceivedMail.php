@@ -27,6 +27,7 @@ class ApplicationReceivedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
+            to: $this->application->user->email,
             subject: 'Lamaran Anda Telah Diterima - ' . $this->application->job->title,
         );
     }
@@ -43,7 +44,7 @@ class ApplicationReceivedMail extends Mailable implements ShouldQueue
                 'jobTitle' => $this->application->job->title,
                 'companyName' => $this->application->job->company_name,
                 'applicationDate' => $this->application->created_at->format('d M Y'),
-                'trackingUrl' => route('applications.track', ['application' => $this->application->id]),
+                'trackingUrl' => route('applications.track', ['id' => $this->application->id]),
             ],
         );
     }

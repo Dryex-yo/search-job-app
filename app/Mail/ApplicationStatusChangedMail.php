@@ -30,6 +30,7 @@ class ApplicationStatusChangedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
+            to: $this->application->user->email,
             subject: 'Update Status Lamaran Anda - ' . $this->statusLabel,
         );
     }
@@ -47,7 +48,7 @@ class ApplicationStatusChangedMail extends Mailable implements ShouldQueue
                 'companyName' => $this->application->job->company_name,
                 'status' => $this->application->status,
                 'statusLabel' => $this->statusLabel,
-                'trackingUrl' => route('applications.track', ['application' => $this->application->id]),
+                'trackingUrl' => route('applications.track', ['id' => $this->application->id]),
             ],
         );
     }

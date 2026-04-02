@@ -6,6 +6,7 @@ use App\Events\ApplicationStatusChanged;
 use App\Events\ApplicationSubmitted;
 use App\Listeners\SendApplicationReceivedEmail;
 use App\Listeners\SendApplicationStatusChangedEmail;
+use App\Listeners\AnalyzeApplicationOnSubmit;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -18,6 +19,7 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         ApplicationSubmitted::class => [
             SendApplicationReceivedEmail::class,
+            AnalyzeApplicationOnSubmit::class,
         ],
         ApplicationStatusChanged::class => [
             SendApplicationStatusChangedEmail::class,
