@@ -18,17 +18,31 @@ const props = defineProps({
 const showCVPreview = ref(false);
 const showNotes = ref(false);
 const notes = ref(props.application?.notes || '');
+const coverLetter = ref(props.application?.cover_letter || ''); // Add reactive cover_letter
 const statusForm = ref({
     status: props.application?.status || 'pending',
     isSaving: false,
 });
 const isEditingNotes = ref(false);
 
-// Initialize notification
-const { success: showSuccess, error: showError, warning: showWarning } = useNotification();
+// Debug: Log received application data
+console.log('ApplicationDetail - Received props:', {
+    id: props.application?.id,
+    cover_letter: props.application?.cover_letter,
+    cover_letter_length: (props.application?.cover_letter || '').length,
+    notes: props.application?.notes,
+});
 
 // Computed properties
 const statusOptions = ['pending', 'shortlisted', 'interview', 'rejected', 'hired'];
+
+const hasCoverLetter = computed(() => {
+    return props.application?.cover_letter && props.application.cover_letter.trim().length > 0;
+});
+
+const displayCoverLetter = computed(() => {
+    return props.application?.cover_letter?.trim() || 'Tidak ada surat lamaran';
+});
 
 const getStatusClass = (status) => {
     const s = status?.toLowerCase();
@@ -224,7 +238,9 @@ const formatDate = (date) => {
                             <span>💬</span> Surat Lamaran
                         </h2>
                         <div class="bg-white/[0.003] border border-white/10 rounded-lg p-4 max-h-48 overflow-y-auto">
-                            <p class="text-sm text-gray-300 whitespace-pre-wrap">{{ application.cover_letter || 'Tidak ada surat lamaran' }}</p>
+                            <p :class="['text-sm whitespace-pre-wrap', hasCoverLetter ? 'text-gray-300' : 'text-gray-500 italic']">
+                                {{ displayCoverLetter }}
+                            </p>
                         </div>
                     </div>
                 </div>

@@ -144,7 +144,7 @@ const exportToExcel = () => {
                                 </button>
                                 <select @change="updateStatus(applicant.id, $event.target.value)" 
                                     :value="applicant.status"
-                                    class="px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg text-xs font-bold text-white cursor-pointer hover:bg-white/20 transition-all">
+                                    class="px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg text-xs font-bold text-black cursor-pointer hover:bg-white/20 transition-all">
                                     <option value="pending">Pending</option>
                                     <option value="interview">Interview</option>
                                     <option value="shortlisted">Shortlisted</option>
@@ -163,9 +163,9 @@ const exportToExcel = () => {
         </div>
 
         <CVPreviewModal 
-            v-if="showCVPreview"
+            :show="showCVPreview"
             :cv-path="selectedApplicantCV"
-            :applicant-name="selectedApplicantName"
+            :candidate-name="selectedApplicantName"
             @close="closeCVPreview"
         />
 

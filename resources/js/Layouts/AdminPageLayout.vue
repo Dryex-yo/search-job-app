@@ -2,6 +2,8 @@
 import { computed, ref } from 'vue';
 import { usePage, Link } from '@inertiajs/vue3';
 import ProfileDropdown from '@/Components/ProfileDropdown.vue';
+import GalaxyBackground from '@/Components/GalaxyBackground.vue';
+import DarkModeToggle from '@/Components/DarkModeToggle.vue';
 
 const page = usePage();
 const props = defineProps({
@@ -28,56 +30,74 @@ const menus = [
 </script>
 
 <template>
-    <div class="fixed inset-0 bg-[#080B14] flex items-center justify-center p-4 md:p-8 font-sans overflow-hidden text-white selection:bg-cyan-500/30">
+    <div class="overflow-x-hidden relative">
+        <!-- Galaxy Background -->
+        <GalaxyBackground />
         
-        <div class="absolute inset-0 opacity-[0.03] pointer-events-none grain-bg"></div>
-
-        <div class="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-cyan-500/10 blur-[130px] rounded-full animate-pulse-slow"></div>
-        <div class="absolute bottom-[-10%] right-[-5%] w-[700px] h-[700px] bg-blue-600/10 blur-[150px] rounded-full animate-pulse-slow delay-700"></div>
-
-        <div class="w-full max-w-[1440px] h-full max-h-[850px] 
-                    bg-white/[0.005] backdrop-blur-[60px] 
-                    border border-white/20 
-                    rounded-[3.5rem] 
-                    shadow-[0_40px_100px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(255,255,255,0.02)] 
-                    flex overflow-hidden relative z-10 
-                    glowing-border">
+        <!-- Main Container - Fully Responsive to dark mode -->
+        <div class="min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center p-4 md:p-8 font-sans overflow-hidden text-gray-900 dark:text-white selection:bg-cyan-500/30 transition-colors duration-300">
             
-            <aside class="w-80 border-r border-white/5 p-12 flex flex-col bg-white/[0.002] backdrop-blur-3xl hidden md:flex">
-                <div class="mb-16">
-                    <h1 class="text-3xl font-black text-cyan-400 italic tracking-tighter uppercase">DRYEX<span class="text-white">.</span></h1>
-                </div>
+            <div class="absolute inset-0 opacity-[0.03] pointer-events-none grain-bg z-10"></div>
 
-                <nav class="flex-grow space-y-3">
-                    <Link v-for="menu in menus" :key="menu.name"
-                        :href="route(menu.route)"
-                        :class="[currentRoute === menu.route ? 'bg-white/10 text-white shadow-inner border-white/10' : 'text-gray-500 hover:text-gray-300 border-transparent']"
-                        class="w-full flex items-center gap-4 px-6 py-4 rounded-2xl border transition-all duration-500 font-bold text-xs uppercase tracking-widest group"
-                    >
-                        <span class="opacity-70 group-hover:opacity-100">{{ menu.icon }}</span>
-                        {{ menu.name }}
-                    </Link>
-                </nav>
+            <div class="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-cyan-500/10 blur-[130px] rounded-full animate-pulse-slow z-10"></div>
+            <div class="absolute bottom-[-10%] right-[-5%] w-[700px] h-[700px] bg-blue-600/10 blur-[150px] rounded-full animate-pulse-slow delay-700 z-10"></div>
 
-                <div class="border-t border-white/10 pt-6 mt-8">
-                    <p class="text-[10px] text-gray-600 uppercase tracking-widest font-bold italic">Use header menu for logout →</p>
-                </div>
-            </aside>
-
-            <main class="flex-grow flex flex-col overflow-hidden bg-gradient-to-br from-white/[0.005] to-transparent">
-                <header class="p-12 pb-6 flex justify-between items-center border-b border-white/10">
-                    <div>
-                        <h2 class="text-3xl font-medium tracking-tight text-white/90">{{ title }}</h2>
-                        <p v-if="subtitle" class="text-gray-600 text-sm mt-1 font-medium italic">{{ subtitle }}</p>
+            <!-- Modal Container - Responsive -->
+            <div class="w-full max-w-[1440px] h-full max-h-[850px] 
+                        bg-white dark:bg-slate-800 backdrop-blur-[60px] 
+                        border border-gray-200 dark:border-slate-700 
+                        rounded-[3.5rem] 
+                        shadow-[0_40px_100px_rgba(0,0,0,0.1)] 
+                        dark:shadow-[0_40px_100px_rgba(0,0,0,0.5)]
+                        flex overflow-hidden relative z-20 
+                        transition-all duration-300">
+                
+                <!-- Sidebar -->
+                <aside class="w-80 border-r border-gray-200 dark:border-slate-700 p-12 flex flex-col bg-gray-50 dark:bg-slate-800 backdrop-blur-3xl hidden md:flex transition-colors duration-300">
+                    <div class="mb-16">
+                        <h1 class="text-3xl font-black text-cyan-400 italic tracking-tighter uppercase">DRYEX<span class="text-gray-900 dark:text-white transition-colors duration-300">.</span></h1>
                     </div>
 
-                    <ProfileDropdown :user="page.props.auth.user" />
-                </header>
+                    <nav class="flex-grow space-y-3">
+                        <Link v-for="menu in menus" :key="menu.name"
+                            :href="route(menu.route)"
+                            :class="[currentRoute === menu.route ? 'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 border-cyan-400 dark:border-cyan-500 shadow-sm dark:shadow-cyan-500/10' : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 border-transparent']"
+                            class="w-full flex items-center gap-4 px-6 py-4 rounded-2xl border transition-all duration-300 font-bold text-xs uppercase tracking-widest group"
+                        >
+                            <span class="opacity-70 group-hover:opacity-100">{{ menu.icon }}</span>
+                            {{ menu.name }}
+                        </Link>
+                    </nav>
 
-                <div class="flex-grow p-12 pt-6 overflow-y-auto custom-scrollbar">
-                    <slot />
-                </div>
-            </main>
+                    <div class="border-t border-gray-300 dark:border-slate-700 pt-6 mt-8 transition-colors duration-300">
+                        <p class="text-[10px] text-gray-600 dark:text-slate-400 uppercase tracking-widest font-bold italic">Use header menu for logout →</p>
+                    </div>
+                </aside>
+
+                <!-- Main Content -->
+                <main class="flex-grow flex flex-col overflow-hidden bg-white dark:bg-slate-900 transition-colors duration-300">
+                    <!-- Header -->
+                    <header class="p-12 pb-6 flex justify-between items-center border-b border-gray-200 dark:border-slate-700 transition-colors duration-300">
+                        <div>
+                            <h2 class="text-3xl font-semibold tracking-tight text-gray-900 dark:text-white transition-colors duration-300">{{ title }}</h2>
+                            <p v-if="subtitle" class="text-gray-600 dark:text-slate-400 text-sm mt-1 font-medium italic transition-colors duration-300">{{ subtitle }}</p>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <!-- Dark Mode Toggle -->
+                            <DarkModeToggle />
+
+                            <!-- Profile Dropdown -->
+                            <ProfileDropdown :user="page.props.auth.user" />
+                        </div>
+                    </header>
+
+                    <!-- Content Area -->
+                    <div class="flex-grow p-12 pt-6 overflow-y-auto custom-scrollbar">
+                        <slot />
+                    </div>
+                </main>
+            </div>
         </div>
     </div>
 </template>
@@ -129,5 +149,46 @@ const menus = [
     opacity: 0.05;
     pointer-events: none;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Custom styling for DarkModeToggle in AdminPageLayout - Fully Reactive */
+/* Light mode styling */
+:deep(.theme-toggle) {
+    background-color: #f0f4f8 !important;
+    border-color: #e2e8f0 !important;
+    color: #1a202c !important;
+}
+
+:deep(.theme-toggle:hover) {
+    background-color: #e8ecf1 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 102, 255, 0.1) !important;
+}
+
+:deep(.theme-toggle:focus) {
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1) !important;
+}
+
+:deep(.theme-toggle svg) {
+    color: currentColor !important;
+}
+
+/* Dark mode styling */
+:deep(.dark .theme-toggle) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+:deep(.dark .theme-toggle:hover) {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 4px 6px -1px rgba(6, 182, 212, 0.25) !important;
+}
+
+:deep(.dark .theme-toggle:focus) {
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.25) !important;
+}
+
+:deep(.dark .theme-toggle svg) {
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 </style>

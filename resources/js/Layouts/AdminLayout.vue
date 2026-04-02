@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import DarkModeToggle from '@/Components/DarkModeToggle.vue';
 import AdminUserDropdown from '@/Components/AdminUserDropdown.vue';
+import GalaxyBackground from '@/Components/GalaxyBackground.vue';
 
 const showingSidebar = ref(false);
 const page = usePage();
@@ -23,16 +24,18 @@ const menus = [
 </script>
 
 <template>
-    <div class="min-h-screen w-full bg-white dark:bg-[#080B14] flex flex-col md:flex-row font-sans text-gray-900 dark:text-white transition-colors duration-300 selection:bg-cyan-500/30 overflow-x-hidden">
+    <div class="min-h-screen w-full bg-white dark:bg-[#080B14] flex flex-col md:flex-row font-sans text-gray-900 dark:text-white transition-colors duration-300 selection:bg-cyan-500/30 overflow-x-hidden relative">
+        <!-- Galaxy Background -->
+        <GalaxyBackground />
         
-        <div class="absolute inset-0 opacity-[0.03] pointer-events-none grain-bg"></div>
+        <div class="absolute inset-0 opacity-[0.03] pointer-events-none grain-bg z-10"></div>
 
         <!-- Background gradients -->
-        <div class="absolute top-[-10%] left-[-5%] w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-cyan-500/10 blur-[130px] rounded-full animate-pulse-slow"></div>
-        <div class="absolute bottom-[-10%] right-[-5%] w-[300px] sm:w-[700px] h-[300px] sm:h-[700px] bg-blue-600/10 blur-[150px] rounded-full animate-pulse-slow delay-700"></div>
+        <div class="absolute top-[-10%] left-[-5%] w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-cyan-500/10 blur-[130px] rounded-full animate-pulse-slow z-10"></div>
+        <div class="absolute bottom-[-10%] right-[-5%] w-[300px] sm:w-[700px] h-[300px] sm:h-[700px] bg-blue-600/10 blur-[150px] rounded-full animate-pulse-slow delay-700 z-10"></div>
 
         <!-- Mobile Header -->
-        <div class="md:hidden sticky top-0 z-50 px-4 py-3 flex justify-between items-center border-b border-gray-200 dark:border-white/5 bg-white/50 dark:bg-white/[0.002] backdrop-blur-xl">
+        <div class="md:hidden sticky top-0 z-50 px-4 py-3 flex justify-between items-center border-b border-gray-200 dark:border-white/5 bg-white/50 dark:bg-white/[0.002] backdrop-blur-xl relative">
             <h1 class="text-lg sm:text-2xl font-black text-cyan-400 italic tracking-tighter uppercase">DRYEX<span class="text-gray-900 dark:text-white">.</span></h1>
             <button
                 @click="showingSidebar = !showingSidebar"
@@ -45,7 +48,7 @@ const menus = [
         </div>
 
         <!-- Main container with proper scrolling -->
-        <div class="w-full flex flex-col md:flex-row overflow-hidden relative">
+        <div class="w-full flex flex-col md:flex-row overflow-hidden relative z-10">
             <!-- Sidebar -->
             <aside 
                 :class="{
@@ -97,7 +100,7 @@ const menus = [
             <!-- Main Content Area -->
             <div class="flex-1 flex flex-col overflow-hidden w-full">
                 <!-- Header -->
-                <header class="border-b border-gray-200 dark:border-white/5 px-4 sm:px-6 md:px-8 py-4 sm:py-6 flex justify-between items-center bg-white/[0.5] dark:bg-white/[0.002] backdrop-blur-2xl transition-colors duration-300">
+                <header class="border-b border-gray-200 dark:border-white/5 px-4 sm:px-6 md:px-8 py-4 sm:py-6 flex justify-between items-center bg-white/[0.5] dark:bg-white/[0.002] backdrop-blur-2xl transition-colors duration-300 relative z-10">
                     <div>
                         <h1 class="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                             <slot name="title">Dashboard</slot>
@@ -139,5 +142,42 @@ const menus = [
 
 .delay-700 {
     animation-delay: 700ms;
+}
+
+/* Adaptive styling for DarkModeToggle in AdminLayout - matches Jobs/UserLayout behavior */
+/* Light mode: Use default light gray styling */
+:deep(.theme-toggle) {
+    background-color: #f0f4f8 !important;
+    border-color: #e2e8f0 !important;
+    color: #1a202c !important;
+}
+
+:deep(.theme-toggle:hover) {
+    background-color: #e8ecf1 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 102, 255, 0.1) !important;
+}
+
+:deep(.theme-toggle:focus) {
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1) !important;
+}
+
+/* Dark mode: Use transparent white for visibility on very dark background */
+:deep(.dark .theme-toggle) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+:deep(.dark .theme-toggle:hover) {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 4px 6px -1px rgba(6, 182, 212, 0.2) !important;
+}
+
+:deep(.dark .theme-toggle:focus) {
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2) !important;
+}
+
+:deep(.dark .theme-toggle svg) {
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 </style>

@@ -6,15 +6,19 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+import GalaxyBackground from '@/Components/GalaxyBackground.vue';
 import { Link } from '@inertiajs/vue3';
 
 const showingNavigationDropdown = ref(false);
 </script>
 
 <template>
-    <div class="overflow-x-hidden">
+    <div class="overflow-x-hidden relative">
+        <!-- Galaxy Background -->
+        <GalaxyBackground />
+        
         <!-- Main Container with gradient background -->
-        <div class="min-h-screen bg-gradient-light dark:bg-deep-blue transition-all duration-500">
+        <div class="min-h-screen bg-gradient-light dark:bg-deep-blue transition-all duration-500 relative z-10">
             <!-- Navigation Bar with new styling -->
             <nav
                 class="nav-light border-b sticky top-0 z-40"

@@ -39,6 +39,7 @@ class DashboardController extends Controller
                     'date' => $app->created_at->format('d M Y'),
                     'avatar' => strtoupper(substr($app->user->name ?? '??', 0, 2)),
                     'resume_path' => $app->resume_path,
+                    'cover_letter' => $app->cover_letter ?? null,
                 ];
             });
 

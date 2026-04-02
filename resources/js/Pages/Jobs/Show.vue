@@ -44,6 +44,18 @@ const applyForm = useForm({
     cover_letter: '',
 });
 
+// Watch for changes in form data to ensure cover_letter is always available
+const ensureFormIntegrity = () => {
+    // This ensures that if somehow the cover_letter got lost, we log it
+    if (process.env.NODE_ENV === 'development') {
+        console.log('Form state:', {
+            job_id: applyForm.job_id,
+            cover_letter_length: applyForm.cover_letter.length,
+            cover_letter_preview: applyForm.cover_letter.substring(0, 50),
+        });
+    }
+};
+
 // Handle CV file selection
 const handleCVSelect = (event) => {
     const file = event.target.files?.[0];
@@ -114,17 +126,23 @@ const submitApplication = () => {
     }
 
     // Validate cover letter is not empty and meets minimum length
-    if (!applyForm.cover_letter.trim()) {
+    const coverLetterValue = applyForm.cover_letter.trim();
+    if (!coverLetterValue) {
         showError('Surat Lamaran Diperlukan', 'Tulis surat lamaran Anda untuk melamar posisi ini.');
         return;
     }
 
-    if (applyForm.cover_letter.trim().length < 10) {
+    if (coverLetterValue.length < 10) {
         showError('Surat Lamaran Terlalu Pendek', 'Surat lamaran harus minimal 10 karakter.');
         return;
     }
 
     isSubmitting.value = true;
+    
+    // Ensure job_id and cover_letter are properly set
+    // This prevents any potential issue with form data mutation or state loss
+    applyForm.job_id = props.job.id;
+    applyForm.cover_letter = coverLetterValue;
     
     // Use uploaded file if available, otherwise use profile CV
     if (cvFile.value) {

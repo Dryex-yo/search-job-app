@@ -8,6 +8,7 @@ import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import NotificationContainer from '@/Components/NotificationContainer.vue';
 import DarkModeToggle from '@/Components/DarkModeToggle.vue';
+import GalaxyBackground from '@/Components/GalaxyBackground.vue';
 
 const showingNavigationDropdown = ref(false);
 const page = usePage();
@@ -22,11 +23,14 @@ const handleLogout = () => {
 </script>
 
 <template>
-    <div class="overflow-x-hidden">
+    <div class="overflow-x-hidden relative">
+        <!-- Galaxy Background -->
+        <GalaxyBackground />
+        
         <!-- Notification Container -->
         <NotificationContainer />
 
-        <div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors duration-300">
+        <div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors duration-300 relative z-10">
             <!-- Navigation Bar -->
             <nav class="border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 dark:backdrop-blur-md sticky top-0 z-50 transition-colors duration-300">
                 <div class="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">

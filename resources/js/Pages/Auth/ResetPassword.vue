@@ -1,5 +1,7 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import GalaxyBackground from '@/Components/GalaxyBackground.vue';
+import DarkModeToggle from '@/Components/DarkModeToggle.vue';
 
 const props = defineProps({
     email: {
@@ -30,15 +32,22 @@ const submit = () => {
     <Head title="Reset Password" />
 
     <div class="min-h-screen flex items-center justify-center bg-[#0b0f1a] relative overflow-hidden font-sans">
+        <!-- Galaxy Background -->
+        <GalaxyBackground />
         
-        <div class="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-cyan-500/10 blur-[150px] rounded-full"></div>
-        <div class="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-blue-600/10 blur-[150px] rounded-full"></div>
+        <div class="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-cyan-500/10 blur-[150px] rounded-full z-10"></div>
+        <div class="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-blue-600/10 blur-[150px] rounded-full z-10"></div>
 
-        <div class="w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 p-10 rounded-[2.5rem] shadow-2xl z-10 relative">
+        <div class="w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 p-10 rounded-[2.5rem] shadow-2xl z-20 relative">
             
             <div class="text-center mb-10">
                 <h2 class="text-3xl font-black text-cyan-400 tracking-tighter uppercase">Dryex</h2>
                 <p class="text-gray-400 text-sm mt-2">Reset your password</p>
+            </div>
+
+            <!-- Dark Mode Toggle -->
+            <div class="absolute top-6 right-6">
+                <DarkModeToggle />
             </div>
 
             <form @submit.prevent="submit">

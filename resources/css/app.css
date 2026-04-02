@@ -294,3 +294,49 @@
     @apply from-cyan-500/0 via-cyan-500/5 to-cyan-500/0;
 }
 
+/* Galaxy Background Styling */
+.galaxy-container {
+    @apply will-change-transform;
+}
+
+/* Enhance content readability over galaxy background */
+body {
+    /* Create subtle overlay for better text readability */
+    background-attachment: fixed;
+}
+
+/* Light mode - add subtle overlay to enhance readability */
+body::before {
+    content: '';
+    @apply fixed inset-0 pointer-events-none;
+    background: rgba(255, 255, 255, 0.3);
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.5s ease-smooth;
+}
+
+/* Dark mode - add subtle dark overlay */
+body.dark::before {
+    background: rgba(3, 7, 18, 0.5);
+    opacity: 1;
+}
+
+/* Mobile optimization for Galaxy */
+@media (max-width: 768px) {
+    .galaxy-canvas {
+        filter: brightness(0.95);
+    }
+}
+
+/* Ensure smooth galaxy animation */
+svg {
+    @apply will-change-transform;
+    transform: translate3d(0, 0, 0);
+}
+
+/* Galaxy particles with proper layering */
+.particle {
+    @apply will-change-transform;
+    transform: translate3d(0, 0, 0);
+}
+
