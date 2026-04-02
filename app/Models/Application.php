@@ -6,10 +6,12 @@ use App\Events\ApplicationStatusChanged;
 use App\Events\ApplicationSubmitted;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Application extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'job_id',
@@ -49,6 +51,15 @@ class Application extends Model
                 });
             }
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'admin_notes', 'ai_match_score', 'reviewed_at'])
+            ->logExcept(['created_at'])
+            ->useLogName('application')
+            ->setDescriptionForEvent(fn(string $eventName) => "Application has been {$eventName}");
     }
 
     // Relasi ke User (Pelamar)

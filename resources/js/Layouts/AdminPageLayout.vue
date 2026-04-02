@@ -33,7 +33,9 @@ const menus = computed(() => {
             { name: 'Dashboard', icon: '📊', route: 'admin.dashboard' },
             { name: 'Jobs', icon: '💼', route: 'admin.jobs' },
             { name: 'Applicants', icon: '👥', route: 'admin.applicants' },
+            { name: 'Users', icon: '👤', route: 'admin.users.index' },
             { name: 'Analytics', icon: '📈', route: 'admin.analytics' },
+            { name: 'Audit Logs', icon: '🔐', route: 'admin.audit-logs.index' },
             { name: 'Settings', icon: '⚙️', route: 'admin.settings' },
             { name: 'Register Recruiter', icon: '➕', route: 'admin.recruiters.create' },
         );

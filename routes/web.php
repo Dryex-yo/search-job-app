@@ -8,6 +8,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RecruiterController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\Admin\RegisteredRecruiterController;
+use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\UserManagementController;
 
 // --- Public Routes ---
 Route::get('/', [JobController::class, 'index'])->name('jobs.index');
@@ -37,7 +39,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/jobs/{id}', [AdminDashboard::class, 'updateJob'])->name('jobs.update');
     Route::delete('/jobs/{id}', [AdminDashboard::class, 'deleteJob'])->name('jobs.destroy');
 
+    // User management routes - Admin only
+    Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
+    Route::get('/users/{user}', [UserManagementController::class, 'show'])->name('users.show');
+    Route::patch('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
+    Route::post('/users/{user}/password', [UserManagementController::class, 'updatePassword'])->name('users.update-password');
+
     Route::get('/settings', [AdminDashboard::class, 'settings'])->name('settings');
+
+    // Audit logs routes - Admin only
+    Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+    Route::get('/audit-logs/{activity}', [AuditLogController::class, 'show'])->name('audit-logs.show');
 
     // Recruiter registration routes - Admin only
     Route::get('/recruiters/create', [RegisteredRecruiterController::class, 'create'])->name('recruiters.create');
