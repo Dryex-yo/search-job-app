@@ -169,7 +169,7 @@ onUnmounted(() => {
     <AdminPageLayout title="Dashboard 📊" subtitle="Real-time metrics & insights">
         <!-- Analytics Summary Grid -->
         <div class="mb-12">
-            <h3 class="text-sm font-black text-gray-600 uppercase tracking-[0.3em] mb-8 italic">📊 Summary Analytics</h3>
+            <h3 class="text-sm font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.3em] mb-8 italic">📊 Summary Analytics</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <AnalyticsCounter 
                     icon="💼"
@@ -207,7 +207,7 @@ onUnmounted(() => {
             
             <!-- Performance Chart Card -->
             <div class="col-span-12 lg:col-span-8 bg-white/[0.01] border border-white/10 rounded-[3.5rem] p-12 shadow-inner">
-                <h4 class="text-[10px] font-black text-gray-700 uppercase tracking-[0.5em] mb-12 italic">📈 Performance Metrics</h4>
+                <h4 class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.5em] mb-12 italic">📈 Performance Metrics</h4>
                 
                 <!-- Animated bars -->
                 <div class="h-56 flex items-end gap-3 mb-8 border-b border-white/10 pb-4 px-2">
@@ -224,25 +224,25 @@ onUnmounted(() => {
                 <div class="grid grid-cols-3 gap-8">
                     <div>
                         <p class="text-4xl font-black text-white tracking-tighter">${{ (props.analytics.total_revenue / 1000).toFixed(1) }}k</p>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-3">Revenue</p>
+                        <p class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-widest mt-3">Revenue</p>
                     </div>
                     <div>
                         <p class="text-4xl font-black text-white tracking-tighter">{{ props.analytics.success_rate }}%</p>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-3">Success Rate</p>
+                        <p class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-widest mt-3">Success Rate</p>
                     </div>
                     <div>
                         <p class="text-4xl font-black text-cyan-400 tracking-tighter">{{ props.analytics.active_jobs }}</p>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-3">Active Jobs</p>
+                        <p class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-widest mt-3">Active Jobs</p>
                     </div>
                 </div>
             </div>
 
             <!-- Status Breakdown Card -->
             <div class="col-span-12 lg:col-span-4 bg-white/[0.01] border border-white/10 rounded-[3.5rem] p-12 shadow-inner">
-                <h4 class="text-[10px] font-black text-gray-700 uppercase tracking-[0.4em] text-center mb-12 italic">📊 Application Status</h4>
+                <h4 class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.4em] text-center mb-12 italic">📊 Application Status</h4>
                 <div class="space-y-8">
                     <div>
-                        <div class="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-400 mb-4">
+                        <div class="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-400 mb-4">
                             <span class="flex items-center gap-2">
                                 <span class="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></span>
                                 Active Jobs
@@ -254,7 +254,7 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div>
-                        <div class="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-400 mb-4">
+                        <div class="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-400 mb-4">
                             <span class="flex items-center gap-2">
                                 <span class="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style="animation-delay: 0.5s;"></span>
                                 Shortlisted
@@ -266,7 +266,7 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div>
-                        <div class="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-400 mb-4">
+                        <div class="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-400 mb-4">
                             <span class="flex items-center gap-2">
                                 <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse" style="animation-delay: 1s;"></span>
                                 Hired
@@ -283,10 +283,10 @@ onUnmounted(() => {
 
         <!-- Hired Candidates -->
         <div class="mb-10">
-            <h3 class="text-sm font-black text-gray-600 uppercase tracking-[0.3em] mb-8 italic">✅ Successful Hires</h3>
+            <h3 class="text-sm font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.3em] mb-8 italic">✅ Successful Hires</h3>
             <div class="bg-white/[0.01] border border-white/10 rounded-[3.5rem] p-12 shadow-inner">
                 <p class="text-5xl font-black text-green-400 tracking-tighter">{{ displayMetrics.hired_count }}</p>
-                <p class="text-xs text-gray-500 mt-4 font-medium">Candidates successfully hired from applications</p>
+                <p class="text-xs text-gray-700 dark:text-gray-400 mt-4 font-medium">Candidates successfully hired from applications</p>
             </div>
         </div>
     </AdminPageLayout>

@@ -63,7 +63,7 @@ class JobController extends Controller
         $request->validate([
             'job_id' => 'required|exists:jobs,id',
             'resume' => 'nullable|mimes:pdf|max:2048', // Maksimal 2MB PDF, optional jika ada di profile
-            'cover_letter' => 'nullable|string',
+            'cover_letter' => 'required|string|min:10',
         ]);
 
         $submitAction->execute($request->all());

@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import CVPreviewModal from '@/Components/CVPreviewModal.vue';
+import CoverLetterModal from '@/Components/CoverLetterModal.vue';
 import NotificationContainer from '@/Components/NotificationContainer.vue';
 import AdminPageLayout from '@/Layouts/AdminPageLayout.vue';
 import { useNotification } from '@/Composables/useNotification';
@@ -17,6 +18,11 @@ const props = defineProps({
 const showCVPreview = ref(false);
 const selectedApplicantCV = ref(null);
 const selectedApplicantName = ref('');
+
+// State untuk Cover Letter Modal
+const showCoverLetterModal = ref(false);
+const selectedApplicantCoverLetter = ref('');
+const selectedApplicantNameForLetter = ref('');
 
 // Initialize notification
 const { success: showSuccess, error: showError, info: showInfo } = useNotification();
@@ -60,6 +66,18 @@ const closeCVPreview = () => {
     selectedApplicantName.value = '';
 };
 
+const openCoverLetterModal = (applicant) => {
+    selectedApplicantCoverLetter.value = applicant.cover_letter || 'Tidak ada surat lamaran';
+    selectedApplicantNameForLetter.value = applicant.name;
+    showCoverLetterModal.value = true;
+};
+
+const closeCoverLetterModal = () => {
+    showCoverLetterModal.value = false;
+    selectedApplicantCoverLetter.value = '';
+    selectedApplicantNameForLetter.value = '';
+};
+
 const exportToExcel = () => {
     window.location.href = route('admin.applicants.export.excel');
 };
@@ -82,7 +100,7 @@ const exportToExcel = () => {
         <div class="bg-white/[0.01] border border-white/10 rounded-[3rem] p-10 shadow-inner glass-grain relative overflow-hidden">
             <table class="w-full text-left border-separate border-spacing-y-2">
                 <thead>
-                    <tr class="text-[10px] font-black text-gray-600 uppercase tracking-[0.4em] italic">
+                    <tr class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.4em] italic">
                         <th class="pb-8 px-6">Candidate</th>
                         <th class="pb-8 px-6">Applied Role</th>
                         <th class="pb-8 px-6">Status</th>
@@ -99,7 +117,7 @@ const exportToExcel = () => {
                                 </div>
                                 <div>
                                     <p class="font-bold text-white text-sm">{{ applicant.name }}</p>
-                                    <p class="text-xs text-gray-500">{{ applicant.email }}</p>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400">{{ applicant.email }}</p>
                                 </div>
                             </div>
                         </td>
@@ -112,13 +130,17 @@ const exportToExcel = () => {
                             </span>
                         </td>
                         <td class="py-7 px-6 text-right">
-                            <p class="text-xs text-gray-500">{{ new Date(applicant.created_at).toLocaleDateString() }}</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">{{ new Date(applicant.created_at).toLocaleDateString() }}</p>
                         </td>
                         <td class="py-7 px-6 text-right">
                             <div class="flex gap-2 justify-end">
                                 <button @click="openCVPreview(applicant)"
                                     class="px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 rounded-lg text-xs font-bold text-blue-400 transition-all">
                                     📄 CV
+                                </button>
+                                <button @click="openCoverLetterModal(applicant)"
+                                    class="px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/40 border border-purple-500/50 rounded-lg text-xs font-bold text-purple-400 transition-all">
+                                    💬 Surat
                                 </button>
                                 <select @change="updateStatus(applicant.id, $event.target.value)" 
                                     :value="applicant.status"
@@ -136,7 +158,7 @@ const exportToExcel = () => {
             </table>
 
             <div v-if="applicants.length === 0" class="text-center py-12">
-                <p class="text-gray-500 text-sm">No applicants found</p>
+                <p class="text-gray-600 dark:text-gray-400 text-sm">No applicants found</p>
             </div>
         </div>
 
@@ -145,6 +167,15 @@ const exportToExcel = () => {
             :cv-path="selectedApplicantCV"
             :applicant-name="selectedApplicantName"
             @close="closeCVPreview"
+        />
+
+        <CoverLetterModal
+            v-if="showCoverLetterModal"
+            :show="showCoverLetterModal"
+            :cover-letter="selectedApplicantCoverLetter"
+            :candidate-name="selectedApplicantNameForLetter"
+            title="Lihat Surat Lamaran"
+            @close="closeCoverLetterModal"
         />
     </AdminPageLayout>
 </template>

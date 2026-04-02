@@ -113,8 +113,15 @@ const submitApplication = () => {
         return;
     }
 
+    // Validate cover letter is not empty and meets minimum length
     if (!applyForm.cover_letter.trim()) {
-        showWarning('Surat Lamaran Kosong', 'Sebaiknya Anda menulis surat lamaran untuk meningkatkan peluang.');
+        showError('Surat Lamaran Diperlukan', 'Tulis surat lamaran Anda untuk melamar posisi ini.');
+        return;
+    }
+
+    if (applyForm.cover_letter.trim().length < 10) {
+        showError('Surat Lamaran Terlalu Pendek', 'Surat lamaran harus minimal 10 karakter.');
+        return;
     }
 
     isSubmitting.value = true;
@@ -389,7 +396,7 @@ const formatDate = (date) => {
                                     <div class="space-y-3">
                                         <label class="text-sm font-semibold text-slate-700 dark:text-gray-300 flex items-center gap-1 transition-colors duration-300">
                                             <span>💬</span> Surat Lamaran
-                                            <span class="text-slate-500 dark:text-gray-500 transition-colors duration-300">(Opsional)</span>
+                                            <span class="text-red-500 dark:text-red-400 transition-colors duration-300">*</span>
                                         </label>
                                         <textarea 
                                             v-model="applyForm.cover_letter"

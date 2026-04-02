@@ -194,7 +194,7 @@ const resetFilters = () => {
             <button @click="openCreateModal" class="bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30 hover:border-cyan-500/60 rounded-2xl p-6 text-left transition-all hover:shadow-lg hover:shadow-cyan-500/20">
                 <p class="text-3xl mb-2">➕</p>
                 <p class="font-bold text-white mb-1">Create New Job</p>
-                <p class="text-xs text-gray-500">Add a new job listing to the platform</p>
+                <p class="text-xs text-gray-600 dark:text-gray-400">Add a new job listing to the platform</p>
             </button>
 
             <button @click="statusFilter = 'active'; applyFilters()" class="bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 hover:border-blue-500/60 rounded-2xl p-6 text-left transition-all hover:shadow-lg hover:shadow-blue-500/20">
@@ -260,12 +260,12 @@ const resetFilters = () => {
         <!-- Job Stats Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
             <div class="bg-white/[0.01] border border-white/10 rounded-[3.5rem] p-12 shadow-inner">
-                <h4 class="text-[10px] font-black text-gray-700 uppercase tracking-[0.5em] mb-8 italic">Job Listings Overview</h4>
+                <h4 class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.5em] mb-8 italic">Job Listings Overview</h4>
                 
                 <div class="space-y-8">
                     <div>
                         <div class="flex justify-between items-center mb-3">
-                            <p class="text-sm font-bold text-gray-400">Total Jobs Created</p>
+                            <p class="text-sm font-bold text-gray-700 dark:text-gray-400">Total Jobs Created</p>
                             <p class="text-2xl font-black text-white">{{ analytics.total_jobs }}</p>
                         </div>
                         <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden">
@@ -275,7 +275,7 @@ const resetFilters = () => {
 
                     <div>
                         <div class="flex justify-between items-center mb-3">
-                            <p class="text-sm font-bold text-gray-400">Currently Active</p>
+                            <p class="text-sm font-bold text-gray-700 dark:text-gray-400">Currently Active</p>
                             <p class="text-2xl font-black text-cyan-400">{{ analytics.active_jobs }}</p>
                         </div>
                         <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden">
@@ -285,8 +285,8 @@ const resetFilters = () => {
 
                     <div>
                         <div class="flex justify-between items-center mb-3">
-                            <p class="text-sm font-bold text-gray-400">Closed/Archived</p>
-                            <p class="text-2xl font-black text-gray-500">{{ analytics.total_jobs - analytics.active_jobs }}</p>
+                            <p class="text-sm font-bold text-gray-700 dark:text-gray-400">Closed/Archived</p>
+                            <p class="text-2xl font-black text-gray-600 dark:text-gray-400">{{ analytics.total_jobs - analytics.active_jobs }}</p>
                         </div>
                         <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden">
                             <div class="h-full bg-gradient-to-r from-gray-600 to-gray-500 shadow-[0_0_20px_rgba(107,114,128,0.7)]" :style="{width: Math.round(((analytics.total_jobs - analytics.active_jobs) / analytics.total_jobs) * 100) + '%' || '0%'}"></div>
@@ -296,13 +296,13 @@ const resetFilters = () => {
             </div>
 
             <div class="bg-white/[0.01] border border-white/10 rounded-[3.5rem] p-12 shadow-inner">
-                <h4 class="text-[10px] font-black text-gray-700 uppercase tracking-[0.5em] mb-8 italic">Application Distribution</h4>
+                <h4 class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.5em] mb-8 italic">Application Distribution</h4>
                 
                 <div class="space-y-4">
                     <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
                         <div class="flex items-center gap-3">
                             <span class="text-2xl">⏳</span>
-                            <span class="font-bold text-gray-300">Pending</span>
+                            <span class="font-bold text-gray-600 dark:text-gray-400">Pending</span>
                         </div>
                         <span class="text-xl font-black text-orange-400">{{ analytics.pending_applications }}</span>
                     </div>
@@ -310,7 +310,7 @@ const resetFilters = () => {
                     <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
                         <div class="flex items-center gap-3">
                             <span class="text-2xl">⭐</span>
-                            <span class="font-bold text-gray-300">Shortlisted</span>
+                            <span class="font-bold text-gray-600 dark:text-gray-400">Shortlisted</span>
                         </div>
                         <span class="text-xl font-black text-blue-400">{{ analytics.shortlisted_applications }}</span>
                     </div>
@@ -318,7 +318,7 @@ const resetFilters = () => {
                     <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
                         <div class="flex items-center gap-3">
                             <span class="text-2xl">✅</span>
-                            <span class="font-bold text-gray-300">Hired</span>
+                            <span class="font-bold text-gray-600 dark:text-gray-400">Hired</span>
                         </div>
                         <span class="text-xl font-black text-green-400">{{ analytics.hired_count }}</span>
                     </div>
@@ -326,7 +326,7 @@ const resetFilters = () => {
                     <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
                         <div class="flex items-center gap-3">
                             <span class="text-2xl">❌</span>
-                            <span class="font-bold text-gray-300">Declined</span>
+                            <span class="font-bold text-gray-600 dark:text-gray-400">Declined</span>
                         </div>
                         <span class="text-xl font-black text-red-400">{{ analytics.rejected_applications }}</span>
                     </div>
@@ -336,23 +336,23 @@ const resetFilters = () => {
 
         <!-- Jobs Table Section -->
         <div class="bg-white/[0.01] border border-white/10 rounded-[2.5rem] p-8">
-            <h4 class="text-[10px] font-black text-gray-700 uppercase tracking-[0.5em] mb-8 italic">📊 All Jobs ({{ filteredJobs.length }})</h4>
+            <h4 class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.5em] mb-8 italic">📊 All Jobs ({{ filteredJobs.length }})</h4>
             
             <div v-if="filteredJobs.length === 0" class="text-center py-12">
-                <p class="text-gray-500 text-lg">No jobs found. Create one to get started! 🚀</p>
+                <p class="text-gray-600 dark:text-gray-400 text-lg">No jobs found. Create one to get started! 🚀</p>
             </div>
 
             <div v-else class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
                         <tr class="border-b border-white/10">
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Title</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Location</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Type</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Salary</th>
-                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase">Status</th>
-                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase">Applications</th>
-                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase">Actions</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-400 uppercase">Title</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-400 uppercase">Location</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-400 uppercase">Type</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-400 uppercase">Salary</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-400 uppercase">Status</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-400 uppercase">Applications</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-400 uppercase">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -360,16 +360,16 @@ const resetFilters = () => {
                             <td class="px-6 py-4">
                                 <div>
                                     <p class="font-bold text-white">{{ job.title }}</p>
-                                    <p class="text-xs text-gray-500">{{ job.company_name }}</p>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400">{{ job.company_name }}</p>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-gray-300">📍 {{ job.location }}</td>
+                            <td class="px-6 py-4 text-gray-600 dark:text-gray-400">📍 {{ job.location }}</td>
                             <td class="px-6 py-4">
                                 <span class="px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-xs font-semibold text-blue-300">
                                     {{ job.type }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-gray-300">{{ job.salary }}</td>
+                            <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ job.salary }}</td>
                             <td class="px-6 py-4 text-center">
                                 <button 
                                     @click="toggleStatus(job)"
@@ -384,7 +384,7 @@ const resetFilters = () => {
                             </td>
                             <td class="px-6 py-4 text-center">
                                 <div class="flex justify-center gap-2 text-xs">
-                                    <span class="text-gray-400">📝 {{ job.applications_count }}</span>
+                                    <span class="text-gray-600 dark:text-gray-400">📝 {{ job.applications_count }}</span>
                                     <span v-if="job.hired_count > 0" class="text-green-400">✅ {{ job.hired_count }}</span>
                                 </div>
                             </td>
@@ -421,7 +421,7 @@ const resetFilters = () => {
             <form @submit.prevent="submitForm" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-bold text-gray-400 mb-2">Job Title *</label>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-400 mb-2">Job Title *</label>
                         <input 
                             v-model="form.title"
                             type="text" 
@@ -432,7 +432,7 @@ const resetFilters = () => {
                     </div>
 
                     <div>
-                        <label class="block text-sm font-bold text-gray-400 mb-2">Company Name *</label>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-400 mb-2">Company Name *</label>
                         <input 
                             v-model="form.company_name"
                             type="text" 
@@ -443,7 +443,7 @@ const resetFilters = () => {
                     </div>
 
                     <div>
-                        <label class="block text-sm font-bold text-gray-400 mb-2">Location *</label>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-400 mb-2">Location *</label>
                         <input 
                             v-model="form.location"
                             type="text" 

@@ -157,11 +157,11 @@ const formatDate = (date) => {
                     </h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <p class="text-xs uppercase tracking-widest text-gray-500 mb-2">Email</p>
+                            <p class="text-xs uppercase tracking-widest text-gray-700 dark:text-gray-500 mb-2">Email</p>
                             <p class="text-white font-semibold break-all">{{ application.user_email }}</p>
                         </div>
                         <div>
-                            <p class="text-xs uppercase tracking-widest text-gray-500 mb-2">Tanggal Aplikasi</p>
+                            <p class="text-xs uppercase tracking-widest text-gray-700 dark:text-gray-500 mb-2">Tanggal Aplikasi</p>
                             <p class="text-white font-semibold">{{ formatDate(application.created_at) }}</p>
                         </div>
                     </div>
@@ -174,19 +174,19 @@ const formatDate = (date) => {
                     </h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <p class="text-xs uppercase tracking-widest text-gray-500 mb-2">Posisi</p>
+                            <p class="text-xs uppercase tracking-widest text-gray-700 dark:text-gray-500 mb-2">Posisi</p>
                             <p class="text-white font-semibold">{{ application.job_title }}</p>
                         </div>
                         <div>
-                            <p class="text-xs uppercase tracking-widest text-gray-500 mb-2">Tipe Pekerjaan</p>
+                            <p class="text-xs uppercase tracking-widest text-gray-700 dark:text-gray-500 mb-2">Tipe Pekerjaan</p>
                             <p class="text-white font-semibold capitalize">{{ application.job_type }}</p>
                         </div>
                         <div>
-                            <p class="text-xs uppercase tracking-widest text-gray-500 mb-2">Lokasi</p>
+                            <p class="text-xs uppercase tracking-widest text-gray-700 dark:text-gray-500 mb-2">Lokasi</p>
                             <p class="text-white font-semibold">{{ application.job_location }}</p>
                         </div>
                         <div>
-                            <p class="text-xs uppercase tracking-widest text-gray-500 mb-2">Gaji</p>
+                            <p class="text-xs uppercase tracking-widest text-gray-700 dark:text-gray-500 mb-2">Gaji</p>
                             <p class="text-white font-semibold">Rp {{ application.job_salary?.toLocaleString('id-ID') }}</p>
                         </div>
                     </div>
@@ -200,7 +200,7 @@ const formatDate = (date) => {
                             <span>📄</span> Resume
                         </h2>
                         <div class="space-y-3">
-                            <p class="text-sm text-gray-400">File resume pelamar tersedia untuk ditinjau</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">File resume pelamar tersedia untuk ditinjau</p>
                             <div class="flex gap-2">
                                 <button 
                                     @click="openCVPreview"

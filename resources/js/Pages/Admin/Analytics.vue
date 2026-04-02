@@ -40,7 +40,7 @@ const costPerHire = computed(() => {
     <AdminPageLayout title="Analytics Report 📈" subtitle="Comprehensive platform performance metrics">
         <!-- Key Metrics Overview -->
         <div class="mb-12">
-            <h3 class="text-sm font-black text-gray-600 uppercase tracking-[0.3em] mb-8 italic">📊 Key Metrics</h3>
+            <h3 class="text-sm font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.3em] mb-8 italic">📊 Key Metrics</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <AnalyticsCounter 
                     icon="💼"
@@ -71,7 +71,7 @@ const costPerHire = computed(() => {
 
         <!-- Data Visualization Charts -->
         <div class="mb-12">
-            <h3 class="text-sm font-black text-gray-600 uppercase tracking-[0.3em] mb-8 italic">📊 Charts & Visualizations</h3>
+            <h3 class="text-sm font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.3em] mb-8 italic">📊 Charts & Visualizations</h3>
             <div class="grid grid-cols-12 gap-10 mb-10">
                 <!-- Weekly Applicants Line Chart -->
                 <div class="col-span-12 lg:col-span-7">
@@ -86,7 +86,7 @@ const costPerHire = computed(() => {
 
             <!-- Monthly Applications Trend -->
             <div class="col-span-12 bg-white/[0.01] border border-white/10 rounded-[3.5rem] p-12 shadow-inner mb-10">
-                <h4 class="text-[10px] font-black text-gray-700 uppercase tracking-[0.5em] mb-8 italic">📈 Monthly Applications Trend (Last 12 Months)</h4>
+                <h4 class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.5em] mb-8 italic">📈 Monthly Applications Trend (Last 12 Months)</h4>
                 <ChartMonthlyApplications :monthlyData="chartData.monthlyApplications" />
             </div>
         </div>
@@ -94,7 +94,7 @@ const costPerHire = computed(() => {
         <!-- Application Funnel Analysis -->
         <div class="grid grid-cols-12 gap-10 mb-10">
             <div class="col-span-12 lg:col-span-7 bg-white/[0.01] border border-white/10 rounded-[3.5rem] p-12 shadow-inner">
-                <h4 class="text-[10px] font-black text-gray-700 uppercase tracking-[0.5em] mb-12 italic">Application Processing Funnel</h4>
+                <h4 class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.5em] mb-12 italic">Application Processing Funnel</h4>
                 
                 <div class="space-y-8">
                     <!-- Pending -->
@@ -103,7 +103,7 @@ const costPerHire = computed(() => {
                             <div class="flex items-center gap-3">
                                 <span class="text-2xl">⏳</span>
                                 <div>
-                                    <p class="text-xs font-black uppercase tracking-widest text-gray-500">Pending Review</p>
+                                    <p class="text-xs font-black uppercase tracking-widest text-gray-700 dark:text-gray-500">Pending Review</p>
                                     <p class="text-xl font-black text-white">{{ analytics.pending_applications }}</p>
                                 </div>
                             </div>
@@ -120,7 +120,7 @@ const costPerHire = computed(() => {
                             <div class="flex items-center gap-3">
                                 <span class="text-2xl">⭐</span>
                                 <div>
-                                    <p class="text-xs font-black uppercase tracking-widest text-gray-500">Shortlisted</p>
+                                    <p class="text-xs font-black uppercase tracking-widest text-gray-700 dark:text-gray-500">Shortlisted</p>
                                     <p class="text-xl font-black text-white">{{ analytics.shortlisted_applications }}</p>
                                 </div>
                             </div>
@@ -137,7 +137,7 @@ const costPerHire = computed(() => {
                             <div class="flex items-center gap-3">
                                 <span class="text-2xl">🎉</span>
                                 <div>
-                                    <p class="text-xs font-black uppercase tracking-widest text-gray-500">Successfully Hired</p>
+                                    <p class="text-xs font-black uppercase tracking-widest text-gray-700 dark:text-gray-500">Successfully Hired</p>
                                     <p class="text-xl font-black text-white">{{ analytics.hired_count }}</p>
                                 </div>
                             </div>
@@ -154,7 +154,7 @@ const costPerHire = computed(() => {
                             <div class="flex items-center gap-3">
                                 <span class="text-2xl">❌</span>
                                 <div>
-                                    <p class="text-xs font-black uppercase tracking-widest text-gray-500">Not Selected</p>
+                                    <p class="text-xs font-black uppercase tracking-widest text-gray-700 dark:text-gray-500">Not Selected</p>
                                     <p class="text-xl font-black text-white">{{ analytics.rejected_applications }}</p>
                                 </div>
                             </div>
@@ -171,45 +171,45 @@ const costPerHire = computed(() => {
             <div class="col-span-12 lg:col-span-5 space-y-6">
                 <!-- Conversion Rate -->
                 <div class="bg-white/[0.01] border border-white/10 rounded-[3.5rem] p-10 shadow-inner">
-                    <p class="text-[10px] font-black text-gray-700 uppercase tracking-[0.3em] mb-6 italic">Hire Conversion Rate</p>
+                    <p class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.3em] mb-6 italic">Hire Conversion Rate</p>
                     <div class="mb-6">
                         <p class="text-5xl font-black text-cyan-400 tracking-tighter">{{ hiredPercent }}<span class="text-2xl">%</span></p>
                     </div>
                     <div class="h-1.5 w-full bg-white/5 rounded-full p-[1px]">
                         <div class="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.7)]" :style="{width: hiredPercent + '%'}"></div>
                     </div>
-                    <p class="text-xs text-gray-500 mt-4 font-medium">{{ analytics.hired_count }} out of {{ analytics.total_applications }} applications resulted in hire</p>
+                    <p class="text-xs text-gray-700 dark:text-gray-400 mt-4 font-medium">{{ analytics.hired_count }} out of {{ analytics.total_applications }} applications resulted in hire</p>
                 </div>
 
                 <!-- Job Stats -->
                 <div class="bg-white/[0.01] border border-white/10 rounded-[3.5rem] p-10 shadow-inner">
-                    <p class="text-[10px] font-black text-gray-700 uppercase tracking-[0.3em] mb-6 italic">Job Listings</p>
+                    <p class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.3em] mb-6 italic">Job Listings</p>
                     <div class="space-y-4">
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-400 font-bold">Total Jobs</span>
+                            <span class="text-gray-700 dark:text-gray-400 font-bold">Total Jobs</span>
                             <span class="text-2xl font-black text-white">{{ analytics.total_jobs }}</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-400 font-bold">Currently Active</span>
+                            <span class="text-gray-700 dark:text-gray-400 font-bold">Currently Active</span>
                             <span class="text-2xl font-black text-cyan-400">{{ analytics.active_jobs }}</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-400 font-bold">Closed/Expired</span>
-                            <span class="text-2xl font-black text-gray-400">{{ analytics.total_jobs - analytics.active_jobs }}</span>
+                            <span class="text-gray-700 dark:text-gray-400 font-bold">Closed/Expired</span>
+                            <span class="text-2xl font-black text-gray-700 dark:text-gray-400">{{ analytics.total_jobs - analytics.active_jobs }}</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- User Engagement -->
                 <div class="bg-white/[0.01] border border-white/10 rounded-[3.5rem] p-10 shadow-inner">
-                    <p class="text-[10px] font-black text-gray-700 uppercase tracking-[0.3em] mb-6 italic">Platform Engagement</p>
+                    <p class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.3em] mb-6 italic">Platform Engagement</p>
                     <div class="space-y-4">
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-400 font-bold">Total Users</span>
+                            <span class="text-gray-700 dark:text-gray-400 font-bold">Total Users</span>
                             <span class="text-2xl font-black text-green-400">{{ analytics.total_users }}</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-400 font-bold">Avg. Apps/User</span>
+                            <span class="text-gray-700 dark:text-gray-400 font-bold">Avg. Apps/User</span>
                             <span class="text-2xl font-black text-blue-400">{{ analytics.total_users > 0 ? Math.round(analytics.total_applications / analytics.total_users * 10) / 10 : 0 }}</span>
                         </div>
                     </div>
@@ -219,49 +219,49 @@ const costPerHire = computed(() => {
 
         <!-- Performance Indicators -->
         <div class="mt-12 mb-12">
-            <h3 class="text-sm font-black text-gray-600 uppercase tracking-[0.3em] mb-8 italic">💰 Revenue & Cost Analytics</h3>
+            <h3 class="text-sm font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.3em] mb-8 italic">💰 Revenue & Cost Analytics</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Total Revenue -->
                 <div class="bg-white/[0.01] border border-white/10 rounded-[2.5rem] p-8">
                     <div class="flex items-center justify-between mb-4">
                         <div>
-                            <p class="text-[10px] font-black text-gray-700 uppercase tracking-[0.3em] mb-2 italic">Total Revenue</p>
+                            <p class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.3em] mb-2 italic">Total Revenue</p>
                             <p class="text-3xl font-black text-green-400">${{ analytics.total_revenue?.toLocaleString() || 0 }}</p>
                         </div>
                         <span class="text-4xl">💵</span>
                     </div>
-                    <p class="text-xs text-gray-500 font-medium">From {{ analytics.hired_count }} successful hires @ $500 per hire</p>
+                    <p class="text-xs text-gray-700 dark:text-gray-400 font-medium">From {{ analytics.hired_count }} successful hires @ $500 per hire</p>
                 </div>
 
                 <!-- Cost Per Hire -->
                 <div class="bg-white/[0.01] border border-white/10 rounded-[2.5rem] p-8">
                     <div class="flex items-center justify-between mb-4">
                         <div>
-                            <p class="text-[10px] font-black text-gray-700 uppercase tracking-[0.3em] mb-2 italic">Cost Per Hire</p>
+                            <p class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.3em] mb-2 italic">Cost Per Hire</p>
                             <p class="text-3xl font-black text-cyan-400">${{ costPerHire }}</p>
                         </div>
                         <span class="text-4xl">🎯</span>
                     </div>
-                    <p class="text-xs text-gray-500 font-medium">Average investment per successful hire</p>
+                    <p class="text-xs text-gray-700 dark:text-gray-400 font-medium">Average investment per successful hire</p>
                 </div>
 
                 <!-- Revenue per User -->
                 <div class="bg-white/[0.01] border border-white/10 rounded-[2.5rem] p-8">
                     <div class="flex items-center justify-between mb-4">
                         <div>
-                            <p class="text-[10px] font-black text-gray-700 uppercase tracking-[0.3em] mb-2 italic">Avg Revenue/User</p>
+                            <p class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.3em] mb-2 italic">Avg Revenue/User</p>
                             <p class="text-3xl font-black text-purple-400">${{ analytics.total_users > 0 ? Math.round((analytics.total_revenue / analytics.total_users) * 100) / 100 : 0 }}</p>
                         </div>
                         <span class="text-4xl">👥</span>
                     </div>
-                    <p class="text-xs text-gray-500 font-medium">Revenue per total platform users</p>
+                    <p class="text-xs text-gray-700 dark:text-gray-400 font-medium">Revenue per total platform users</p>
                 </div>
             </div>
         </div>
 
         <!-- Top Performing Jobs -->
         <div v-if="topPerformingJobs && topPerformingJobs.length > 0" class="mt-12 mb-12">
-            <h3 class="text-sm font-black text-gray-600 uppercase tracking-[0.3em] mb-8 italic">⭐ Top Performing Jobs</h3>
+            <h3 class="text-sm font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.3em] mb-8 italic">⭐ Top Performing Jobs</h3>
             <div class="bg-white/[0.01] border border-white/10 rounded-[3.5rem] p-8 shadow-inner">
                 <div class="space-y-4">
                     <div v-for="(job, index) in topPerformingJobs" :key="job.id" class="flex items-center justify-between p-4 bg-white/[0.02] hover:bg-white/[0.05] transition-all rounded-2xl border border-white/5">
@@ -271,21 +271,21 @@ const costPerHire = computed(() => {
                             </div>
                             <div class="flex-1">
                                 <p class="text-sm font-bold text-white">{{ job.title }}</p>
-                                <p class="text-xs text-gray-500">{{ job.company_name }}</p>
+                                <p class="text-xs text-gray-700 dark:text-gray-400">{{ job.company_name }}</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-8">
                             <div class="text-right">
                                 <p class="text-xl font-black text-blue-400">{{ job.applications_count }}</p>
-                                <p class="text-xs text-gray-500">Aplikasi</p>
+                                <p class="text-xs text-gray-700 dark:text-gray-400">Aplikasi</p>
                             </div>
                             <div class="text-right">
                                 <p class="text-xl font-black text-green-400">{{ job.hired_count }}</p>
-                                <p class="text-xs text-gray-500">Hired</p>
+                                <p class="text-xs text-gray-700 dark:text-gray-400">Hired</p>
                             </div>
                             <div class="text-right">
                                 <p class="text-xl font-black text-cyan-400">{{ job.conversion_rate }}%</p>
-                                <p class="text-xs text-gray-500">Conversion</p>
+                                <p class="text-xs text-gray-700 dark:text-gray-400">Conversion</p>
                             </div>
                             <div class="px-3 py-1 rounded-full text-xs font-bold" :class="job.status === 'active' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'">
                                 {{ job.status === 'active' ? '🔴 Active' : '⭕ Inactive' }}
