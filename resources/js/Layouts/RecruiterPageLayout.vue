@@ -9,7 +9,7 @@ const page = usePage();
 const props = defineProps({
     title: {
         type: String,
-        default: 'Dashboard'
+        default: 'Recruiter Dashboard'
     },
     subtitle: {
         type: String,
@@ -19,34 +19,13 @@ const props = defineProps({
 
 const showingSidebar = ref(false);
 const currentRoute = computed(() => route().current());
-const user = page.props.auth.user;
-const isAdmin = computed(() => user?.role === 'admin' || user?.roles?.includes('admin'));
-const isRecruiter = computed(() => user?.role === 'recruiter' || user?.roles?.includes('recruiter'));
 
-// Dynamic menus based on user role
-const menus = computed(() => {
-    const baseMenus = [];
-    
-    if (isAdmin.value) {
-        // Admin menus
-        baseMenus.push(
-            { name: 'Dashboard', icon: '📊', route: 'admin.dashboard' },
-            { name: 'Jobs', icon: '💼', route: 'admin.jobs' },
-            { name: 'Applicants', icon: '👥', route: 'admin.applicants' },
-            { name: 'Analytics', icon: '📈', route: 'admin.analytics' },
-            { name: 'Settings', icon: '⚙️', route: 'admin.settings' },
-            { name: 'Register Recruiter', icon: '➕', route: 'admin.recruiters.create' },
-        );
-    } else if (isRecruiter.value) {
-        // Recruiter menus - limited to applicants and analytics
-        baseMenus.push(
-            { name: 'Applicants', icon: '👥', route: 'admin.applicants' },
-            { name: 'Analytics', icon: '📈', route: 'admin.analytics' },
-        );
-    }
-    
-    return baseMenus;
-});
+// Recruiter menus - limited access
+const menus = [
+    { name: 'Dashboard', icon: '📊', route: 'recruiter.dashboard' },
+    { name: 'Applicants', icon: '👥', route: 'recruiter.applicants' },
+    { name: 'Analytics', icon: '📈', route: 'recruiter.analytics' },
+];
 </script>
 
 <template>
@@ -75,13 +54,14 @@ const menus = computed(() => {
                 <!-- Sidebar -->
                 <aside class="w-80 border-r border-gray-200 dark:border-slate-700 p-12 flex flex-col bg-gray-50 dark:bg-slate-800 backdrop-blur-3xl hidden md:flex transition-colors duration-300">
                     <div class="mb-16">
-                        <h1 class="text-3xl font-black text-cyan-400 italic tracking-tighter uppercase">DRYEX<span class="text-gray-900 dark:text-white transition-colors duration-300">.</span></h1>
+                        <h1 class="text-3xl font-black text-blue-400 italic tracking-tighter uppercase">DRYEX<span class="text-gray-900 dark:text-white transition-colors duration-300">.</span></h1>
+                        <p class="text-[10px] text-gray-600 dark:text-slate-400 uppercase tracking-widest font-bold mt-2">Recruiter Portal</p>
                     </div>
 
                     <nav class="flex-grow space-y-3">
                         <Link v-for="menu in menus" :key="menu.name"
                             :href="route(menu.route)"
-                            :class="[currentRoute === menu.route ? 'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 border-cyan-400 dark:border-cyan-500 shadow-sm dark:shadow-cyan-500/10' : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 border-transparent']"
+                            :class="[currentRoute === menu.route ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 border-blue-400 dark:border-blue-500 shadow-sm dark:shadow-blue-500/10' : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 border-transparent']"
                             class="w-full flex items-center gap-4 px-6 py-4 rounded-2xl border transition-all duration-300 font-bold text-xs uppercase tracking-widest group"
                         >
                             <span class="opacity-70 group-hover:opacity-100">{{ menu.icon }}</span>
@@ -149,7 +129,7 @@ const menus = computed(() => {
 
 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 20px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(6, 182, 212, 0.2); }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.2); }
 
 @keyframes pulse-slow {
     0%, 100% { opacity: 1; }
@@ -168,47 +148,9 @@ const menus = computed(() => {
     inset: 0;
     opacity: 0.05;
     pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
-/* Custom styling for DarkModeToggle in AdminPageLayout - Fully Reactive */
-/* Light mode styling */
-:deep(.theme-toggle) {
-    background-color: #f0f4f8 !important;
-    border-color: #e2e8f0 !important;
-    color: #1a202c !important;
-}
-
-:deep(.theme-toggle:hover) {
-    background-color: #e8ecf1 !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 102, 255, 0.1) !important;
-}
-
-:deep(.theme-toggle:focus) {
-    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1) !important;
-}
-
-:deep(.theme-toggle svg) {
-    color: currentColor !important;
-}
-
-/* Dark mode styling */
-:deep(.dark .theme-toggle) {
-    background-color: rgba(255, 255, 255, 0.15) !important;
-    border-color: rgba(255, 255, 255, 0.25) !important;
-    color: rgba(255, 255, 255, 0.9) !important;
-}
-
-:deep(.dark .theme-toggle:hover) {
-    background-color: rgba(255, 255, 255, 0.2) !important;
-    box-shadow: 0 4px 6px -1px rgba(6, 182, 212, 0.25) !important;
-}
-
-:deep(.dark .theme-toggle:focus) {
-    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.25) !important;
-}
-
-:deep(.dark .theme-toggle svg) {
-    color: rgba(255, 255, 255, 0.9) !important;
+.delay-700 {
+    animation-delay: 3.5s;
 }
 </style>

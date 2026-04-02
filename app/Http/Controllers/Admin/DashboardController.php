@@ -21,12 +21,21 @@ class DashboardController extends Controller
     public function dashboard()
     {
         return Inertia::render('Admin/Dashboard', [
+            'user' => Auth::user(),
             'analytics' => $this->getAnalyticsData()
         ]);
     }
 
     public function index()
     {
+        // Check if user has permission to view applicants
+        // Allow if user is admin OR has explicit view-applicants permission
+        /** @var User $user */
+        $user = Auth::user();
+        if (!($user->hasRole('admin') || $user->can('view-applicants'))) {
+            abort(403, 'Unauthorized to view applicants');
+        }
+
         $applicants = Application::with(['user', 'job'])
             ->latest()
             ->get()
@@ -207,6 +216,13 @@ class DashboardController extends Controller
 
     public function storeJob(Request $request)
     {
+        // Only admin can create jobs
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user->hasRole('admin')) {
+            abort(403, 'Unauthorized to create jobs');
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'company_name' => 'required|string|max:255',
@@ -224,6 +240,13 @@ class DashboardController extends Controller
 
     public function updateJob(Request $request, $id)
     {
+        // Only admin can update jobs
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user->hasRole('admin')) {
+            abort(403, 'Unauthorized to update jobs');
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'company_name' => 'required|string|max:255',
@@ -241,6 +264,13 @@ class DashboardController extends Controller
 
     public function deleteJob($id)
     {
+        // Check if user has permission to delete jobs
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user->can('delete-jobs') && !$user->hasRole('admin')) {
+            abort(403, 'Unauthorized to delete jobs');
+        }
+
         $job = Job::findOrFail($id);
         
         // Hapus semua applications yang terkait
@@ -253,6 +283,13 @@ class DashboardController extends Controller
 
     public function settings()
     {
+        // Check if user has permission to change settings
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user->can('change-settings') && !$user->hasRole('admin')) {
+            abort(403, 'Unauthorized to access settings');
+        }
+
         return Inertia::render('Admin/Settings', [
             'analytics' => $this->getAnalyticsData()
         ]);

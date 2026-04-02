@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class AdminMiddleware
+class RecruiterMiddleware
 {
     /**
      * Handle an incoming request.
@@ -19,11 +19,11 @@ class AdminMiddleware
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
         
-        // Check if user has admin role (using Spatie) or old 'role' column
-        if ($user && ($user->hasRole('admin') || $user->role === 'admin')) {
+        // Allow admin and recruiter roles
+        if ($user && ($user->hasRole(['admin', 'recruiter']) || in_array($user->role, ['admin', 'recruiter']))) {
             return $next($request);
         }
 
-        return response()->json(['message' => 'Unauthorized. Admin access required.'], 403);
+        return response()->json(['message' => 'Unauthorized. Admin or Recruiter access required.'], 403);
     }
 }

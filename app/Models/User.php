@@ -7,11 +7,20 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
+use Spatie\Permission\Traits\HasPermissions;
 
+/**
+ * @mixin HasRoles
+ * @mixin HasPermissions
+ * @property string|null $role
+ * @method bool hasRole($roles, ?string $guard = null)
+ * @method bool can(string $permission, ?string $guard = null)
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles, HasPermissions;
 
     /**
      * The attributes that are mass assignable.
@@ -76,15 +85,23 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->hasRole('admin') || $this->role === 'admin';
     }
 
     /**
-     * Check if user is regular user
+     * Check if user is recruiter
+     */
+    public function isRecruiter(): bool
+    {
+        return $this->hasRole('recruiter') || $this->role === 'recruiter';
+    }
+
+    /**
+     * Check if user is regular user (job seeker)
      */
     public function isUser(): bool
     {
-        return $this->role === 'user';
+        return $this->hasRole('user') || $this->role === 'user';
     }
 
     /**

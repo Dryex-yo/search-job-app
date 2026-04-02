@@ -15,8 +15,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create only the admin user
-        User::updateOrCreate(
+        // First, seed roles and permissions
+        $this->call(RoleAndPermissionSeeder::class);
+
+        // Create the admin user
+        $admin = User::updateOrCreate(
             ['email' => 'admin@dryex.com'],
             [
                 'name' => 'Administrator Dryex',
@@ -25,5 +28,8 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        // Assign admin role to the admin user
+        $admin->assignRole('admin');
     }
 }

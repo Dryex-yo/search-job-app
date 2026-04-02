@@ -26,6 +26,11 @@ class DashboardController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
+        // Redirect recruiter to recruiter dashboard
+        if ($user->isRecruiter()) {
+            return redirect()->route('recruiter.dashboard');
+        }
+
         // Show user dashboard for regular users
         return Inertia::render('Dashboard', [
             'dashboardData' => $this->getDashboardData($user),

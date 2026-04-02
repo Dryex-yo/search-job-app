@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register route middleware aliases
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'recruiter' => \App\Http\Middleware\RecruiterMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -1,0 +1,33 @@
+includes:
+  - vendor/kylekatarnls/update-helper/res/phpstan.neon.dist
+
+parameters:
+  level: 5
+  paths:
+    - app
+    - bootstrap
+    - routes
+  excludePaths:
+    - vendor
+    - node_modules
+    - storage
+    - tests
+    - database/migrations
+    - database/seeders
+    - config
+  ignoreErrors:
+    # Ignore errors from generated files and vendor
+    - identifier: class.notFound
+      path: vendor
+    - identifier: method.notFound
+      path: vendor
+    - identifier: type.notFound
+      path: vendor
+    # Ignore migration and seeder errors
+    - identifier: class.notFound
+      path: database
+    - identifier: method.notFound
+      path: database
+    - identifier: function.notFound
+      path: database
+
