@@ -20,14 +20,20 @@ class JobController extends Controller
      */
     public function index(Request $request, ListAvailableJobsAction $listJobsAction): Response
     {
+        // Validate and sanitize filter inputs for security
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:255',
+            'type' => 'nullable|string|max:50',
+            'location' => 'nullable|string|max:255',
+            'salary_min' => 'nullable|numeric|min:0',
+            'salary_max' => 'nullable|numeric|min:0',
+        ]);
+
         // Mengambil semua filter dari URL query string
-        $filters = $request->only(['search', 'type', 'location', 'salary_min', 'salary_max']);
-        
-        // Jika hanya search diisi dan tidak ada filter lain, gunakan backward compatibility
-        $filterArray = array_filter($filters); // Hapus nilai kosong
+        $filters = array_filter($validated); // Hapus nilai kosong
         
         // Mengambil jobs dengan filter
-        $jobs = $listJobsAction->execute($filterArray);
+        $jobs = $listJobsAction->execute($filters);
 
         // Mengambil data unik untuk dropdown filters
         $jobTypes = Job::distinct()->pluck('type')->filter()->values();
@@ -35,7 +41,7 @@ class JobController extends Controller
 
         return Inertia::render('Jobs/Index', [
             'jobs' => $jobs,
-            'filters' => $filters,
+            'filters' => $validated,
             'jobTypes' => $jobTypes,
             'locations' => $locations,
         ]);
@@ -61,9 +67,9 @@ class JobController extends Controller
     public function apply(Request $request, SubmitApplicationAction $submitAction)
     {
         $request->validate([
-            'job_id' => 'required|exists:jobs,id',
+            'job_id' => 'required|integer|exists:jobs,id',
             'resume' => 'nullable|mimes:pdf|max:2048', // Maksimal 2MB PDF, optional jika ada di profile
-            'cover_letter' => 'required|string|min:10',
+            'cover_letter' => 'required|string|min:10|max:5000',
         ]);
 
         $submitAction->execute($request->all());

@@ -61,15 +61,18 @@ class DashboardController extends Controller
     {
         $request->validate([
             'status' => 'required|in:pending,shortlisted,rejected,interview,hired',
-            'notes' => 'nullable|string|max:5000'
+            'notes' => 'nullable|string|min:0|max:5000'
         ]);
+
+        // Verify the application exists and is accessible to the user
+        $application = Application::findOrFail((int)$id);
 
         // Update using the action for status
         $updateStatus->execute($id, $request->status);
 
         // Also update notes if provided
-        if ($request->has('notes')) {
-            Application::findOrFail($id)->update(['notes' => $request->notes]);
+        if ($request->has('notes') && !empty($request->notes)) {
+            $application->update(['notes' => trim($request->notes)]);
         }
 
         return back()->with('message', 'Status pelamar berhasil diperbarui!');
@@ -162,9 +165,16 @@ class DashboardController extends Controller
 
     public function jobs(Request $request)
     {
-        $search = $request->get('search', '');
-        $status = $request->get('status', '');
-        $type = $request->get('type', '');
+        // Validate filter inputs
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:255',
+            'status' => 'nullable|in:active,inactive',
+            'type' => 'nullable|in:Full-time,Part-time,Contract,Freelance',
+        ]);
+
+        $search = $validated['search'] ?? '';
+        $status = $validated['status'] ?? '';
+        $type = $validated['type'] ?? '';
 
         $jobsQuery = Job::query();
 

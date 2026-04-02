@@ -88,14 +88,20 @@ class RecruiterController extends Controller
     {
         $request->validate([
             'status' => 'required|in:pending,shortlisted,rejected,interview,hired',
-            'notes' => 'nullable|string|max:5000'
+            'notes' => 'nullable|string|min:0|max:5000'
         ]);
 
-        $application = Application::findOrFail($id);
-        $application->update([
+        $application = Application::findOrFail((int)$id);
+        
+        $updateData = [
             'status' => $request->status,
-            'notes' => $request->notes ?? $application->notes
-        ]);
+        ];
+
+        if ($request->has('notes') && !empty($request->notes)) {
+            $updateData['notes'] = trim($request->notes);
+        }
+
+        $application->update($updateData);
 
         return back()->with('message', 'Status pelamar berhasil diperbarui!');
     }
