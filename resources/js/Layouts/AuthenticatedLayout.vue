@@ -1,7 +1,9 @@
 <script setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import DarkModeToggle from '@/Components/DarkModeToggle.vue';
+import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
@@ -9,6 +11,7 @@ import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import GalaxyBackground from '@/Components/GalaxyBackground.vue';
 import { Link } from '@inertiajs/vue3';
 
+const { t } = useI18n();
 const showingNavigationDropdown = ref(false);
 </script>
 
@@ -44,7 +47,7 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard')"
                                 >
-                                    Dashboard
+                                    {{ t('navigation.home') }}
                                 </NavLink>
                             </div>
                         </div>
@@ -52,6 +55,9 @@ const showingNavigationDropdown = ref(false);
                         <div class="hidden sm:ms-6 sm:flex sm:items-center gap-4">
                             <!-- Dark Mode Toggle -->
                             <DarkModeToggle />
+
+                            <!-- Language Switcher -->
+                            <LanguageSwitcher />
 
                             <!-- Settings Dropdown -->
                             <div class="relative">
@@ -84,14 +90,14 @@ const showingNavigationDropdown = ref(false);
                                         <DropdownLink
                                             :href="route('profile.edit')"
                                         >
-                                            Profile
+                                            {{ t('navigation.myProfile') }}
                                         </DropdownLink>
                                         <DropdownLink
                                             :href="route('logout')"
                                             method="post"
                                             as="button"
                                         >
-                                            Log Out
+                                            {{ t('common.logout') }}
                                         </DropdownLink>
                                     </template>
                                 </Dropdown>
@@ -102,6 +108,9 @@ const showingNavigationDropdown = ref(false);
                         <div class="-me-2 flex items-center gap-2 sm:hidden">
                             <!-- Dark Mode Toggle Mobile -->
                             <DarkModeToggle />
+
+                            <!-- Language Switcher Mobile -->
+                            <LanguageSwitcher />
 
                             <button
                                 @click="

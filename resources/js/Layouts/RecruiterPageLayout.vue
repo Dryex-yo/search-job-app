@@ -1,10 +1,13 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { usePage, Link } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 import ProfileDropdown from '@/Components/ProfileDropdown.vue';
 import GalaxyBackground from '@/Components/GalaxyBackground.vue';
 import DarkModeToggle from '@/Components/DarkModeToggle.vue';
+import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 
+const { t } = useI18n();
 const page = usePage();
 const props = defineProps({
     title: {
@@ -21,11 +24,11 @@ const showingSidebar = ref(false);
 const currentRoute = computed(() => route().current());
 
 // Recruiter menus - limited access
-const menus = [
-    { name: 'Dashboard', icon: '📊', route: 'recruiter.dashboard' },
-    { name: 'Applicants', icon: '👥', route: 'recruiter.applicants' },
-    { name: 'Analytics', icon: '📈', route: 'recruiter.analytics' },
-];
+const menus = computed(() => [
+    { name: t('navigation.home'), icon: '📊', route: 'recruiter.dashboard' },
+    { name: t('recruiter.applicants'), icon: '👥', route: 'recruiter.applicants' },
+    { name: t('recruiter.statistics'), icon: '📈', route: 'recruiter.analytics' },
+]);
 </script>
 
 <template>
@@ -86,6 +89,9 @@ const menus = [
                         <div class="flex items-center gap-4">
                             <!-- Dark Mode Toggle -->
                             <DarkModeToggle />
+
+                            <!-- Language Switcher -->
+                            <LanguageSwitcher />
 
                             <!-- Profile Dropdown -->
                             <ProfileDropdown :user="page.props.auth.user" />

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
@@ -8,8 +9,10 @@ import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import NotificationContainer from '@/Components/NotificationContainer.vue';
 import DarkModeToggle from '@/Components/DarkModeToggle.vue';
+import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import GalaxyBackground from '@/Components/GalaxyBackground.vue';
 
+const { t } = useI18n();
 const showingNavigationDropdown = ref(false);
 const page = usePage();
 
@@ -50,14 +53,14 @@ const handleLogout = () => {
                                 :active="route().current('index')"
                                 class="text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition text-sm md:text-base"
                             >
-                                Jobs
+                                {{ t('navigation.jobs') }}
                             </NavLink>
                             <NavLink
                                 href="/dashboard"
                                 :active="route().current('dashboard')"
                                 class="text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition text-sm md:text-base"
                             >
-                                Dashboard
+                                {{ t('navigation.home') }}
                             </NavLink>
                         </div>
 
@@ -65,6 +68,9 @@ const handleLogout = () => {
                         <div class="hidden sm:flex items-center gap-3 md:gap-4">
                             <!-- Dark Mode Toggle -->
                             <DarkModeToggle />
+
+                            <!-- Language Switcher -->
+                            <LanguageSwitcher />
 
                             <template v-if="auth.user">
                                 <!-- User Dropdown -->
@@ -92,13 +98,13 @@ const handleLogout = () => {
 
                                     <template #content>
                                         <DropdownLink href="/">
-                                            Jobs
+                                            {{ t('navigation.jobs') }}
                                         </DropdownLink>
                                         <DropdownLink :href="route('profile.edit')">
-                                            Profile
+                                            {{ t('navigation.myProfile') }}
                                         </DropdownLink>
                                         <DropdownLink :href="route('logout')" method="post" as="button">
-                                            Log Out
+                                            {{ t('common.logout') }}
                                         </DropdownLink>
                                     </template>
                                 </Dropdown>
@@ -109,13 +115,13 @@ const handleLogout = () => {
                                     :href="route('login')"
                                     class="text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition font-medium text-xs sm:text-sm"
                                 >
-                                    Login
+                                    {{ t('common.login') }}
                                 </Link>
                                 <Link
                                     :href="route('register')"
                                     class="px-2 sm:px-4 py-2 bg-cyan-600 dark:bg-cyan-600 text-white rounded-md hover:bg-cyan-700 dark:hover:bg-cyan-700 transition font-medium text-xs sm:text-sm"
                                 >
-                                    Register
+                                    {{ t('common.register') }}
                                 </Link>
                             </template>
                         </div>
@@ -123,6 +129,7 @@ const handleLogout = () => {
                         <!-- Mobile Hamburger Menu -->
                         <div class="flex sm:hidden items-center gap-2">
                             <DarkModeToggle />
+                            <LanguageSwitcher />
                             <button
                                 @click="showingNavigationDropdown = !showingNavigationDropdown"
                                 class="inline-flex items-center justify-center rounded-md p-2 text-gray-600 dark:text-slate-400 transition duration-150 ease-in-out hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100 focus:bg-gray-100 dark:focus:bg-slate-700 focus:text-gray-900 dark:focus:text-slate-100 focus:outline-none"
@@ -164,10 +171,10 @@ const handleLogout = () => {
                 >
                     <div class="space-y-1 px-2 pb-3 pt-2">
                         <ResponsiveNavLink href="/" :active="route().current('index')" class="text-xs sm:text-sm">
-                            Jobs
+                            {{ t('navigation.jobs') }}
                         </ResponsiveNavLink>
                         <ResponsiveNavLink href="/dashboard" :active="route().current('dashboard')" class="text-xs sm:text-sm">
-                            Dashboard
+                            {{ t('navigation.home') }}
                         </ResponsiveNavLink>
                     </div>
 
@@ -182,10 +189,10 @@ const handleLogout = () => {
 
                         <div class="mt-3 space-y-1">
                             <ResponsiveNavLink :href="route('profile.edit')" class="text-gray-600 dark:text-slate-300 text-xs sm:text-sm">
-                                Profile
+                                {{ t('navigation.myProfile') }}
                             </ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('logout')" method="post" as="button" class="text-gray-600 dark:text-slate-300 text-xs sm:text-sm">
-                                Log Out
+                                {{ t('common.logout') }}
                             </ResponsiveNavLink>
                         </div>
                     </div>
@@ -194,13 +201,13 @@ const handleLogout = () => {
                             :href="route('login')"
                             class="block w-full text-center px-3 sm:px-4 py-2 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-xs sm:text-sm"
                         >
-                            Login
+                            {{ t('common.login') }}
                         </Link>
                         <Link
                             :href="route('register')"
                             class="block w-full text-center px-3 sm:px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition text-xs sm:text-sm"
                         >
-                            Register
+                            {{ t('common.register') }}
                         </Link>
                     </div>
                 </div>

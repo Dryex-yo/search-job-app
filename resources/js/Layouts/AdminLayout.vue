@@ -1,10 +1,13 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 import DarkModeToggle from '@/Components/DarkModeToggle.vue';
+import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import AdminUserDropdown from '@/Components/AdminUserDropdown.vue';
 import GalaxyBackground from '@/Components/GalaxyBackground.vue';
 
+const { t } = useI18n();
 const showingSidebar = ref(false);
 const page = usePage();
 
@@ -14,13 +17,13 @@ const auth = computed(() => {
     return page.props.auth || {};
 });
 
-const menus = [
-    { name: 'Dashboard', icon: '📊', route: 'admin.dashboard' },
-    { name: 'Analytics', icon: '📈', route: 'admin.analytics' }, 
-    { name: 'Jobs', icon: '💼', route: 'admin.jobs' },
-    { name: 'Applicants', icon: '👥', route: 'admin.applicants' },
-    { name: 'Settings', icon: '⚙️', route: 'admin.settings' },
-];
+const menus = computed(() => [
+    { name: t('navigation.home'), icon: '📊', route: 'admin.dashboard' },
+    { name: t('recruiter.statistics'), icon: '📈', route: 'admin.analytics' }, 
+    { name: t('navigation.jobs'), icon: '💼', route: 'admin.jobs' },
+    { name: t('navigation.applications'), icon: '👥', route: 'admin.applicants' },
+    { name: t('common.settings'), icon: '⚙️', route: 'admin.settings' },
+]);
 </script>
 
 <template>
@@ -109,6 +112,9 @@ const menus = [
                     <div class="flex items-center gap-3 sm:gap-4">
                         <!-- Dark Mode Toggle -->
                         <DarkModeToggle />
+
+                        <!-- Language Switcher -->
+                        <LanguageSwitcher />
 
                         <!-- User Profile Dropdown -->
                         <AdminUserDropdown />
