@@ -4,14 +4,16 @@ namespace App\Models;
 
 use App\Events\ApplicationStatusChanged;
 use App\Events\ApplicationSubmitted;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Multitenancy\Models\Concerns\UsesTenantConnection;
 
 class Application extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsActivity, UsesTenantConnection;
 
     protected $fillable = [
         'job_id',
@@ -34,7 +36,8 @@ class Application extends Model
         'interview_meeting_provider',
         'interview_calendar_event_id',
         'interview_notes',
-        'interview_cancelled_at'
+        'interview_cancelled_at',
+        'tenant_id',
     ];
 
     /**
@@ -86,5 +89,43 @@ class Application extends Model
     public function admin()
     {
         return $this->belongsTo(User::class, 'admin_id');
+    }
+
+    /**
+     * Get the tenant this application belongs to
+     */
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * Scope: Get applications from current tenant
+     */
+    public function scopeForTenant(Builder $query, $tenantId = null)
+    {
+        $tenantId = $tenantId ?? tenancy()->tenant()?->id;
+        
+        if ($tenantId) {
+            return $query->where('tenant_id', $tenantId);
+        }
+        
+        return $query;
+    }
+
+    /**
+     * Scope: Get pending applications
+     */
+    public function scopePending(Builder $query)
+    {
+        return $query->where('status', 'pending');
+    }
+
+    /**
+     * Check if application belongs to current tenant
+     */
+    public function belongsToCurrentTenant(): bool
+    {
+        return $this->tenant_id === tenancy()->tenant()?->id;
     }
 }

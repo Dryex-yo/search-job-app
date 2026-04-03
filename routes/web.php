@@ -6,6 +6,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RecruiterController;
+use App\Http\Controllers\TenantController;
+use App\Http\Controllers\TenantRegistrationController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\Admin\RegisteredRecruiterController;
 use App\Http\Controllers\Admin\AuditLogController;
@@ -16,6 +18,10 @@ use App\Http\Controllers\Admin\InterviewSchedulingController;
 Route::get('/', [JobController::class, 'index'])->name('jobs.index');
 Route::get('/jobs/{id}', [JobController::class, 'show'])->name('jobs.show');
 Route::get('/applications/{id}', [JobController::class, 'trackApplication'])->name('applications.track');
+
+// --- Tenant Registration Routes ---
+Route::get('/tenant/register', [TenantRegistrationController::class, 'showRegistrationForm'])->name('tenant.register.form');
+Route::post('/tenant/register', [TenantRegistrationController::class, 'register'])->name('tenant.register');
 
 // --- User Auth Routes ---
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
@@ -56,6 +62,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Recruiter registration routes - Admin only
     Route::get('/recruiters/create', [RegisteredRecruiterController::class, 'create'])->name('recruiters.create');
     Route::post('/recruiters', [RegisteredRecruiterController::class, 'store'])->name('recruiters.store');
+
+    // Tenant management routes - Superadmin only
+    Route::middleware('role:superadmin')->group(function () {
+        Route::resource('/tenants', TenantController::class);
+        Route::patch('/tenants/{tenant}/suspend', [TenantController::class, 'suspend'])->name('tenants.suspend');
+        Route::patch('/tenants/{tenant}/activate', [TenantController::class, 'activate'])->name('tenants.activate');
+    });
 });
 
 // Recruiter and Admin routes - Applicant management

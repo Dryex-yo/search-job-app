@@ -4,9 +4,11 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Multitenancy\Models\Concerns\UsesTenantConnection;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\Permission\Traits\HasPermissions;
 
@@ -20,7 +22,7 @@ use Spatie\Permission\Traits\HasPermissions;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasRoles, HasPermissions;
+    use HasFactory, Notifiable, HasRoles, HasPermissions, UsesTenantConnection;
 
     /**
      * The attributes that are mass assignable.
@@ -54,6 +56,8 @@ class User extends Authenticatable
         'id_number',
         'emergency_contact_name',
         'emergency_contact_phone',
+        'tenant_id',
+        'tenant_key',
     ];
 
     /**
@@ -119,4 +123,51 @@ class User extends Authenticatable
     {
         return $this->hasMany(Application::class);
     }
+
+    /**
+     * Get the tenant this user belongs to
+     */
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * Get jobs posted by this recruiter
+     */
+    public function postedJobs()
+    {
+        return $this->hasMany(Job::class, 'recruiter_id');
+    }
+
+    /**
+     * Scope: Get users from current tenant
+     */
+    public function scopeForTenant(Builder $query, $tenantId = null)
+    {
+        $tenantId = $tenantId ?? tenancy()->tenant()?->id;
+        
+        if ($tenantId) {
+            return $query->where('tenant_id', $tenantId);
+        }
+        
+        return $query;
+    }
+
+    /**
+     * Scope: Get all recruiter users
+     */
+    public function scopeRecruiters(Builder $query)
+    {
+        return $query->where('role', 'recruiter');
+    }
+
+    /**
+     * Check if user belongs to current tenant
+     */
+    public function belongsToCurrentTenant(): bool
+    {
+        return $this->tenant_id === tenancy()->tenant()?->id;
+    }
 }
+
