@@ -4,99 +4,196 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\User;
 
 class JobSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
-        public function run(): void
-        {
-            $jobs = [
-                // Tier 1: Developer Roles (10 jobs)
-                ['Full Stack Developer', 'DEVORYN TECH', 'Remote (Jakarta)', 'Rp 15.000.000', 'Full-time', 'Membangun aplikasi masa depan dengan Laravel & Vue.'],
-                ['Backend Developer', 'TECH CORP', 'Jakarta', 'Rp 14.000.000', 'Full-time', 'Develop REST API dengan PHP dan Node.js.'],
-                ['Frontend Developer', 'DIGITAL SOLUTIONS', 'Bandung', 'Rp 12.000.000', 'Full-time', 'Membuat UI yang responsif menggunakan React dan Vue.'],
-                ['Mobile Developer', 'APP CREATORS', 'Remote', 'Rp 13.000.000', 'Full-time', 'Mengembangkan aplikasi Android dan iOS native.'],
-                ['Junior Developer', 'STARTUP HUB', 'Remote', 'Rp 8.000.000', 'Full-time', 'Membantu development tim dalam berbagai project.'],
-                ['Senior Developer', 'ENTERPRISE TECH', 'Jakarta', 'Rp 20.000.000', 'Full-time', 'Lead development team dan arsitektur sistem.'],
-                ['API Developer', 'API SERVICES', 'Remote', 'Rp 13.000.000', 'Full-time', 'Build dan maintain API services.'],
-                ['Frontend Lead', 'FRONTEND MASTERS', 'Jakarta', 'Rp 16.000.000', 'Full-time', 'Lead tim frontend dan code architecture.'],
-                ['Backend Lead', 'BACKEND EXPERTS', 'Jakarta', 'Rp 16.000.000', 'Full-time', 'Lead tim backend dan database design.'],
-                ['Full Stack Lead', 'TECH LEADERS', 'Jakarta', 'Rp 19.000.000', 'Full-time', 'Lead full stack development team.'],
+    public function run(): void
+    {
+        $jobTitles = [
+            // Developer Roles
+            'Full Stack Developer', 'Backend Developer', 'Frontend Developer', 'Mobile Developer',
+            'Junior Developer', 'Senior Developer', 'API Developer', 'Frontend Lead',
+            'Backend Lead', 'Full Stack Lead', 'React Developer', 'Vue Developer',
+            'Angular Developer', 'Node.js Developer', 'Python Developer', 'Java Developer',
+            'C# Developer', '.NET Developer', 'PHP Developer', 'Ruby Developer',
+            'Go Developer', 'Rust Developer', 'Swift Developer', 'Kotlin Developer',
+            'Flutter Developer', 'Django Developer', 'Spring Boot Developer', 'Database Developer',
+            
+            // Design & UX
+            'UI/UX Designer', 'Graphic Designer', 'Product Designer', 'UX Researcher',
+            'Design Lead', 'Brand Manager', 'Web Designer', 'Motion Designer',
+            'Interaction Designer', 'Design Consultant', 'Visual Designer', 'User Researcher',
+            'Design System Lead', 'Accessibility Designer', 'Service Designer',
+            
+            // Data & AI
+            'Data Scientist', 'Machine Learning Engineer', 'Data Analyst', 'Big Data Engineer',
+            'AI Specialist', 'Data Engineer', 'Analytics Engineer', 'Business Intelligence',
+            'Statistician', 'Data Visualizer', 'ML Operations Engineer', 'Data Pipeline Engineer',
+            'LLM Engineer', 'Computer Vision Engineer', 'NLP Engineer',
+            
+            // DevOps & Infrastructure
+            'DevOps Engineer', 'Cloud Architect', 'Database Administrator', 'System Administrator',
+            'Security Engineer', 'Platform Engineer', 'Site Reliability Engineer', 'Network Engineer',
+            'Infrastructure Engineer', 'Kubernetes Engineer', 'AWS Engineer', 'Azure Engineer',
+            'GCP Engineer', 'Linux Administrator', 'Windows Administrator', 'Cloud Security Engineer',
+            
+            // QA & Testing
+            'QA Engineer', 'Automation QA', 'QA Lead', 'Performance Tester',
+            'Security Tester', 'Manual QA Tester', 'Test Automation Specialist', 'QA Analyst',
+            
+            // Management & Strategy
+            'Product Manager', 'Business Analyst', 'Technical Director', 'Engineering Manager',
+            'Solutions Architect', 'Software Architect', 'Operations Manager', 'Project Manager',
+            'Scrum Master', 'Agile Coach', 'Tech Lead', 'VP Engineering',
+            'CTO', 'Engineering Director', 'Technical Program Manager',
+            
+            // Specialized Tech
+            'Blockchain Developer', 'Game Developer', 'AR/VR Developer', 'IoT Developer',
+            'Embedded Systems Engineer', 'Robotics Engineer', 'Scripting Developer', 'DevSecOps Engineer',
+            'Salesforce Developer', 'Shopify Developer', 'WordPress Developer', 'Custom Integration Developer',
+        ];
 
-                // Tier 2: Design & UX (10 jobs)
-                ['UI/UX Designer', 'GLASSCORP', 'Bandung', 'Rp 10.000.000', 'Contract', 'Membuat desain glassmorphism yang cantik.'],
-                ['Graphic Designer', 'CREATIVE AGENCY', 'Bandung', 'Rp 9.500.000', 'Full-time', 'Membuat visual design dan branding materials.'],
-                ['Product Designer', 'DESIGN STUDIO', 'Jakarta', 'Rp 11.000.000', 'Full-time', 'Design product experience dan user interface.'],
-                ['UX Researcher', 'RESEARCH LAB', 'Jakarta', 'Rp 10.500.000', 'Full-time', 'Research user behavior dan usability testing.'],
-                ['Design Lead', 'DESIGN LEADERS', 'Jakarta', 'Rp 14.000.000', 'Full-time', 'Lead design team dan design strategy.'],
-                ['Brand Manager', 'BRAND SOLUTIONS', 'Jakarta', 'Rp 12.000.000', 'Full-time', 'Manage brand identity dan marketing assets.'],
-                ['Web Designer', 'WEB DESIGN PRO', 'Surabaya', 'Rp 9.000.000', 'Full-time', 'Desain website modern dan user-friendly.'],
-                ['Motion Designer', 'ANIMATION STUDIO', 'Jakarta', 'Rp 11.500.000', 'Full-time', 'Create motion graphics dan animasi profesional.'],
-                ['Interaction Designer', 'UX LABS', 'Remote', 'Rp 10.800.000', 'Full-time', 'Design interactive experience untuk user.'],
-                ['Design Consultant', 'DESIGN CONSULTING', 'Jakarta', 'Rp 13.000.000', 'Part-time', 'Konsultasi desain untuk berbagai klien.'],
+        $companyNames = [
+            'DEVORYN TECH', 'TECH CORP', 'DIGITAL SOLUTIONS', 'APP CREATORS',
+            'STARTUP HUB', 'ENTERPRISE TECH', 'API SERVICES', 'FRONTEND MASTERS',
+            'BACKEND EXPERTS', 'TECH LEADERS', 'GLASSCORP', 'CREATIVE AGENCY',
+            'DESIGN STUDIO', 'RESEARCH LAB', 'DESIGN LEADERS', 'BRAND SOLUTIONS',
+            'WEB DESIGN PRO', 'ANIMATION STUDIO', 'UX LABS', 'DESIGN CONSULTING',
+            'DATA INSIGHTS', 'AI RESEARCH', 'ANALYTICS PRO', 'BIG DATA SOLUTIONS',
+            'ARTIFICIAL INTELLIGENCE', 'DATA ENGINEERING', 'ANALYTICS ENGINEERING', 'BI SOLUTIONS',
+            'STATISTICS LAB', 'DATA VIZ STUDIO', 'CLOUD SYSTEMS', 'CLOUD EXPERTS',
+            'DATA MANAGEMENT', 'IT SERVICES', 'CYBER SECURITY', 'PLATFORM TECH',
+            'RELIABILITY FIRST', 'NETWORK SOLUTIONS', 'INFRASTRUCTURE PRO', 'CONTAINER TECH',
+            'TEST MASTERS', 'AUTOMATION TESTING', 'QA LEADERSHIP', 'PERFORMANCE TESTING',
+            'SECURITY TESTING', 'PRODUCT LABS', 'CONSULT PRO', 'TECH DIRECTION',
+            'TECH MANAGEMENT', 'SOLUTIONS INC', 'SOFTWARE DESIGN', 'OPERATIONS HUB',
+            'PROJECT MASTERS', 'CRYPTO LABS', 'GAME STUDIO', 'IMMERSIVE TECH',
+            'IOT SOLUTIONS', 'EMBEDDED TECH', 'ROBOTICS LABS', 'SCRIPTING SOLUTIONS',
+            'NEXTGEN TECH', 'INNOVATE LABS', 'DIGITAL ERA', 'TECH FUTURES',
+            'CODE MASTERS', 'DEVELOPMENT HOUSE', 'IT SOLUTIONS', 'TECH INNOVATIONS',
+            'SOFTWARE HOUSE', 'INTEGRATION TECH', 'AUTOMATION SYSTEMS', 'CLOUD NATIVE',
+            'TECH PIONEERS', 'DIGITAL TRANSFORMATION', 'SMART SYSTEMS', 'INTELLIGENCE AI',
+            'QUANTUM TECH', 'APEX SOLUTIONS', 'ZENITH TECH', 'NOVA SYSTEMS',
+        ];
 
-                // Tier 3: Data & AI (10 jobs)
-                ['Data Scientist', 'DATA INSIGHTS', 'Jakarta', 'Rp 16.000.000', 'Full-time', 'Analisis data dan machine learning untuk bisnis.'],
-                ['Machine Learning Engineer', 'AI RESEARCH', 'Remote', 'Rp 17.500.000', 'Full-time', 'Develop machine learning models dan algorithms.'],
-                ['Data Analyst', 'ANALYTICS PRO', 'Jakarta', 'Rp 11.000.000', 'Full-time', 'Analisis data dan business intelligence reporting.'],
-                ['Big Data Engineer', 'BIG DATA SOLUTIONS', 'Jakarta', 'Rp 15.500.000', 'Full-time', 'Handle dan process big data infrastructure.'],
-                ['AI Specialist', 'ARTIFICIAL INTELLIGENCE', 'Remote', 'Rp 18.000.000', 'Full-time', 'Develop artificial intelligence solutions.'],
-                ['Data Engineer', 'DATA ENGINEERING', 'Jakarta', 'Rp 14.500.000', 'Full-time', 'Build data pipelines dan ETL processes.'],
-                ['Analytics Engineer', 'ANALYTICS ENGINEERING', 'Remote', 'Rp 12.500.000', 'Full-time', 'Create analytics infrastructure dan dashboards.'],
-                ['Business Intelligence', 'BI SOLUTIONS', 'Jakarta', 'Rp 12.000.000', 'Full-time', 'Develop BI tools dan dashboards untuk management.'],
-                ['Statistician', 'STATISTICS LAB', 'Jakarta', 'Rp 11.000.000', 'Full-time', 'Analisis statistik dan forecasting data.'],
-                ['Data Visualizer', 'DATA VIZ STUDIO', 'Bandung', 'Rp 10.500.000', 'Full-time', 'Create data visualization dan infographics.'],
+        $locations = [
+            'Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Medan',
+            'Bali', 'Makassar', 'Semarang', 'Palembang', 'Tangerang',
+            'Bekasi', 'Depok', 'Bogor', 'Cikarang', 'Serpong',
+            'Remote', 'Remote (Jakarta)', 'Remote (Indonesia)', 'Hybrid Jakarta',
+            'Hybrid Bandung', 'Hybrid Surabaya', 'Jakarta - Hybrid',
+        ];
 
-                // Tier 4: DevOps & Infrastructure (10 jobs)
-                ['DevOps Engineer', 'CLOUD SYSTEMS', 'Remote', 'Rp 14.500.000', 'Full-time', 'Manage infrastructure dan deployment automation.'],
-                ['Cloud Architect', 'CLOUD EXPERTS', 'Jakarta', 'Rp 18.000.000', 'Full-time', 'Desain arsitektur cloud infrastructure.'],
-                ['Database Administrator', 'DATA MANAGEMENT', 'Jakarta', 'Rp 13.500.000', 'Full-time', 'Manage database dan optimize queries.'],
-                ['System Administrator', 'IT SERVICES', 'Jakarta', 'Rp 10.000.000', 'Full-time', 'Maintain sistem dan network infrastructure.'],
-                ['Security Engineer', 'CYBER SECURITY', 'Remote', 'Rp 15.500.000', 'Full-time', 'Implementasi dan monitoring keamanan sistem.'],
-                ['Platform Engineer', 'PLATFORM TECH', 'Remote', 'Rp 15.000.000', 'Full-time', 'Build platform infrastructure untuk developer.'],
-                ['Site Reliability Engineer', 'RELIABILITY FIRST', 'Remote', 'Rp 16.000.000', 'Full-time', 'Maintain reliability dan uptime sistem.'],
-                ['Network Engineer', 'NETWORK SOLUTIONS', 'Jakarta', 'Rp 12.000.000', 'Full-time', 'Design dan manage network infrastructure.'],
-                ['Infrastructure Engineer', 'INFRASTRUCTURE PRO', 'Remote', 'Rp 13.000.000', 'Full-time', 'Build infrastructure scalable dan reliable.'],
-                ['Kubernetes Engineer', 'CONTAINER TECH', 'Remote', 'Rp 14.000.000', 'Full-time', 'Manage dan optimize kubernetes clusters.'],
+        $jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Temporary'];
 
-                // Tier 5: QA & Testing (5 jobs)
-                ['QA Engineer', 'TEST MASTERS', 'Surabaya', 'Rp 9.000.000', 'Full-time', 'Melakukan testing dan quality assurance.'],
-                ['Automation QA', 'AUTOMATION TESTING', 'Jakarta', 'Rp 10.000.000', 'Full-time', 'Create test automation dan scripts.'],
-                ['QA Lead', 'QA LEADERSHIP', 'Jakarta', 'Rp 12.000.000', 'Full-time', 'Lead QA team dan quality strategy.'],
-                ['Performance Tester', 'PERFORMANCE TESTING', 'Remote', 'Rp 11.000.000', 'Full-time', 'Testing performa dan load testing.'],
-                ['Security Tester', 'SECURITY TESTING', 'Jakarta', 'Rp 11.500.000', 'Full-time', 'Security testing dan vulnerability assessment.'],
+        $salaryRanges = [
+            'Rp 5.000.000', 'Rp 6.000.000', 'Rp 7.000.000', 'Rp 8.000.000', 'Rp 9.000.000',
+            'Rp 10.000.000', 'Rp 11.000.000', 'Rp 12.000.000', 'Rp 13.000.000', 'Rp 14.000.000',
+            'Rp 15.000.000', 'Rp 16.000.000', 'Rp 17.000.000', 'Rp 18.000.000', 'Rp 19.000.000',
+            'Rp 20.000.000', 'Rp 21.000.000', 'Rp 22.000.000', 'Rp 25.000.000', 'Rp 30.000.000',
+        ];
 
-                // Tier 6: Management & Strategy (8 jobs)
-                ['Product Manager', 'PRODUCT LABS', 'Jakarta', 'Rp 17.000.000', 'Full-time', 'Mengelola product development dan strategy.'],
-                ['Business Analyst', 'CONSULT PRO', 'Jakarta', 'Rp 11.000.000', 'Full-time', 'Analisis kebutuhan bisnis dan requirement gathering.'],
-                ['Technical Director', 'TECH DIRECTION', 'Jakarta', 'Rp 21.000.000', 'Full-time', 'Direktur teknis dan strategic planning.'],
-                ['Engineering Manager', 'TECH MANAGEMENT', 'Jakarta', 'Rp 18.000.000', 'Full-time', 'Manage tim engineering dan technical projects.'],
-                ['Solutions Architect', 'SOLUTIONS INC', 'Jakarta', 'Rp 16.500.000', 'Full-time', 'Design solusi untuk klien enterprise.'],
-                ['Software Architect', 'SOFTWARE DESIGN', 'Jakarta', 'Rp 19.500.000', 'Full-time', 'Design arsitektur software yang scalable.'],
-                ['Operations Manager', 'OPERATIONS HUB', 'Jakarta', 'Rp 11.000.000', 'Full-time', 'Manage operasional dan business processes.'],
-                ['Project Manager', 'PROJECT MASTERS', 'Jakarta', 'Rp 12.500.000', 'Full-time', 'Manage project dan timeline delivery.'],
+        $descriptions = [
+            'Membangun aplikasi masa depan dengan teknologi terkini.',
+            'Develop REST API dengan best practices dan clean code.',
+            'Membuat UI yang responsif dan user-friendly.',
+            'Mengembangkan aplikasi mobile yang powerful.',
+            'Membantu development tim dalam berbagai project.',
+            'Lead development team dan arsitektur sistem.',
+            'Build dan maintain API services yang reliable.',
+            'Lead tim dan code architecture yang baik.',
+            'Design dan manage database yang scalable.',
+            'Implementasi keamanan sistem yang ketat.',
+            'Manage infrastructure dan deployment automation.',
+            'Desain arsitektur cloud infrastructure.',
+            'Manage database dan optimize queries.',
+            'Maintain sistem dan network infrastructure.',
+            'Create test automation dan scripts.',
+            'Lead QA team dan quality strategy.',
+            'Testing performa dan load testing.',
+            'Security testing dan vulnerability assessment.',
+            'Mengelola product development dan strategy.',
+            'Analisis kebutuhan bisnis dan requirement gathering.',
+            'Direktur teknis dan strategic planning.',
+            'Manage tim engineering dan technical projects.',
+            'Design solusi untuk klien enterprise.',
+            'Design arsitektur software yang scalable.',
+            'Manage operasional dan business processes.',
+            'Manage project dan timeline delivery.',
+            'Develop aplikasi blockchain dan smart contracts.',
+            'Develop game menggunakan game engine terbaru.',
+            'Create aplikasi augmented dan virtual reality.',
+            'Develop Internet of Things applications.',
+            'Develop embedded systems dan firmware.',
+            'Design dan develop robotic systems.',
+            'Develop scripts untuk automation.',
+            'Analisis data dan machine learning untuk bisnis.',
+            'Develop machine learning models dan algorithms.',
+            'Analisis data dan business intelligence reporting.',
+            'Handle dan process big data infrastructure.',
+            'Develop artificial intelligence solutions.',
+            'Build data pipelines dan ETL processes.',
+            'Create analytics infrastructure dan dashboards.',
+            'Develop BI tools dan dashboards untuk management.',
+            'Analisis statistik dan forecasting data.',
+            'Create data visualization dan infographics.',
+            'Membuat desain glassmorphism yang cantik.',
+            'Membuat visual design dan branding materials.',
+            'Design product experience dan user interface.',
+            'Research user behavior dan usability testing.',
+            'Lead design team dan design strategy.',
+            'Manage brand identity dan marketing assets.',
+            'Desain website modern dan user-friendly.',
+            'Create motion graphics dan animasi profesional.',
+            'Design interactive experience untuk user.',
+            'Konsultasi desain untuk berbagai klien.',
+        ];
 
-                // Tier 7: Specialized Tech (7 jobs)
-                ['Blockchain Developer', 'CRYPTO LABS', 'Remote', 'Rp 18.500.000', 'Full-time', 'Develop aplikasi blockchain dan smart contracts.'],
-                ['Game Developer', 'GAME STUDIO', 'Bandung', 'Rp 12.500.000', 'Full-time', 'Develop game menggunakan Unity dan Unreal.'],
-                ['AR/VR Developer', 'IMMERSIVE TECH', 'Jakarta', 'Rp 14.000.000', 'Full-time', 'Create aplikasi augmented dan virtual reality.'],
-                ['IoT Developer', 'IOT SOLUTIONS', 'Surabaya', 'Rp 12.000.000', 'Full-time', 'Develop Internet of Things applications.'],
-                ['Embedded Systems', 'EMBEDDED TECH', 'Jakarta', 'Rp 13.000.000', 'Full-time', 'Develop embedded systems dan firmware.'],
-                ['Robotics Engineer', 'ROBOTICS LABS', 'Remote', 'Rp 15.000.000', 'Full-time', 'Design dan develop robotic systems.'],
-                ['Scripting Developer', 'SCRIPTING SOLUTIONS', 'Remote', 'Rp 9.500.000', 'Full-time', 'Develop scripts untuk automation.'],
-            ];
+        $statuses = ['active', 'closed', 'inactive'];
 
-            foreach ($jobs as $job) {
-                \App\Models\Job::create([
-                    'title' => $job[0],
-                    'company_name' => $job[1],
-                    'location' => $job[2],
-                    'salary' => $job[3],
-                    'type' => $job[4],
-                    'description' => $job[5],
+        // Get all recruiters or create defaults
+        $recruiters = User::role('recruiter')->limit(5)->get();
+        
+        if ($recruiters->isEmpty()) {
+            // If no recruiters exist, create a few dummy recruiters
+            $recruiters = collect();
+            for ($i = 1; $i <= 5; $i++) {
+                $recruiter = User::create([
+                    'name' => "Recruiter $i",
+                    'email' => "recruiter$i@example.com",
+                    'password' => bcrypt('password'),
                 ]);
+                $recruiter->assignRole('recruiter');
+                $recruiters->push($recruiter);
             }
         }
+
+        // Create 1000 dummy jobs
+        $batchSize = 100;
+        for ($i = 0; $i < 1000; $i += $batchSize) {
+            $jobs = [];
+            for ($j = 0; $j < $batchSize && ($i + $j) < 1000; $j++) {
+                $recruiter = $recruiters->random();
+                
+                $jobs[] = [
+                    'title' => collect($jobTitles)->random(),
+                    'company_name' => collect($companyNames)->random(),
+                    'location' => collect($locations)->random(),
+                    'salary' => collect($salaryRanges)->random(),
+                    'type' => collect($jobTypes)->random(),
+                    'description' => collect($descriptions)->random(),
+                    'status' => collect($statuses)->random(),
+                    'recruiter_id' => $recruiter->id,
+                    'created_at' => now()->subDays(rand(0, 90)),
+                    'updated_at' => now()->subDays(rand(0, 90)),
+                ];
+            }
+            
+            \App\Models\Job::insert($jobs);
+        }
+    }
 }

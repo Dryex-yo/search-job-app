@@ -36,13 +36,15 @@ const handleLogout = () => {
         <div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors duration-300 relative z-10">
             <!-- Navigation Bar -->
             <nav class="border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 dark:backdrop-blur-md sticky top-0 z-50 transition-colors duration-300">
-                <div class="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
-                    <div class="flex h-14 sm:h-16 justify-between items-center">
+                <div class="mx-auto w-full max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
+                    <div class="flex h-16 gap-2 justify-between items-center">
                         <!-- Logo -->
-                        <div class="flex shrink-0 items-center">
-                            <Link href="/" class="flex items-center gap-2">
-                                <ApplicationLogo class="h-7 sm:h-8 w-7 sm:w-8 text-cyan-400" />
-                                <span class="text-base sm:text-lg font-bold text-white hidden sm:inline">JobSearch</span>
+                        <div class="flex items-center shrink-0 min-w-0">
+                            <Link href="/" class="flex items-center gap-1 shrink min-w-0">
+                                <div class="flex shrink-0 w-9 h-9 items-center">
+                                    <ApplicationLogo class="h-full w-auto max-w-[200px]" />
+                                </div>
+                                <span class="text-sm sm:text-lg font-bold text-gray-900 dark:text-white whitespace-nowrap truncate">JobSearch</span>
                             </Link>
                         </div>
 
@@ -60,7 +62,7 @@ const handleLogout = () => {
                                 :active="route().current('dashboard')"
                                 class="text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition text-sm md:text-base"
                             >
-                                {{ t('navigation.home') }}
+                                {{ t('Dashboard') }}
                             </NavLink>
                         </div>
 
@@ -127,12 +129,12 @@ const handleLogout = () => {
                         </div>
 
                         <!-- Mobile Hamburger Menu -->
-                        <div class="flex sm:hidden items-center gap-2">
+                        <div class="flex sm:hidden items-center gap-1">
                             <DarkModeToggle />
                             <LanguageSwitcher />
                             <button
                                 @click="showingNavigationDropdown = !showingNavigationDropdown"
-                                class="inline-flex items-center justify-center rounded-md p-2 text-gray-600 dark:text-slate-400 transition duration-150 ease-in-out hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100 focus:bg-gray-100 dark:focus:bg-slate-700 focus:text-gray-900 dark:focus:text-slate-100 focus:outline-none"
+                                class="inline-flex items-center justify-center rounded-lg p-2.5 text-gray-600 dark:text-slate-400 transition duration-150 ease-in-out hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100 focus:bg-gray-100 dark:focus:bg-slate-700 focus:text-gray-900 dark:focus:text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                             >
                                 <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                                     <path
@@ -167,14 +169,14 @@ const handleLogout = () => {
                         block: showingNavigationDropdown,
                         hidden: !showingNavigationDropdown,
                     }"
-                    class="sm:hidden border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 transition-colors duration-300"
+                    class="sm:hidden border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 transition-all duration-300 ease-smooth"
                 >
-                    <div class="space-y-1 px-2 pb-3 pt-2">
-                        <ResponsiveNavLink href="/" :active="route().current('index')" class="text-xs sm:text-sm">
+                    <div class="space-y-1 px-2 pb-4 pt-3 sm:px-3">
+                        <ResponsiveNavLink href="/" :active="route().current('index')" class="text-sm">
                             {{ t('navigation.jobs') }}
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink href="/dashboard" :active="route().current('dashboard')" class="text-xs sm:text-sm">
-                            {{ t('navigation.home') }}
+                        <ResponsiveNavLink href="/dashboard" :active="route().current('dashboard')" class="text-sm">
+                            {{ t('navigation.dashboard') }}
                         </ResponsiveNavLink>
                     </div>
 
@@ -188,10 +190,10 @@ const handleLogout = () => {
                         </div>
 
                         <div class="mt-3 space-y-1">
-                            <ResponsiveNavLink :href="route('profile.edit')" class="text-gray-600 dark:text-slate-300 text-xs sm:text-sm">
+                            <ResponsiveNavLink :href="route('profile.edit')" class="text-gray-600 dark:text-slate-300 text-sm">
                                 {{ t('navigation.myProfile') }}
                             </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('logout')" method="post" as="button" class="text-gray-600 dark:text-slate-300 text-xs sm:text-sm">
+                            <ResponsiveNavLink :href="route('logout')" method="post" as="button" class="text-gray-600 dark:text-slate-300 text-sm">
                                 {{ t('common.logout') }}
                             </ResponsiveNavLink>
                         </div>
@@ -199,13 +201,13 @@ const handleLogout = () => {
                     <div v-else class="border-t border-gray-200 dark:border-slate-700 px-3 sm:px-4 py-3 space-y-2 transition-colors duration-300">
                         <Link
                             :href="route('login')"
-                            class="block w-full text-center px-3 sm:px-4 py-2 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-xs sm:text-sm"
+                            class="block w-full text-center px-3 sm:px-4 py-2.5 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-sm font-medium"
                         >
                             {{ t('common.login') }}
                         </Link>
                         <Link
                             :href="route('register')"
-                            class="block w-full text-center px-3 sm:px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition text-xs sm:text-sm"
+                            class="block w-full text-center px-3 sm:px-4 py-2.5 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition text-sm font-medium"
                         >
                             {{ t('common.register') }}
                         </Link>

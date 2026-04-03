@@ -106,6 +106,14 @@ const menus = computed(() => {
                         </div>
 
                         <div class="flex items-center gap-4">
+                            <!-- Home Button -->
+                            <Link :href="route('jobs.index')"
+                                class="p-3 rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 transition-all duration-300 shadow-sm dark:shadow-md"
+                                title="Go to Home"
+                            >
+                                <span class="text-xl">🏠</span>
+                            </Link>
+
                             <!-- Dark Mode Toggle -->
                             <DarkModeToggle />
 

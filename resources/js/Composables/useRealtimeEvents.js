@@ -4,9 +4,10 @@
  */
 
 import { ref } from 'vue';
-import Echo from 'laravel-echo';
 
 let echoInstance = null;
+let echoInitialized = false;
+let echoError = null;
 
 export const useRealtimeEvents = () => {
     const isConnected = ref(false);
@@ -16,11 +17,33 @@ export const useRealtimeEvents = () => {
      * Initialize Laravel Echo with Reverb connection
      */
     const initializeEcho = () => {
-        if (echoInstance) {
+        // Return early if we've already attempted to initialize and failed
+        if (echoInitialized) {
+            if (echoError) {
+                console.warn('⚠️ Real-time events unavailable:', echoError);
+                return null;
+            }
             return echoInstance;
         }
 
+        echoInitialized = true;
+
         try {
+            // Use window.Echo if available (initialized in bootstrap.js)
+            if (window.Echo) {
+                echoInstance = window.Echo;
+                isConnected.value = true;
+                console.log('🔌 WebSocket connected via Reverb');
+                return echoInstance;
+            }
+
+            // Fallback: Attempt to create a new Echo instance
+            const Echo = window.Echo || (typeof window !== 'undefined' && window.Echo);
+            
+            if (!Echo) {
+                throw new Error('Laravel Echo library not available - real-time updates will be disabled');
+            }
+
             echoInstance = new Echo({
                 broadcaster: 'reverb',
                 key: import.meta.env.VITE_REVERB_APP_KEY || 'default-app-key',
@@ -36,7 +59,8 @@ export const useRealtimeEvents = () => {
 
             return echoInstance;
         } catch (error) {
-            console.error('Failed to initialize Echo:', error);
+            echoError = error.message;
+            console.warn('⚠️ Real-time WebSocket unavailable - App will continue without real-time updates:', error.message);
             isConnected.value = false;
             return null;
         }
@@ -46,70 +70,88 @@ export const useRealtimeEvents = () => {
      * Listen to a public channel event
      */
     const listenToApplications = (callback) => {
-        const echo = initializeEcho();
-        if (!echo) return;
+        try {
+            const echo = initializeEcho();
+            if (!echo) {
+                console.warn('⚠️ Real-time events disabled. Application will work with polling only.');
+                return;
+            }
 
-        echo.channel('applications')
-            .listen('application.submitted', (data) => {
-                console.log('📨 Application submitted:', data);
-                callback({
-                    type: 'application.submitted',
-                    data,
+            echo.channel('applications')
+                .listen('application.submitted', (data) => {
+                    console.log('📨 Application submitted:', data);
+                    callback({
+                        type: 'application.submitted',
+                        data,
+                    });
+                })
+                .listen('application.status-changed', (data) => {
+                    console.log('📊 Application status changed:', data);
+                    callback({
+                        type: 'application.status-changed',
+                        data,
+                    });
                 });
-            })
-            .listen('application.status-changed', (data) => {
-                console.log('📊 Application status changed:', data);
-                callback({
-                    type: 'application.status-changed',
-                    data,
-                });
-            });
 
-        listeners.value.set('applications', callback);
+            listeners.value.set('applications', callback);
+        } catch (error) {
+            console.warn('⚠️ Failed to listen to applications channel:', error.message);
+        }
     };
 
     /**
      * Stop listening to applications channel
      */
     const stopListeningToApplications = () => {
-        const echo = echoInstance;
-        if (!echo) return;
+        try {
+            if (!echoInstance) return;
 
-        echo.leaveChannel('applications');
-        listeners.value.delete('applications');
+            echoInstance.leaveChannel('applications');
+            listeners.value.delete('applications');
+        } catch (error) {
+            console.warn('⚠️ Failed to stop listening:', error.message);
+        }
     };
 
     /**
      * Listen to private channel for specific user
      */
     const listenToUserNotifications = (userId, callback) => {
-        const echo = initializeEcho();
-        if (!echo) return;
+        try {
+            const echo = initializeEcho();
+            if (!echo) return;
 
-        const channelName = `private.user.${userId}`;
+            const channelName = `private.user.${userId}`;
 
-        echo.private(channelName)
-            .listen('application.status-changed', (data) => {
-                console.log('📌 Personal notification:', data);
-                callback({
-                    type: 'personal.status-changed',
-                    data,
+            echo.private(channelName)
+                .listen('application.status-changed', (data) => {
+                    console.log('📌 Personal notification:', data);
+                    callback({
+                        type: 'personal.status-changed',
+                        data,
+                    });
                 });
-            });
 
-        listeners.value.set(channelName, callback);
+            listeners.value.set(channelName, callback);
+        } catch (error) {
+            console.warn('⚠️ Failed to listen to user notifications:', error.message);
+        }
     };
 
     /**
      * Disconnect from WebSocket
      */
     const disconnect = () => {
-        if (echoInstance) {
-            echoInstance.disconnect();
-            echoInstance = null;
-            isConnected.value = false;
-            listeners.value.clear();
-            console.log('❌ WebSocket disconnected');
+        try {
+            if (echoInstance) {
+                echoInstance.disconnect();
+                echoInstance = null;
+                isConnected.value = false;
+                listeners.value.clear();
+                console.log('❌ WebSocket disconnected');
+            }
+        } catch (error) {
+            console.warn('⚠️ Failed to disconnect:', error.message);
         }
     };
 

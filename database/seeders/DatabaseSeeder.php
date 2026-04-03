@@ -31,5 +31,8 @@ class DatabaseSeeder extends Seeder
 
         // Assign admin role to the admin user
         $admin->assignRole('admin');
+        
+        // Seed jobs
+        $this->call(JobSeeder::class);
     }
 }

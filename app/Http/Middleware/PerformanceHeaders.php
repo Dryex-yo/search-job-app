@@ -56,14 +56,14 @@ class PerformanceHeaders
     {
         $isDev = config('app.debug');
         
-        // Development policy - allow Vite dev server on specific ports (5173, 5174, etc)
+        // Development policy - allow Vite dev server and Reverb/Pusher
         if ($isDev) {
             return "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:5173 http://localhost:5174 https://localhost:5173 https://localhost:5174 http://127.0.0.1:5173 http://127.0.0.1:5174; "
                 . "script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:5173 http://localhost:5174 https://localhost:5173 https://localhost:5174 http://127.0.0.1:5173 http://127.0.0.1:5174; "
                 . "style-src 'self' 'unsafe-inline' http://localhost:5173 http://localhost:5174 https://localhost:5173 https://localhost:5174 http://127.0.0.1:5173 http://127.0.0.1:5174 *.bunny.net; "
                 . "img-src 'self' data: https: blob:; "
                 . "font-src 'self' *.bunny.net; "
-                . "connect-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:5173 http://localhost:5174 https://localhost:5173 https://localhost:5174 http://127.0.0.1:5173 http://127.0.0.1:5174 ws://localhost:5173 ws://localhost:5174 wss://localhost:5173 wss://localhost:5174 ws://127.0.0.1:5173 ws://127.0.0.1:5174 wss://127.0.0.1:5173 wss://127.0.0.1:5174;";
+                . "connect-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:5173 http://localhost:5174 https://localhost:5173 https://localhost:5174 http://127.0.0.1:5173 http://127.0.0.1:5174 ws://localhost:5173 ws://localhost:5174 wss://localhost:5173 wss://localhost:5174 ws://127.0.0.1:5173 ws://127.0.0.1:5174 wss://127.0.0.1:5173 wss://127.0.0.1:5174 ws://localhost:8080 wss://localhost:8080 ws://127.0.0.1:8080 wss://127.0.0.1:8080 https://js.pusher.com https://sockjs.pusher.com wss://*.pusher.com;";
         }
         
         // Production policy - strict
@@ -72,7 +72,7 @@ class PerformanceHeaders
             . "style-src 'self' 'unsafe-inline' *.bunny.net; "
             . "img-src 'self' data: https:; "
             . "font-src 'self' *.bunny.net; "
-            . "connect-src 'self' *.bunny.net;";
+            . "connect-src 'self' *.bunny.net wss://*.pusher.com https://js.pusher.com;";
     }
 
     /**

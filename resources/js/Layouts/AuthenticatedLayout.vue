@@ -27,14 +27,14 @@ const showingNavigationDropdown = ref(false);
                 class="nav-light border-b sticky top-0 z-40"
             >
                 <!-- Primary Navigation Menu -->
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="flex h-16 justify-between items-center">
-                        <div class="flex items-center">
+                <div class="mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8">
+                    <div class="flex h-16 gap-2 justify-between items-center">
+                        <div class="flex items-center shrink-0 min-w-0">
                             <!-- Logo -->
-                            <div class="flex shrink-0 items-center">
+                            <div class="flex shrink-0 w-9 h-9 items-center">
                                 <Link :href="route('dashboard')">
                                     <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-light-gray-text dark:text-white transition-colors duration-300"
+                                        class="h-full w-auto max-w-[200px] fill-current text-light-gray-text dark:text-white transition-colors duration-300"
                                     />
                                 </Link>
                             </div>
@@ -47,7 +47,7 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard')"
                                 >
-                                    {{ t('navigation.home') }}
+                                    {{ t('Dashboard') }}
                                 </NavLink>
                             </div>
                         </div>
@@ -105,7 +105,7 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <!-- Hamburger -->
-                        <div class="-me-2 flex items-center gap-2 sm:hidden">
+                        <div class="flex items-center gap-1 sm:hidden">
                             <!-- Dark Mode Toggle Mobile -->
                             <DarkModeToggle />
 
@@ -117,7 +117,7 @@ const showingNavigationDropdown = ref(false);
                                     showingNavigationDropdown =
                                         !showingNavigationDropdown
                                 "
-                                class="inline-flex items-center justify-center rounded-lg p-2 text-light-gray-muted dark:text-gray-500 transition-all duration-300 ease-smooth hover:bg-light-tertiary dark:hover:bg-gray-800 hover:text-light-gray-text dark:hover:text-gray-400 focus:bg-light-tertiary dark:focus:bg-gray-800 focus:text-light-gray-text dark:focus:text-gray-400 focus:outline-none"
+                                class="inline-flex items-center justify-center rounded-lg p-2.5 text-light-gray-muted dark:text-gray-500 transition-all duration-300 ease-smooth hover:bg-light-tertiary dark:hover:bg-gray-800 hover:text-light-gray-text dark:hover:text-gray-400 focus:bg-light-tertiary dark:focus:bg-gray-800 focus:text-light-gray-text dark:focus:text-gray-400 focus:outline-none focus:ring-2 focus:ring-light-accent dark:focus:ring-blue-500"
                             >
                                 <svg
                                     class="h-6 w-6"
@@ -159,9 +159,9 @@ const showingNavigationDropdown = ref(false);
                         block: showingNavigationDropdown,
                         hidden: !showingNavigationDropdown,
                     }"
-                    class="sm:hidden border-t border-light-gray-border dark:border-gray-700 transition-all duration-300"
+                    class="sm:hidden border-t border-light-gray-border dark:border-gray-700 transition-all duration-300 ease-smooth"
                 >
-                    <div class="space-y-1 pb-3 pt-2">
+                    <div class="space-y-1 px-2 pb-4 pt-3 sm:px-3">
                         <ResponsiveNavLink
                             :href="route('dashboard')"
                             :active="route().current('dashboard')"
@@ -172,7 +172,7 @@ const showingNavigationDropdown = ref(false);
 
                     <!-- Responsive Settings Options -->
                     <div
-                        class="border-t border-light-gray-border dark:border-gray-700 pb-1 pt-4"
+                        class="border-t border-light-gray-border dark:border-gray-700 pb-2 pt-4"
                     >
                         <div class="px-4">
                             <div
@@ -180,7 +180,7 @@ const showingNavigationDropdown = ref(false);
                             >
                                 {{ $page.props.auth.user.name }}
                             </div>
-                            <div class="text-sm font-medium text-light-gray-muted dark:text-gray-400">
+                            <div class="text-sm font-medium text-light-gray-muted dark:text-gray-400 truncate">
                                 {{ $page.props.auth.user.email }}
                             </div>
                         </div>
