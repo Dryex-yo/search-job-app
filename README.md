@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/Laravel-11-FF2D20?style=flat-square&logo=laravel" alt="Laravel 11">
+<img src="https://img.shields.io/badge/Laravel-12-FF2D20?style=flat-square&logo=laravel" alt="Laravel 12">
 <img src="https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=flat-square&logo=php" alt="PHP 8.2+">
 <img src="https://img.shields.io/badge/Vue-3-4FC08D?style=flat-square&logo=vue.js" alt="Vue 3">
 <img src="https://img.shields.io/badge/Tailwind-CSS-06B6D4?style=flat-square&logo=tailwindcss" alt="Tailwind CSS">
@@ -206,7 +206,7 @@
 ## Tech Stack
 
 ### Backend
-- **Framework**: Laravel 11 dengan PHP 8.2+
+- **Framework**: Laravel 12 dengan PHP 8.2+
 - **Database**: MySQL/PostgreSQL
 - **Real-time**: Laravel Reverb (WebSocket Broadcasting)
 - **Queue**: Laravel Queue untuk background jobs
