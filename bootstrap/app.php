@@ -25,5 +25,42 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Sentry integration for error tracking
+        $exceptions->reportable(function (\Throwable $e) {
+            // Send to Sentry if enabled
+            if (config('sentry.enabled') && function_exists('\\Sentry\\captureException')) {
+                \Sentry\captureException($e);
+            }
+        });
+
+        // Custom error response handler
+        $exceptions->render(function (\Throwable $e, $request) {
+            // Log to Sentry with context
+            if (config('sentry.enabled') && function_exists('\\Sentry\\withScope')) {
+                \Sentry\withScope(function ($scope) use ($e, $request) {
+                    // Add user context
+                    if ($request->user()) {
+                        $scope->setUser([
+                            'id' => $request->user()->id,
+                            'email' => $request->user()->email,
+                            'username' => $request->user()->name ?? null,
+                        ]);
+                    }
+
+                    // Add request context
+                    $scope->setContext('request', [
+                        'url' => $request->url(),
+                        'method' => $request->method(),
+                        'ip' => $request->ip(),
+                        'user_agent' => $request->userAgent(),
+                    ]);
+
+                    // Add request data
+                    if ($request->isJson()) {
+                        $scope->setContext('payload', $request->all());
+                    }
+                });
+            }
+        });
     })->create();
+

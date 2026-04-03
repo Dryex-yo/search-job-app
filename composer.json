@@ -16,6 +16,7 @@
         "maatwebsite/excel": "*",
         "openai-php/client": "*",
         "predis/predis": "^2.0",
+        "sentry/sentry-laravel": "*",
         "smalot/pdfparser": "^2.12",
         "spatie/laravel-activitylog": "^4.12",
         "spatie/laravel-medialibrary": "^11.0",
