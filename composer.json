@@ -15,8 +15,10 @@
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "*",
         "openai-php/client": "*",
+        "predis/predis": "^2.0",
         "smalot/pdfparser": "^2.12",
         "spatie/laravel-activitylog": "^4.12",
+        "spatie/laravel-medialibrary": "^11.0",
         "spatie/laravel-permission": "*",
         "tightenco/ziggy": "^2.0"
     },

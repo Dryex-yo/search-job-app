@@ -6,18 +6,27 @@ use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Job;
 use App\Models\User;
+use App\Services\DashboardCacheService;
 use App\Actions\Applications\UpdateApplicationStatusAction;
 use App\Exports\ApplicationsExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 
 class DashboardController extends Controller
 {
+    private DashboardCacheService $cacheService;
+
+    public function __construct(DashboardCacheService $cacheService)
+    {
+        $this->cacheService = $cacheService;
+    }
+
     public function dashboard()
     {
         return Inertia::render('Admin/Dashboard', [
@@ -38,7 +47,7 @@ class DashboardController extends Controller
 
         $applicants = Application::with(['user', 'job'])
             ->latest()
-            ->get()
+            ->paginate(15)
             ->map(function ($app) {
                 return [
                     'id' => $app->id,
@@ -83,6 +92,9 @@ class DashboardController extends Controller
             $application->update(['notes' => trim($request->notes)]);
         }
 
+        // Invalidate admin caches when status changes
+        $this->cacheService->invalidateAllCaches();
+
         return back()->with('message', 'Status pelamar berhasil diperbarui!');
     }
 
@@ -116,7 +128,6 @@ class DashboardController extends Controller
         $application = Application::findOrFail($id);
         
         if ($application->resume_path && Storage::disk('public')->exists($application->resume_path)) {
-            // Gunakan response() download agar Intelephense lebih tenang
             return response()->download(storage_path('app/public/' . $application->resume_path));
         }
 
@@ -124,38 +135,37 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get analytics data for admin pages
+     * Get analytics data for admin pages (cached)
      */
     private function getAnalyticsData()
     {
-        $totalApplications = Application::count();
-        $hiredCount = Application::where('status', 'hired')->count();
-        $rejectedCount = Application::where('status', 'rejected')->count();
-        $shortlistedCount = Application::where('status', 'shortlisted')->count();
-        $pendingCount = Application::where('status', 'pending')->count();
-        
-        // Calculate success rate (hired / total * 100)
-        $successRate = $totalApplications > 0 ? round(($hiredCount / $totalApplications) * 100, 1) : 0;
-        
-        // Calculate revenue from hired applications (estimated at $500 per hire)
-        $totalRevenue = $hiredCount * 500;
-        
-        // Get monthly applications data for the last 12 months
-        $monthlyData = $this->getMonthlyApplicationsData();
-        
-        return [
-            'total_jobs' => Job::count(),
-            'total_applications' => $totalApplications,
-            'total_users' => User::whereNotIn('id', [Auth::id()])->count(),
-            'active_jobs' => Job::where('status', 'active')->count(),
-            'pending_applications' => $pendingCount,
-            'shortlisted_applications' => $shortlistedCount,
-            'rejected_applications' => $rejectedCount,
-            'hired_count' => $hiredCount,
-            'success_rate' => $successRate,
-            'total_revenue' => $totalRevenue,
-            'monthly_applications' => $monthlyData,
-        ];
+        $cacheKey = 'admin_dashboard_analytics';
+
+        return Cache::remember($cacheKey, 3600, function () {
+            $totalApplications = Application::count();
+            $hiredCount = Application::where('status', 'hired')->count();
+            $rejectedCount = Application::where('status', 'rejected')->count();
+            $shortlistedCount = Application::where('status', 'shortlisted')->count();
+            $pendingCount = Application::where('status', 'pending')->count();
+            
+            $successRate = $totalApplications > 0 ? round(($hiredCount / $totalApplications) * 100, 1) : 0;
+            $totalRevenue = $hiredCount * 500;
+            $monthlyData = $this->getMonthlyApplicationsData();
+            
+            return [
+                'total_jobs' => Job::count(),
+                'total_applications' => $totalApplications,
+                'total_users' => User::whereNotIn('id', [Auth::id()])->count(),
+                'active_jobs' => Job::where('status', 'active')->count(),
+                'pending_applications' => $pendingCount,
+                'shortlisted_applications' => $shortlistedCount,
+                'rejected_applications' => $rejectedCount,
+                'hired_count' => $hiredCount,
+                'success_rate' => $successRate,
+                'total_revenue' => $totalRevenue,
+                'monthly_applications' => $monthlyData,
+            ];
+        });
     }
 
     public function analytics()
@@ -204,7 +214,7 @@ class DashboardController extends Controller
             $jobsQuery->where('type', $type);
         }
 
-        $jobs = $jobsQuery->latest()->get()->map(function($job) {
+        $jobs = $jobsQuery->latest()->paginate(15)->map(function($job) {
             return [
                 'id' => $job->id,
                 'title' => $job->title,
@@ -234,7 +244,6 @@ class DashboardController extends Controller
 
     public function storeJob(Request $request)
     {
-        // Only admin can create jobs
         /** @var User $user */
         $user = Auth::user();
         if (!$user->hasRole('admin')) {
@@ -252,13 +261,13 @@ class DashboardController extends Controller
         ]);
 
         Job::create($validated);
+        $this->cacheService->invalidateAllCaches();
 
         return back()->with('message', 'Job berhasil ditambahkan!');
     }
 
     public function updateJob(Request $request, $id)
     {
-        // Only admin can update jobs
         /** @var User $user */
         $user = Auth::user();
         if (!$user->hasRole('admin')) {
@@ -276,13 +285,13 @@ class DashboardController extends Controller
         ]);
 
         Job::findOrFail($id)->update($validated);
+        $this->cacheService->invalidateAllCaches();
 
         return back()->with('message', 'Job berhasil diperbarui!');
     }
 
     public function deleteJob($id)
     {
-        // Check if user has permission to delete jobs
         /** @var User $user */
         $user = Auth::user();
         if (!$user->can('delete-jobs') && !$user->hasRole('admin')) {
@@ -291,17 +300,15 @@ class DashboardController extends Controller
 
         $job = Job::findOrFail($id);
         
-        // Hapus semua applications yang terkait
         Application::where('job_id', $id)->delete();
-        
         $job->delete();
+        $this->cacheService->invalidateAllCaches();
 
         return back()->with('message', 'Job berhasil dihapus!');
     }
 
     public function settings()
     {
-        // Check if user has permission to change settings
         /** @var User $user */
         $user = Auth::user();
         if (!$user->can('change-settings') && !$user->hasRole('admin')) {
@@ -314,55 +321,62 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get monthly applications data for the last 12 months
+     * Get monthly applications data for the last 12 months (cached)
      */
     private function getMonthlyApplicationsData()
     {
-        $monthlyData = [];
-        $categories = [];
-        
-        for ($i = 11; $i >= 0; $i--) {
-            $startDate = Carbon::now()->subMonths($i)->startOfMonth();
-            $endDate = Carbon::now()->subMonths($i)->endOfMonth();
+        $cacheKey = 'monthly_applications_data';
+
+        return Cache::remember($cacheKey, 86400, function () {
+            $monthlyData = [];
+            $categories = [];
             
-            $count = Application::whereBetween('created_at', [$startDate, $endDate])->count();
-            $monthlyData[] = $count;
-            $categories[] = $startDate->format('M');
-        }
-        
-        return [
-            'data' => $monthlyData,
-            'categories' => $categories,
-        ];
+            for ($i = 11; $i >= 0; $i--) {
+                $startDate = Carbon::now()->subMonths($i)->startOfMonth();
+                $endDate = Carbon::now()->subMonths($i)->endOfMonth();
+                
+                $count = Application::whereBetween('created_at', [$startDate, $endDate])->count();
+                $monthlyData[] = $count;
+                $categories[] = $startDate->format('M');
+            }
+            
+            return [
+                'data' => $monthlyData,
+                'categories' => $categories,
+            ];
+        });
     }
 
     /**
-     * Get weekly applicants data for line chart (last 12 weeks)
+     * Get weekly applicants data for line chart (last 12 weeks) (cached)
      */
     private function getWeeklyApplicantsData()
     {
-        $weeksData = [];
-        $categories = [];
-        
-        // Get data for last 12 weeks
-        for ($i = 11; $i >= 0; $i--) {
-            $startDate = Carbon::now()->subWeeks($i)->startOfWeek();
-            $endDate = Carbon::now()->subWeeks($i)->endOfWeek();
+        $cacheKey = 'weekly_applicants_data';
+
+        return Cache::remember($cacheKey, 86400, function () {
+            $weeksData = [];
+            $categories = [];
             
-            $count = Application::whereBetween('created_at', [$startDate, $endDate])->count();
-            $weeksData[] = $count;
-            $categories[] = $startDate->format('d M');
-        }
-        
-        return [
-            'series' => [
-                [
-                    'name' => 'Aplikasi Per Minggu',
-                    'data' => $weeksData
-                ]
-            ],
-            'categories' => $categories,
-        ];
+            for ($i = 11; $i >= 0; $i--) {
+                $startDate = Carbon::now()->subWeeks($i)->startOfWeek();
+                $endDate = Carbon::now()->subWeeks($i)->endOfWeek();
+                
+                $count = Application::whereBetween('created_at', [$startDate, $endDate])->count();
+                $weeksData[] = $count;
+                $categories[] = $startDate->format('d M');
+            }
+            
+            return [
+                'series' => [
+                    [
+                        'name' => 'Aplikasi Per Minggu',
+                        'data' => $weeksData
+                    ]
+                ],
+                'categories' => $categories,
+            ];
+        });
     }
 
     /**
@@ -375,75 +389,87 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get status distribution for pie chart (Hired vs Rejected)
+     * Get status distribution for pie chart (cached)
      */
     private function getStatusDistribution()
     {
-        $hiredCount = Application::where('status', 'hired')->count();
-        $rejectedCount = Application::where('status', 'rejected')->count();
-        $otherCount = Application::whereNotIn('status', ['hired', 'rejected'])->count();
-        
-        return [
-            'series' => [$hiredCount, $rejectedCount, $otherCount],
-            'labels' => ['Hired 🎉', 'Rejected ❌', 'In Progress ⏳'],
-            'colors' => ['#10b981', '#ef4444', '#f59e0b'],
-        ];
+        $cacheKey = 'status_distribution_chart';
+
+        return Cache::remember($cacheKey, 3600, function () {
+            $hiredCount = Application::where('status', 'hired')->count();
+            $rejectedCount = Application::where('status', 'rejected')->count();
+            $otherCount = Application::whereNotIn('status', ['hired', 'rejected'])->count();
+            
+            return [
+                'series' => [$hiredCount, $rejectedCount, $otherCount],
+                'labels' => ['Hired 🎉', 'Rejected ❌', 'In Progress ⏳'],
+                'colors' => ['#10b981', '#ef4444', '#f59e0b'],
+            ];
+        });
     }
 
     /**
-     * Get monthly applications data for bar chart
+     * Get monthly applications data for bar chart (cached)
      */
     private function getMonthlyApplicationsChart()
     {
-        $monthlyData = [];
-        $categories = [];
-        
-        for ($i = 11; $i >= 0; $i--) {
-            $startDate = Carbon::now()->subMonths($i)->startOfMonth();
-            $endDate = Carbon::now()->subMonths($i)->endOfMonth();
+        $cacheKey = 'monthly_applications_chart';
+
+        return Cache::remember($cacheKey, 86400, function () {
+            $monthlyData = [];
+            $categories = [];
             
-            $count = Application::whereBetween('created_at', [$startDate, $endDate])->count();
-            $monthlyData[] = $count;
-            $categories[] = $startDate->format('M Y');
-        }
-        
-        return [
-            'series' => [
-                [
-                    'name' => 'Aplikasi',
-                    'data' => $monthlyData
-                ]
-            ],
-            'categories' => $categories,
-        ];
+            for ($i = 11; $i >= 0; $i--) {
+                $startDate = Carbon::now()->subMonths($i)->startOfMonth();
+                $endDate = Carbon::now()->subMonths($i)->endOfMonth();
+                
+                $count = Application::whereBetween('created_at', [$startDate, $endDate])->count();
+                $monthlyData[] = $count;
+                $categories[] = $startDate->format('M Y');
+            }
+            
+            return [
+                'series' => [
+                    [
+                        'name' => 'Aplikasi',
+                        'data' => $monthlyData
+                    ]
+                ],
+                'categories' => $categories,
+            ];
+        });
     }
 
     /**
-     * Get top 5 performing jobs by applications count
+     * Get top 5 performing jobs by applications count (cached)
      */
     private function getTopPerformingJobs()
     {
-        return Job::withCount('applications')
-            ->withCount(['applications as hired_count' => function($query) {
-                $query->where('status', 'hired');
-            }])
-            ->orderByDesc('applications_count')
-            ->limit(5)
-            ->get()
-            ->map(function($job) {
-                $totalApps = $job->applications_count ?? 0;
-                $hiredApps = $job->hired_count ?? 0;
-                $conversionRate = $totalApps > 0 ? round(($hiredApps / $totalApps) * 100, 1) : 0;
-                
-                return [
-                    'id' => $job->id,
-                    'title' => $job->title,
-                    'company_name' => $job->company_name,
-                    'applications_count' => $totalApps,
-                    'hired_count' => $hiredApps,
-                    'conversion_rate' => $conversionRate,
-                    'status' => $job->status,
-                ];
-            });
+        $cacheKey = 'top_performing_jobs';
+
+        return Cache::remember($cacheKey, 3600, function () {
+            return Job::withCount('applications')
+                ->withCount(['applications as hired_count' => function($query) {
+                    $query->where('status', 'hired');
+                }])
+                ->orderByDesc('applications_count')
+                ->limit(5)
+                ->get()
+                ->map(function($job) {
+                    $totalApps = $job->applications_count ?? 0;
+                    $hiredApps = $job->hired_count ?? 0;
+                    $conversionRate = $totalApps > 0 ? round(($hiredApps / $totalApps) * 100, 1) : 0;
+                    
+                    return [
+                        'id' => $job->id,
+                        'title' => $job->title,
+                        'company_name' => $job->company_name,
+                        'applications_count' => $totalApps,
+                        'hired_count' => $hiredApps,
+                        'conversion_rate' => $conversionRate,
+                        'status' => $job->status,
+                    ];
+                });
+        });
     }
 }
