@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\Admin\RegisteredRecruiterController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\InterviewSchedulingController;
 
 // --- Public Routes ---
 Route::get('/', [JobController::class, 'index'])->name('jobs.index');
@@ -67,6 +68,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::get('/applicants/download/{id}', [AdminDashboard::class, 'downloadResume'])->name('applicants.download');
         Route::get('/applicants/export/excel', [AdminDashboard::class, 'exportExcel'])->name('applicants.export.excel');
         Route::patch('/applications/{id}', [AdminDashboard::class, 'update'])->name('applications.update');
+
+        // Interview scheduling routes
+        Route::post('/applications/{id}/schedule-interview', [InterviewSchedulingController::class, 'schedule'])->name('applications.schedule-interview');
+        Route::patch('/applications/{id}/reschedule-interview', [InterviewSchedulingController::class, 'reschedule'])->name('applications.reschedule-interview');
+        Route::delete('/applications/{id}/cancel-interview', [InterviewSchedulingController::class, 'cancel'])->name('applications.cancel-interview');
+        Route::get('/applications/{id}/interview-details', [InterviewSchedulingController::class, 'getDetails'])->name('applications.interview-details');
 
         Route::get('/analytics', [AdminDashboard::class, 'analytics'])->name('analytics');
     });

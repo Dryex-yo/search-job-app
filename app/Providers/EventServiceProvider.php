@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Events\ApplicationStatusChanged;
 use App\Events\ApplicationSubmitted;
+use App\Events\InterviewScheduled;
 use App\Listeners\SendApplicationReceivedEmail;
 use App\Listeners\SendApplicationStatusChangedEmail;
 use App\Listeners\AnalyzeApplicationOnSubmit;
+use App\Listeners\SendInterviewScheduledEmail;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -23,6 +25,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         ApplicationStatusChanged::class => [
             SendApplicationStatusChangedEmail::class,
+        ],
+        InterviewScheduled::class => [
+            SendInterviewScheduledEmail::class,
         ],
     ];
 

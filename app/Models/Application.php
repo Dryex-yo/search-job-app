@@ -26,7 +26,15 @@ class Application extends Model
         'ai_match_score',
         'ai_analysis_status',
         'ai_analysis_details',
-        'ai_analyzed_at'
+        'ai_analyzed_at',
+        'interview_scheduled_at',
+        'interview_duration_minutes',
+        'interview_type',
+        'interview_meeting_link',
+        'interview_meeting_provider',
+        'interview_calendar_event_id',
+        'interview_notes',
+        'interview_cancelled_at'
     ];
 
     /**
