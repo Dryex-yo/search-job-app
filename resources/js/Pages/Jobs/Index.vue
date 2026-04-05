@@ -142,10 +142,13 @@ const closeCVPreview = () => {
                 
                 <!-- Search Bar -->
                 <div class="relative w-full group">
+                    <label for="job-search" class="sr-only">Cari pekerjaan</label>
                     <input 
+                        id="job-search"
                         v-model="search" 
                         type="text" 
                         placeholder="Cari posisi, perusahaan, atau lokasi..."
+                        aria-label="Cari pekerjaan berdasarkan posisi, perusahaan, atau lokasi"
                         class="w-full bg-white dark:bg-white/5 backdrop-blur-2xl border border-slate-200 dark:border-white/10 rounded-full md:rounded-[2rem] py-3 sm:py-4 px-4 sm:px-6 md:px-8 text-xs sm:text-sm md:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 transition-all shadow-lg dark:shadow-2xl"
                     />
                     <div class="absolute right-6 top-1/2 -translate-y-1/2 text-cyan-600 dark:text-cyan-400">
@@ -184,9 +187,11 @@ const closeCVPreview = () => {
                     
                     <!-- Filter: Job Type -->
                     <div>
-                        <label class="block text-[10px] text-slate-400 dark:text-gray-400 uppercase font-black mb-2 ml-1">Tipe Pekerjaan</label>
+                        <label for="filter-job-type" class="block text-[10px] text-slate-400 dark:text-gray-400 uppercase font-black mb-2 ml-1">Tipe Pekerjaan</label>
                         <select 
+                            id="filter-job-type"
                             v-model="selectedType"
+                            aria-label="Filter berdasarkan tipe pekerjaan"
                             class="w-full bg-slate-50 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all cursor-pointer"
                         >
                             <option value="">Semua Tipe</option>
@@ -198,9 +203,11 @@ const closeCVPreview = () => {
 
                     <!-- Filter: Location -->
                     <div>
-                        <label class="block text-[10px] text-slate-400 dark:text-gray-400 uppercase font-black mb-2 ml-1">Lokasi</label>
+                        <label for="filter-location" class="block text-[10px] text-slate-400 dark:text-gray-400 uppercase font-black mb-2 ml-1">Lokasi</label>
                         <select 
+                            id="filter-location"
                             v-model="selectedLocation"
+                            aria-label="Filter berdasarkan lokasi pekerjaan"
                             class="w-full bg-slate-50 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all cursor-pointer"
                         >
                             <option value="">Semua Lokasi</option>
@@ -212,22 +219,26 @@ const closeCVPreview = () => {
 
                     <!-- Filter: Salary Min -->
                     <div>
-                        <label class="block text-[10px] text-slate-400 dark:text-gray-400 uppercase font-black mb-2 ml-1">Gaji Min</label>
+                        <label for="filter-salary-min" class="block text-[10px] text-slate-400 dark:text-gray-400 uppercase font-black mb-2 ml-1">Gaji Min</label>
                         <input 
+                            id="filter-salary-min"
                             v-model="salaryMin"
                             type="text"
                             placeholder="Cth: Rp 5.000.000"
+                            aria-label="Filter gaji minimum"
                             class="w-full bg-slate-50 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all"
                         />
                     </div>
 
                     <!-- Filter: Salary Max -->
                     <div>
-                        <label class="block text-[10px] text-slate-400 dark:text-gray-400 uppercase font-black mb-2 ml-1">Gaji Max</label>
+                        <label for="filter-salary-max" class="block text-[10px] text-slate-400 dark:text-gray-400 uppercase font-black mb-2 ml-1">Gaji Max</label>
                         <input 
+                            id="filter-salary-max"
                             v-model="salaryMax"
                             type="text"
                             placeholder="Cth: Rp 15.000.000"
+                            aria-label="Filter gaji maksimum"
                             class="w-full bg-slate-50 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all"
                         />
                     </div>
@@ -272,9 +283,9 @@ const closeCVPreview = () => {
                 <div 
                     v-for="job in jobs" 
                     :key="job.id" 
-                    class="group relative bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 p-5 sm:p-8 rounded-2xl md:rounded-[2.5rem] shadow-sm hover:shadow-xl dark:shadow-none hover:border-cyan-500/50 transition-all duration-500 flex flex-col"
+                    class="group relative bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 p-5 sm:p-8 rounded-2xl md:rounded-[2.5rem] shadow-sm hover:shadow-2xl dark:shadow-none hover:border-cyan-500/50 hover:-translate-y-1 transition-all duration-500 flex flex-col animate-scale-in"
                 >
-                    <div class="absolute top-3 sm:top-6 right-4 sm:right-8 w-1.5 h-1.5 bg-cyan-400/40 dark:bg-cyan-400/40 rounded-full blur-[1px]"></div>
+                    <div class="absolute top-3 sm:top-6 right-4 sm:right-8 w-1.5 h-1.5 bg-cyan-400/40 dark:bg-cyan-400/40 rounded-full blur-[1px] animate-pulse-slow"></div>
                     
                     <!-- Job Type Badge -->
                     <div class="mb-4 sm:mb-6">
@@ -302,7 +313,7 @@ const closeCVPreview = () => {
                             <p class="text-lg font-black text-slate-900 dark:text-white mt-0.5">{{ job.salary }}</p>
                         </div>
                         <button @click="openDetail(job.id)" 
-                            class="bg-slate-900 dark:bg-white/10 hover:bg-cyan-600 dark:hover:bg-cyan-500 text-white dark:text-white dark:hover:text-slate-900 px-5 py-2.5 rounded-xl text-[10px] font-black transition-all duration-300">
+                            class="bg-slate-900 dark:bg-white/10 hover:bg-cyan-600 dark:hover:bg-cyan-500 text-white dark:text-white dark:hover:text-slate-900 px-5 py-2.5 rounded-xl text-[10px] font-black transition-all duration-300 button-glow transform hover:scale-105">
                             DETAIL
                         </button>
                     </div>

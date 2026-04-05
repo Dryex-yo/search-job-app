@@ -25,13 +25,15 @@ const statusForm = ref({
 });
 const isEditingNotes = ref(false);
 
-// Debug: Log received application data
-console.log('ApplicationDetail - Received props:', {
-    id: props.application?.id,
-    cover_letter: props.application?.cover_letter,
-    cover_letter_length: (props.application?.cover_letter || '').length,
-    notes: props.application?.notes,
-});
+// Debug: Log received application data only in development
+if (process.env.NODE_ENV === 'development') {
+    console.log('ApplicationDetail - Received props:', {
+        id: props.application?.id,
+        cover_letter: props.application?.cover_letter,
+        cover_letter_length: (props.application?.cover_letter || '').length,
+        notes: props.application?.notes,
+    });
+}
 
 // Computed properties
 const statusOptions = ['pending', 'shortlisted', 'interview', 'rejected', 'hired'];

@@ -176,7 +176,7 @@ const handleLogout = () => {
                             {{ t('navigation.jobs') }}
                         </ResponsiveNavLink>
                         <ResponsiveNavLink href="/dashboard" :active="route().current('dashboard')" class="text-sm">
-                            {{ t('navigation.dashboard') }}
+                            Dashboard
                         </ResponsiveNavLink>
                     </div>
 

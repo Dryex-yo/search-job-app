@@ -194,7 +194,7 @@ const costPerHire = computed(() => {
                             <span class="text-2xl font-black text-cyan-400">{{ analytics.active_jobs }}</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-700 dark:text-gray-400 font-bold">Closed/Expired</span>
+                                <span class="text-gray-700 dark:text-gray-400 font-bold">Ditutup/Kadaluarsa</span>
                             <span class="text-2xl font-black text-gray-700 dark:text-gray-400">{{ analytics.total_jobs - analytics.active_jobs }}</span>
                         </div>
                     </div>

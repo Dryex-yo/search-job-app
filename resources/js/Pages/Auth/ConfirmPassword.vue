@@ -31,11 +31,6 @@ const submit = () => {
                 <p class="text-gray-400 text-sm mt-2">Confirm your identity</p>
             </div>
 
-            <!-- Dark Mode Toggle -->
-            <div class="absolute top-6 right-6">
-                <DarkModeToggle />
-            </div>
-
             <p class="text-gray-400 text-sm mb-8 leading-relaxed">
                 This is a secure area of the application. Please confirm your password before continuing.
             </p>

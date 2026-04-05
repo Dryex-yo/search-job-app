@@ -35,10 +35,6 @@ const submit = () => {
                 <p class="text-gray-400 text-sm mt-2">Forgot your password?</p>
             </div>
 
-            <!-- Dark Mode Toggle -->
-            <div class="absolute top-6 right-6">
-                <DarkModeToggle />
-            </div>
 
             <div v-if="status" class="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-2xl">
                 <p class="text-green-400 text-sm">{{ status }}</p>

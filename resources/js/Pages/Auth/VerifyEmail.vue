@@ -38,10 +38,6 @@ const verificationLinkSent = computed(
                 <p class="text-gray-400 text-sm mt-2">Verify your email</p>
             </div>
 
-            <!-- Dark Mode Toggle -->
-            <div class="absolute top-6 right-6">
-                <DarkModeToggle />
-            </div>
 
             <p class="text-gray-400 text-sm mb-6 leading-relaxed">
                 Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn't receive the email, we will gladly send you another.

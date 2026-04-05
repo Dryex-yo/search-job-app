@@ -90,17 +90,19 @@ const openDeleteModal = (job) => {
 };
 
 const submitForm = async () => {
-    console.log('Form submitted:', { 
-        isEdit: showEditModal.value, 
-        jobId: selectedJob.value?.id,
-        formData: form.data()
-    });
+    if (process.env.NODE_ENV === 'development') {
+        console.log('Form submitted:', { 
+            isEdit: showEditModal.value, 
+            jobId: selectedJob.value?.id,
+            formData: form.data()
+        });
+    }
     
     try {
         if (showEditModal.value && selectedJob.value) {
             await form.patch(route('admin.jobs.update', selectedJob.value.id), {
                 onSuccess: () => {
-                    console.log('Job updated successfully');
+                    if (process.env.NODE_ENV === 'development') console.log('Job updated successfully');
                     showEditModal.value = false;
                     form.reset();
                     selectedJob.value = null;
@@ -114,7 +116,7 @@ const submitForm = async () => {
         } else {
             await form.post(route('admin.jobs.store'), {
                 onSuccess: () => {
-                    console.log('Job created successfully');
+                    if (process.env.NODE_ENV === 'development') console.log('Job created successfully');
                     showCreateModal.value = false;
                     form.reset();
                     setTimeout(() => window.location.reload(), 500);
@@ -133,10 +135,12 @@ const submitForm = async () => {
 
 const confirmDelete = () => {
     if (selectedJob.value) {
-        console.log('Deleting job:', selectedJob.value.id);
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Deleting job:', selectedJob.value.id);
+        }
         router.delete(route('admin.jobs.destroy', selectedJob.value.id), {
             onSuccess: () => {
-                console.log('Job deleted successfully');
+                if (process.env.NODE_ENV === 'development') console.log('Job deleted successfully');
                 showDeleteModal.value = false;
                 selectedJob.value = null;
                 setTimeout(() => window.location.reload(), 500);
@@ -152,14 +156,18 @@ const confirmDelete = () => {
 
 const toggleStatus = (job) => {
     const newStatus = job.status === 'active' ? 'inactive' : 'active';
-    console.log('Toggling job status:', { jobId: job.id, currentStatus: job.status, newStatus: newStatus });
+    if (process.env.NODE_ENV === 'development') {
+        console.log('Toggling job status:', { jobId: job.id, currentStatus: job.status, newStatus: newStatus });
+    }
     
     router.patch(route('admin.jobs.update', job.id), { 
         ...job,
         status: newStatus 
     }, {
         onSuccess: () => {
-            console.log('Status toggled successfully');
+            if (process.env.NODE_ENV === 'development') {
+                console.log('Status toggled successfully');
+            }
             setTimeout(() => window.location.reload(), 300);
         },
         onError: (errors) => {

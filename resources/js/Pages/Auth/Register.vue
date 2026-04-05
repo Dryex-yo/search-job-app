@@ -34,11 +34,6 @@ const submit = () => {
                 <p class="text-gray-400 text-sm mt-2">Create your account</p>
             </div>
 
-            <!-- Dark Mode Toggle -->
-            <div class="absolute top-6 right-6">
-                <DarkModeToggle />
-            </div>
-
             <form @submit.prevent="submit">
                 <div class="mb-6">
                     <label class="block text-gray-300 text-xs font-bold uppercase tracking-widest mb-2 ml-1">Full Name</label>

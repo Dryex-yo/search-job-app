@@ -44,16 +44,9 @@ const applyForm = useForm({
     cover_letter: '',
 });
 
-// Watch for changes in form data to ensure cover_letter is always available
-const ensureFormIntegrity = () => {
-    // This ensures that if somehow the cover_letter got lost, we log it
-    if (process.env.NODE_ENV === 'development') {
-        console.log('Form state:', {
-            job_id: applyForm.job_id,
-            cover_letter_length: applyForm.cover_letter.length,
-            cover_letter_preview: applyForm.cover_letter.substring(0, 50),
-        });
-    }
+// Form validation helper
+const validateForm = () => {
+    return applyForm.job_id && applyForm.cover_letter && (applyForm.resume || userProfileCV.value);
 };
 
 // Handle CV file selection

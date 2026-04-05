@@ -46,7 +46,7 @@ function handleImageError() {
         >
             <div class="relative w-full max-w-2xl px-6 lg:max-w-7xl">
                 <header
-                    class="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3"
+                    class="grid grid-cols-2 sm:grid-cols-3 items-center gap-2 py-10 lg:grid-cols-3"
                 >
                     <div class="flex lg:col-start-2 lg:justify-center">
                         <svg

@@ -152,13 +152,13 @@ watch(() => metrics.value, (newMetrics) => {
 
 // Initialize real-time listeners
 onMounted(() => {
-    console.log('🚀 Dashboard mounted - initializing real-time events');
+    if (process.env.NODE_ENV === 'development') console.log('🚀 Dashboard mounted - initializing real-time events');
     listenToApplications(handleApplicationEvent);
 });
 
 // Cleanup on unmount
 onUnmounted(() => {
-    console.log('🧹 Dashboard unmounted - stopping listeners');
+    if (process.env.NODE_ENV === 'development') console.log('🧹 Dashboard unmounted - stopping listeners');
     stopListeningToApplications();
 });
 </script>
