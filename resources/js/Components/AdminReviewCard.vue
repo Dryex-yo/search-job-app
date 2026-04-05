@@ -77,7 +77,7 @@ const formattedDate = computed(() => {
 </script>
 
 <template>
-    <div class="bg-white/5 border border-white/10 rounded-lg p-6 backdrop-blur-xl">
+    <div class="bg-white/5 dark:bg-white/[0.02] border border-white/10 dark:border-white/5 rounded-lg p-6 backdrop-blur-xl">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-bold text-white">📋 Status Aplikasi</h3>
             <div :class="`${statusColor} border rounded-full px-3 py-1`">

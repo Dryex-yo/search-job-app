@@ -57,9 +57,9 @@ const downloadCV = () => {
     <div v-if="show" class="fixed inset-0 z-[200] flex items-center justify-center p-4">
         <div @click="closeModal" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
-        <div class="relative bg-white/10 backdrop-blur-2xl border border-white/20 w-full max-w-4xl h-[85vh] rounded-[2rem] shadow-2xl text-white overflow-hidden flex flex-col">
+        <div class="relative bg-white/10 dark:bg-white/5 backdrop-blur-2xl border border-white/20 dark:border-white/10 w-full max-w-4xl h-[85vh] rounded-[2rem] shadow-2xl text-white overflow-hidden flex flex-col">
             <!-- Header -->
-            <div class="flex items-center justify-between p-6 border-b border-white/10 bg-white/5">
+            <div class="flex items-center justify-between p-6 border-b border-white/10 bg-white/5 dark:bg-white/[0.02]">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30">
                         <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,7 +105,7 @@ const downloadCV = () => {
             </div>
 
             <!-- Footer with Actions -->
-            <div class="border-t border-white/10 p-4 bg-white/5 flex justify-end gap-3">
+            <div class="border-t border-white/10 p-4 bg-white/5 dark:bg-white/[0.02] flex justify-end gap-3">
                 <button @click="closeModal"
                     class="px-6 py-2.5 rounded-lg border border-white/10 text-gray-300 hover:text-white hover:bg-white/5 transition-all text-sm font-medium uppercase tracking-wider">
                     Close

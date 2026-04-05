@@ -52,12 +52,12 @@ const menus = computed(() => {
 </script>
 
 <template>
-    <div class="overflow-x-hidden relative">
+    <div class="overflow-x-hidden relative w-full h-screen bg-white dark:bg-slate-950">
         <!-- Galaxy Background -->
         <GalaxyBackground />
         
         <!-- Main Container - Fully Responsive to dark mode -->
-        <div class="min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center p-4 md:p-8 font-sans overflow-hidden text-gray-900 dark:text-white selection:bg-cyan-500/30 transition-colors duration-300">
+        <div class="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center p-4 md:p-8 font-sans overflow-hidden text-gray-900 dark:text-white selection:bg-cyan-500/30 transition-colors duration-300">
             
             <div class="absolute inset-0 opacity-[0.03] pointer-events-none grain-bg z-10"></div>
 
@@ -66,7 +66,7 @@ const menus = computed(() => {
 
             <!-- Modal Container - Responsive -->
             <div class="w-full max-w-[1440px] h-full max-h-[850px] 
-                        bg-white dark:bg-slate-800 backdrop-blur-[60px] 
+                        bg-white dark:bg-slate-900 backdrop-blur-[60px] 
                         border border-gray-200 dark:border-slate-700 
                         rounded-[3.5rem] 
                         shadow-[0_40px_100px_rgba(0,0,0,0.1)] 
@@ -75,7 +75,7 @@ const menus = computed(() => {
                         transition-all duration-300">
                 
                 <!-- Sidebar -->
-                <aside class="w-80 border-r border-gray-200 dark:border-slate-700 p-12 flex flex-col bg-gray-50 dark:bg-slate-800 backdrop-blur-3xl hidden md:flex transition-colors duration-300">
+                <aside class="w-80 border-r border-gray-200 dark:border-slate-700 p-12 flex flex-col bg-gray-50 dark:bg-slate-900 backdrop-blur-3xl hidden md:flex transition-colors duration-300">
                     <div class="mb-16">
                         <h1 class="text-3xl font-black text-cyan-400 italic tracking-tighter uppercase">DRYEX<span class="text-gray-900 dark:text-white transition-colors duration-300">.</span></h1>
                     </div>
@@ -123,7 +123,7 @@ const menus = computed(() => {
                     </header>
 
                     <!-- Content Area -->
-                    <div class="flex-grow p-12 pt-6 overflow-y-auto custom-scrollbar">
+                    <div class="flex-grow p-12 pt-6 overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900 transition-colors duration-300">
                         <slot />
                     </div>
                 </main>
@@ -158,6 +158,7 @@ const menus = computed(() => {
 }
 
 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 20px; }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(6, 182, 212, 0.2); }
 
