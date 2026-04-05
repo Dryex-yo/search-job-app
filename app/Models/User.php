@@ -109,6 +109,86 @@ class User extends Authenticatable
     }
 
     /**
+     * Calculate profile completion percentage
+     * Returns 0-100 based on how many profile fields are filled
+     */
+    public function getProfileCompletionPercentage(): int
+    {
+        // Define all profile fields that should be filled for 100% completion
+        $profileFields = [
+            // Basic required (must have name and email for 0%)
+            'name' => 10,           // 4.76% weight
+            'email' => 10,          // 4.76% weight
+            
+            // Contact info
+            'phone' => 5,           // 2.38%
+            'address' => 5,         // 2.38%
+            'city' => 5,            // 2.38%
+            'province' => 5,        // 2.38%
+            'postal_code' => 5,     // 2.38%
+            
+            // Personal info
+            'date_of_birth' => 5,   // 2.38%
+            'gender' => 5,          // 2.38%
+            'id_number' => 5,       // 2.38%
+            'bio' => 5,             // 2.38%
+            
+            // Education
+            'education_level' => 5,           // 2.38%
+            'education_institution' => 5,    // 2.38%
+            'education_major' => 5,          // 2.38%
+            'education_year_graduated' => 5, // 2.38%
+            'education_grade' => 5,          // 2.38%
+            
+            // Professional
+            'experiences' => 10,    // 4.76%
+            'skills' => 10,         // 4.76%
+            
+            // Files & Media
+            'resume_path' => 5,              // 2.38%
+            'profile_photo_path' => 5,       // 2.38%
+            
+            // Emergency
+            'emergency_contact_name' => 5,   // 2.38%
+            'emergency_contact_phone' => 5,  // 2.38%
+        ];
+
+        // Check if required fields (name, email) are filled
+        if (empty($this->name) || empty($this->email)) {
+            return 0; // Can't be above 0% without name and email
+        }
+
+        // Calculate total possible points
+        $totalPoints = array_sum($profileFields);
+        $earnedPoints = 0;
+
+        // Check each field
+        foreach ($profileFields as $field => $points) {
+            $value = $this->{$field} ?? null;
+            
+            // Check if field is filled
+            $isFilled = false;
+            
+            if ($field === 'experiences') {
+                // experiences is array
+                $isFilled = is_array($value) && count($value) > 0;
+            } else {
+                // All other fields are strings/scalar
+                $isFilled = !empty($value);
+            }
+            
+            if ($isFilled) {
+                $earnedPoints += $points;
+            }
+        }
+
+        // Calculate percentage
+        $percentage = round(($earnedPoints / $totalPoints) * 100);
+        
+        return min(100, max(0, $percentage));
+    }
+
+    /**
      * Get profile views for this user
      */
     public function profileViews()

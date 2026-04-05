@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\DashboardCacheService;
+use App\Services\ImageService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +16,14 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
+    private DashboardCacheService $cacheService;
+    private ImageService $imageService;
+
+    public function __construct(DashboardCacheService $cacheService, ImageService $imageService)
+    {
+        $this->cacheService = $cacheService;
+        $this->imageService = $imageService;
+    }
     /**
      * Display the user's profile form.
      */
@@ -38,11 +48,53 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+        // Invalidate dashboard cache to reflect profile completion changes
+        $this->cacheService->invalidateCache($request->user()->id);
+
         // Return the edit page dengan updated user data
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => 'Profil berhasil diperbarui',
         ]);
+    }
+
+    /**
+     * Upload user's profile photo
+     */
+    public function uploadProfilePhoto(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'profile_photo' => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120', 'dimensions:min_width=100,min_height=100'],
+        ], [
+            'profile_photo.required' => 'Mohon pilih foto profil',
+            'profile_photo.image' => 'File harus berupa gambar',
+            'profile_photo.mimes' => 'Format harus JPEG, PNG, JPG, atau GIF',
+            'profile_photo.max' => 'Ukuran maksimal 5MB',
+            'profile_photo.dimensions' => 'Ukuran gambar minimal 100x100 pixel',
+        ]);
+
+        $user = $request->user();
+
+        try {
+            // Delete old profile photo if exists
+            if ($user->profile_photo_path) {
+                $this->imageService->deleteFile($user->profile_photo_path);
+            }
+
+            // Store new profile photo with compression
+            $path = $this->imageService->storeProfilePhoto($request->file('profile_photo'));
+
+            $user->update([
+                'profile_photo_path' => $path,
+            ]);
+
+            // Invalidate dashboard cache
+            $this->cacheService->invalidateCache($user->id);
+
+            return Redirect::route('profile.edit')->with('status', 'Foto profil berhasil diupload');
+        } catch (\Exception $e) {
+            return Redirect::route('profile.edit')->withErrors(['profile_photo' => 'Gagal mengupload foto. Silakan coba lagi.']);
+        }
     }
 
     /**
@@ -52,23 +104,35 @@ class ProfileController extends Controller
     {
         $request->validate([
             'resume' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
+        ], [
+            'resume.required' => 'Mohon pilih file CV/Resume',
+            'resume.file' => 'File harus valid',
+            'resume.mimes' => 'Format harus PDF, DOC, atau DOCX',
+            'resume.max' => 'Ukuran maksimal 5MB',
         ]);
 
         $user = $request->user();
 
-        // Delete old resume if exists
-        if ($user->resume_path && Storage::disk('public')->exists($user->resume_path)) {
-            Storage::disk('public')->delete($user->resume_path);
+        try {
+            // Delete old resume if exists
+            if ($user->resume_path) {
+                $this->imageService->deleteFile($user->resume_path);
+            }
+
+            // Store new resume
+            $path = $this->imageService->storeResume($request->file('resume'));
+
+            $user->update([
+                'resume_path' => $path,
+            ]);
+
+            // Invalidate dashboard cache
+            $this->cacheService->invalidateCache($user->id);
+
+            return Redirect::route('profile.edit')->with('status', 'CV berhasil diupload');
+        } catch (\Exception $e) {
+            return Redirect::route('profile.edit')->withErrors(['resume' => 'Gagal mengupload CV. Silakan coba lagi.']);
         }
-
-        // Store new resume
-        $path = $request->file('resume')->store('resumes', 'public');
-
-        $user->update([
-            'resume_path' => $path,
-        ]);
-
-        return Redirect::route('profile.edit')->with('status', 'CV berhasil diupload');
     }
 
     /**

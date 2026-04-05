@@ -42,8 +42,16 @@ class PreventSqlInjection
      */
     public function handle(Request $request, Closure $next)
     {
-        // Check all request parameters for SQL injection patterns
-        $this->validateRequestParameters($request);
+        // Skip SQL injection check for file upload routes
+        $excludedRoutes = [
+            'profile.upload-photo',
+            'profile.upload-resume',
+        ];
+
+        if (!in_array($request->route()?->getName(), $excludedRoutes)) {
+            // Check all request parameters for SQL injection patterns
+            $this->validateRequestParameters($request);
+        }
 
         return $next($request);
     }

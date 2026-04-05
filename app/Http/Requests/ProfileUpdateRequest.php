@@ -39,6 +39,7 @@ class ProfileUpdateRequest extends FormRequest
             'education_institution' => ['nullable', 'string', 'max:255'],
             'education_year_graduated' => ['nullable', 'integer', 'min:1900', 'max:2100'],
             'education_major' => ['nullable', 'string', 'max:100'],
+            'education_grade' => ['nullable', 'string', 'max:10'],
             // Experiences (array)
             'experiences' => ['nullable', 'array'],
             'experiences.*.company' => ['nullable', 'string', 'max:255'],
@@ -51,6 +52,8 @@ class ProfileUpdateRequest extends FormRequest
             'id_number' => ['nullable', 'string', 'max:50', Rule::unique(User::class)->ignore($this->user()->id)],
             'emergency_contact_name' => ['nullable', 'string', 'max:255'],
             'emergency_contact_phone' => ['nullable', 'string', 'max:20'],
+            'profile_photo_path' => ['nullable', 'string'],
+            'resume_path' => ['nullable', 'string'],
         ];
     }
 }

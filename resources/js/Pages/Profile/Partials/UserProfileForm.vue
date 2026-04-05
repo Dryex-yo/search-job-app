@@ -18,6 +18,16 @@ defineProps({
 const page = usePage();
 const user = page.props.auth.user;
 
+// Form untuk upload profile photo
+const photoForm = useForm({
+    profile_photo: null,
+});
+
+const photoPreviewUrl = ref(user.profile_photo_path ? `/storage/${user.profile_photo_path}` : null);
+const photoInputRef = ref(null);
+const photoFileSize = ref(null);
+const photoUploadLoading = ref(false);
+
 const form = useForm({
     name: user.name || '',
     email: user.email || '',
@@ -42,7 +52,72 @@ const form = useForm({
     id_number: user.id_number || '',
     emergency_contact_name: user.emergency_contact_name || '',
     emergency_contact_phone: user.emergency_contact_phone || '',
+    // Profile photo
+    profile_photo_path: user.profile_photo_path || '',
 });
+
+// Handle photo file selection
+const handlePhotoSelect = (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+        // Validate file size
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            alert('Ukuran file terlalu besar (maksimal 5MB)');
+            return;
+        }
+
+        photoForm.profile_photo = file;
+        photoFileSize.value = (file.size / 1024 / 1024).toFixed(2);
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            photoPreviewUrl.value = e.target?.result;
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+// Upload profile photo
+const uploadProfilePhoto = () => {
+    if (!photoForm.profile_photo) return;
+    
+    photoUploadLoading.value = true;
+    
+    const formData = new FormData();
+    formData.append('profile_photo', photoForm.profile_photo);
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
+    
+    fetch(route('profile.upload-photo'), {
+        method: 'POST',
+        body: formData,
+    })
+    .then((res) => {
+        photoUploadLoading.value = false;
+        if (res.ok) {
+            // Success - reload page
+            window.location.href = route('profile.edit');
+        } else {
+            alert('Gagal mengupload foto. Silakan coba lagi.');
+        }
+    })
+    .catch((error) => {
+        photoUploadLoading.value = false;
+        console.error('Upload failed:', error);
+        alert('Terjadi kesalahan saat mengupload foto.');
+    });
+};
+
+// Clear photo selection
+const clearPhotoSelection = () => {
+    photoForm.profile_photo = null;
+    photoFileSize.value = null;
+    photoPreviewUrl.value = user.profile_photo_path ? `/storage/${user.profile_photo_path}` : null;
+    if (photoInputRef.value) {
+        photoInputRef.value.value = '';
+    }
+};
 
 // For adding new experience
 const newExperience = ref({
@@ -206,6 +281,7 @@ const cancelEdit = () => {
     form.id_number = user.id_number || '';
     form.emergency_contact_name = user.emergency_contact_name || '';
     form.emergency_contact_phone = user.emergency_contact_phone || '';
+    form.profile_photo_path = user.profile_photo_path || '';
 };
 
 // Format currency untuk display
@@ -257,8 +333,112 @@ const getGenderLabel = (value) => {
             </div>
         </Transition>
 
+        <!-- PROFILE PHOTO SECTION -->
+        <div class="mt-8 flex flex-col md:flex-row gap-8 items-stretch">
+            <!-- Photo Preview -->
+            <div class="flex-shrink-0 w-full md:w-auto md:flex-1">
+                <div class="bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-purple-50 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6 h-full flex flex-col items-center justify-center">
+                    <div class="relative w-56 h-56 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center overflow-hidden border-4 border-dashed border-blue-300 dark:border-blue-600 shadow-md">
+                        <img v-if="photoPreviewUrl" :src="photoPreviewUrl" alt="Profile Photo" class="w-full h-full object-cover">
+                        <div v-else class="text-center">
+                            <p class="text-6xl">👤</p>
+                            <p class="text-gray-500 dark:text-gray-400 text-xs mt-2">Belum ada foto</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-6 text-center leading-relaxed px-2">
+                        <span class="block font-medium text-gray-700 dark:text-gray-300 mb-1">Rekomendasi:</span>
+                        Foto berkualitas tinggi<br>
+                        Aspek rasio 1:1 (persegi)<br>
+                        Min 100x100 px, Maks 5MB
+                    </p>
+                </div>
+            </div>
+
+            <!-- Photo Upload Form -->
+            <div class="flex-grow w-full md:flex-grow-0 md:flex-1">
+                <div class="bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-purple-50 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6 h-full flex flex-col">
+                    <h3 class="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-4 flex items-center gap-2">
+                        <span class="text-2xl">🖼️</span> Foto Profil
+                    </h3>
+                    
+                    <div v-if="!photoForm.profile_photo" class="space-y-4 flex-grow flex flex-col">
+                        <label 
+                            for="profile_photo_input"
+                            class="flex-grow flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg text-center cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
+                        >
+                            <p class="text-4xl mb-3">📸</p>
+                            <p class="text-blue-600 dark:text-blue-400 font-semibold text-lg">Pilih Foto</p>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Atau drag & drop di sini</p>
+                            <input
+                                ref="photoInputRef"
+                                id="profile_photo_input"
+                                type="file"
+                                accept="image/*"
+                                class="hidden"
+                                @change="handlePhotoSelect"
+                            />
+                        </label>
+                        <p class="text-gray-600 dark:text-gray-300 text-xs leading-relaxed">
+                            💡 <span class="font-medium">Tips:</span> Gunakan foto wajah yang jelas dan terang. Hindari filter yang berlebihan. Foto akan di-crop menjadi kotak otomatis.
+                        </p>
+                    </div>
+
+                    <div v-else class="space-y-4 flex-grow flex flex-col">
+                        <div class="bg-white dark:bg-slate-800 rounded-lg p-4 border border-green-300 dark:border-green-700 flex-grow">
+                            <p class="text-green-700 dark:text-green-300 font-semibold mb-2 flex items-center gap-2">
+                                <span class="text-lg">✓</span> Foto siap upload
+                            </p>
+                            <div class="space-y-1 text-sm">
+                                <p class="text-gray-600 dark:text-gray-300">
+                                    <span class="font-medium">File:</span> {{ photoForm.profile_photo.name }}
+                                </p>
+                                <p class="text-gray-600 dark:text-gray-300">
+                                    <span class="font-medium">Ukuran:</span> {{ photoFileSize }} MB
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button
+                                type="button"
+                                @click="uploadProfilePhoto"
+                                :disabled="photoUploadLoading"
+                                class="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-500 disabled:cursor-not-allowed dark:bg-green-600 dark:hover:bg-green-700 text-white rounded-lg transition-colors font-semibold flex items-center justify-center gap-2"
+                            >
+                                <span v-if="!photoUploadLoading">✓ Upload</span>
+                                <span v-else class="flex items-center gap-2">
+                                    <span class="inline-block animate-spin">⏳</span> Uploading...
+                                </span>
+                            </button>
+                            <button
+                                type="button"
+                                @click="clearPhotoSelection"
+                                :disabled="photoUploadLoading"
+                                class="flex-1 px-4 py-3 bg-gray-400 hover:bg-gray-500 disabled:bg-gray-400 disabled:cursor-not-allowed dark:bg-slate-600 dark:hover:bg-slate-700 text-white rounded-lg transition-colors font-semibold"
+                            >
+                                ✕ Batal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- MODE TAMPILAN (READ-ONLY) -->
         <div v-if="!isEditMode" class="mt-8 space-y-6">
+            <!-- SECTION 0: Foto Profil -->
+            <div class="flex justify-center">
+                <div class="bg-gradient-to-br from-blue-50 dark:from-blue-900/20 to-purple-50 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-8">
+                    <div class="w-64 h-64 bg-gray-200 dark:bg-slate-700 rounded-lg flex items-center justify-center overflow-hidden border-4 border-blue-300 dark:border-blue-600">
+                        <img v-if="form.profile_photo_path" :src="`/storage/${form.profile_photo_path}`" alt="Foto Profil" class="w-full h-full object-cover">
+                        <div v-else class="text-center">
+                            <p class="text-6xl">👤</p>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm mt-4">Tidak ada foto profil</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- SECTION 1: Informasi Dasar -->
             <div class="bg-gradient-to-r from-blue-50 dark:from-blue-900/20 to-purple-50 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
                 <h3 class="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-4">📋 Informasi Dasar</h3>

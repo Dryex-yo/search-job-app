@@ -119,6 +119,7 @@ class DashboardCacheService
                 'this_month_applications' => $thisMonthApplications,
                 'profile_views' => $profileViews,
                 'profile_views_this_month' => $profileViewsThisMonth,
+                'profile_completion' => $user->getProfileCompletionPercentage(),
             ],
             'recentApplications' => $recentApplications->toArray(),
             'recommendedJobs' => $recommendedJobs->toArray(),
