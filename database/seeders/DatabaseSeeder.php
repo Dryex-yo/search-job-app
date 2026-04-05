@@ -34,5 +34,8 @@ class DatabaseSeeder extends Seeder
         
         // Seed jobs
         $this->call(JobSeeder::class);
+        
+        // Seed 10,000 applications for stress testing
+        $this->call(ApplicationSeeder::class);
     }
 }

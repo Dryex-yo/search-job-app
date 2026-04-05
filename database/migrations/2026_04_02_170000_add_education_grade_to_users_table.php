@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('education_grade')->nullable()->after('education_major')->comment('Grade/Nilai pendidikan (GPA, IPK, dll)');
+            if (!Schema::hasColumn('users', 'education_grade')) {
+                $table->string('education_grade')->nullable()->comment('Grade/Nilai pendidikan (GPA, IPK, dll)');
+            }
         });
     }
 

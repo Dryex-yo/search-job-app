@@ -12,17 +12,39 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tenants', function (Blueprint $table) {
-            $table->string('owner_name')->after('database')->nullable();
-            $table->string('owner_email')->after('owner_name')->nullable();
-            $table->string('owner_phone')->after('owner_email')->nullable();
-            $table->string('industry')->after('owner_phone')->nullable();
-            $table->string('company_size')->after('industry')->nullable();
-            $table->text('address')->after('company_size')->nullable();
-            $table->string('city')->after('address')->nullable();
-            $table->string('country')->after('city')->nullable();
-            $table->string('status')->default('active')->after('country');
-            $table->dateTime('trial_ends_at')->nullable()->after('status');
-            $table->string('subscription_plan')->default('free')->after('trial_ends_at');
+            if (!Schema::hasColumn('tenants', 'owner_name')) {
+                $table->string('owner_name')->nullable();
+            }
+            if (!Schema::hasColumn('tenants', 'owner_email')) {
+                $table->string('owner_email')->nullable();
+            }
+            if (!Schema::hasColumn('tenants', 'owner_phone')) {
+                $table->string('owner_phone')->nullable();
+            }
+            if (!Schema::hasColumn('tenants', 'industry')) {
+                $table->string('industry')->nullable();
+            }
+            if (!Schema::hasColumn('tenants', 'company_size')) {
+                $table->string('company_size')->nullable();
+            }
+            if (!Schema::hasColumn('tenants', 'address')) {
+                $table->text('address')->nullable();
+            }
+            if (!Schema::hasColumn('tenants', 'city')) {
+                $table->string('city')->nullable();
+            }
+            if (!Schema::hasColumn('tenants', 'country')) {
+                $table->string('country')->nullable();
+            }
+            if (!Schema::hasColumn('tenants', 'status')) {
+                $table->string('status')->default('active');
+            }
+            if (!Schema::hasColumn('tenants', 'trial_ends_at')) {
+                $table->dateTime('trial_ends_at')->nullable();
+            }
+            if (!Schema::hasColumn('tenants', 'subscription_plan')) {
+                $table->string('subscription_plan')->default('free');
+            }
         });
     }
 
