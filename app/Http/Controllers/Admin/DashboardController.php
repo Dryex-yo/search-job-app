@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Job;
 use App\Models\User;
+use App\Models\Settings;
 use App\Services\DashboardCacheService;
 use App\Actions\Applications\UpdateApplicationStatusAction;
 use App\Exports\ApplicationsExport;
@@ -35,7 +36,7 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function index()
+    public function index(Request $request)
     {
         // Check if user has permission to view applicants
         // Allow if user is admin OR has explicit view-applicants permission
@@ -45,32 +46,103 @@ class DashboardController extends Controller
             abort(403, 'Unauthorized to view applicants');
         }
 
-        $applicants = Application::with(['user', 'job'])
-            ->latest()
-            ->paginate(15)
-            ->map(function ($app) {
-                return [
-                    'id' => $app->id,
-                    'name' => $app->user->name ?? 'Unknown User',
-                    'email' => $app->user->email ?? 'N/A',
-                    'role' => $app->job->title ?? 'Unknown Role',
-                    'job' => [
-                        'title' => $app->job->title ?? 'Unknown Role'
-                    ],
-                    'status' => $app->status, 
-                    'date' => $app->created_at->format('d M Y'),
-                    'created_at' => $app->created_at,
-                    'avatar' => strtoupper(substr($app->user->name ?? '??', 0, 2)),
-                    'resume_path' => $app->resume_path,
-                    'cover_letter' => $app->cover_letter ?? null,
-                    'ai_match_score' => $app->ai_match_score,
-                    'ai_analysis_status' => $app->ai_analysis_status,
-                    'ai_analysis_details' => $app->ai_analysis_details,
-                ];
+        // Validate filter inputs
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:255',
+            'status' => 'nullable|in:pending,shortlisted,rejected,interview,hired',
+            'score_min' => 'nullable|numeric|min:0|max:100',
+            'score_max' => 'nullable|numeric|min:0|max:100',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date',
+            'sort' => 'nullable|in:latest,oldest,score_high,score_low',
+            'per_page' => 'nullable|integer|min:5|max:100',
+        ]);
+
+        $query = Application::with(['user', 'job']);
+
+        // Search filter
+        if (!empty($validated['search'])) {
+            $search = $validated['search'];
+            $query->where(function($q) use ($search) {
+                $q->whereHas('user', function($subQ) use ($search) {
+                    $subQ->where('name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                })
+                ->orWhereHas('job', function($subQ) use ($search) {
+                    $subQ->where('title', 'like', "%{$search}%");
+                });
             });
+        }
+
+        // Status filter
+        if (!empty($validated['status'])) {
+            $query->where('status', $validated['status']);
+        }
+
+        // AI Score range filter
+        if (!empty($validated['score_min'])) {
+            $query->where('ai_match_score', '>=', $validated['score_min']);
+        }
+        if (!empty($validated['score_max'])) {
+            $query->where('ai_match_score', '<=', $validated['score_max']);
+        }
+
+        // Date range filter
+        if (!empty($validated['date_from'])) {
+            $query->whereDate('created_at', '>=', $validated['date_from']);
+        }
+        if (!empty($validated['date_to'])) {
+            $query->whereDate('created_at', '<=', $validated['date_to']);
+        }
+
+        // Sorting
+        $sortBy = $validated['sort'] ?? 'latest';
+        if ($sortBy === 'oldest') {
+            $query->oldest();
+        } elseif ($sortBy === 'score_high') {
+            $query->orderByDesc('ai_match_score');
+        } elseif ($sortBy === 'score_low') {
+            $query->orderBy('ai_match_score');
+        } else {
+            $query->latest();
+        }
+
+        // Per page setting
+        $perPage = $validated['per_page'] ?? 15;
+
+        $applicants = $query->paginate($perPage)->through(function ($app) {
+            return [
+                'id' => $app->id,
+                'name' => $app->user->name ?? 'Unknown User',
+                'email' => $app->user->email ?? 'N/A',
+                'role' => $app->job->title ?? 'Unknown Role',
+                'job' => [
+                    'title' => $app->job->title ?? 'Unknown Role'
+                ],
+                'status' => $app->status, 
+                'date' => $app->created_at->format('d M Y'),
+                'created_at' => $app->created_at,
+                'avatar' => strtoupper(substr($app->user->name ?? '??', 0, 2)),
+                'resume_path' => $app->resume_path,
+                'cover_letter' => $app->cover_letter ?? null,
+                'ai_match_score' => $app->ai_match_score,
+                'ai_analysis_status' => $app->ai_analysis_status,
+                'ai_analysis_details' => $app->ai_analysis_details,
+            ];
+        });
 
         return Inertia::render('Admin/Applicants', [
-            'applicants' => $applicants
+            'applicants' => $applicants,
+            'filters' => [
+                'search' => $validated['search'] ?? '',
+                'status' => $validated['status'] ?? '',
+                'score_min' => $validated['score_min'] ?? '',
+                'score_max' => $validated['score_max'] ?? '',
+                'date_from' => $validated['date_from'] ?? '',
+                'date_to' => $validated['date_to'] ?? '',
+                'sort' => $sortBy,
+                'per_page' => $perPage,
+            ]
         ]);
     }
 
@@ -119,6 +191,18 @@ class DashboardController extends Controller
                 'resume_path' => $application->resume_path,
                 'notes' => $application->notes ?? '',
                 'created_at' => $application->created_at,
+                // Interview scheduling fields
+                'interview_scheduled_at' => $application->interview_scheduled_at,
+                'interview_duration_minutes' => $application->interview_duration_minutes ?? 60,
+                'interview_type' => $application->interview_type,
+                'interview_meeting_link' => $application->interview_meeting_link,
+                'interview_meeting_provider' => $application->interview_meeting_provider,
+                'interview_notes' => $application->interview_notes,
+                'interview_cancelled_at' => $application->interview_cancelled_at,
+                // AI Analysis fields
+                'ai_match_score' => $application->ai_match_score,
+                'ai_analysis_status' => $application->ai_analysis_status,
+                'ai_analysis_details' => $application->ai_analysis_details,
             ]
         ]);
     }
@@ -137,6 +221,11 @@ class DashboardController extends Controller
     /**
      * Get analytics data for admin pages (cached)
      */
+    public function getAnalyticsDataPublic()
+    {
+        return $this->getAnalyticsData();
+    }
+
     private function getAnalyticsData()
     {
         $cacheKey = 'admin_dashboard_analytics';
@@ -149,7 +238,11 @@ class DashboardController extends Controller
             $pendingCount = Application::where('status', 'pending')->count();
             
             $successRate = $totalApplications > 0 ? round(($hiredCount / $totalApplications) * 100, 1) : 0;
-            $totalRevenue = $hiredCount * 500;
+            
+            // Use Settings model for hiring fee instead of hardcoded 500
+            $hiringFee = Settings::get('hiring_fee_per_person', 500.00);
+            $totalRevenue = $hiredCount * $hiringFee;
+            
             $monthlyData = $this->getMonthlyApplicationsData();
             
             return [
@@ -188,6 +281,7 @@ class DashboardController extends Controller
             'search' => 'nullable|string|max:255',
             'status' => 'nullable|in:active,inactive',
             'type' => 'nullable|in:Full-time,Part-time,Contract,Freelance',
+            'per_page' => 'nullable|integer|min:5|max:100',
         ]);
 
         $search = $validated['search'] ?? '';
@@ -214,7 +308,20 @@ class DashboardController extends Controller
             $jobsQuery->where('type', $type);
         }
 
-        $jobs = $jobsQuery->latest()->paginate(15)->map(function($job) {
+        // Per page setting
+        $perPage = $validated['per_page'] ?? 15;
+
+        $jobs = $jobsQuery
+            ->withCount('applications')
+            ->withCount(['applications as hired_count' => function($query) {
+                $query->where('status', 'hired');
+            }])
+            ->withCount(['applications as shortlisted_count' => function($query) {
+                $query->where('status', 'shortlisted');
+            }])
+            ->latest()
+            ->paginate($perPage)
+            ->through(function($job) {
             return [
                 'id' => $job->id,
                 'title' => $job->title,
@@ -223,9 +330,9 @@ class DashboardController extends Controller
                 'salary' => $job->salary,
                 'type' => $job->type,
                 'status' => $job->status,
-                'applications_count' => Application::where('job_id', $job->id)->count(),
-                'hired_count' => Application::where('job_id', $job->id)->where('status', 'hired')->count(),
-                'shortlisted_count' => Application::where('job_id', $job->id)->where('status', 'shortlisted')->count(),
+                'applications_count' => $job->applications_count ?? 0,
+                'hired_count' => $job->hired_count ?? 0,
+                'shortlisted_count' => $job->shortlisted_count ?? 0,
                 'created_at' => $job->created_at->format('d M Y'),
                 'created_at_raw' => $job->created_at,
             ];
@@ -238,6 +345,7 @@ class DashboardController extends Controller
                 'search' => $search,
                 'status' => $status,
                 'type' => $type,
+                'per_page' => $perPage,
             ]
         ]);
     }
@@ -305,19 +413,6 @@ class DashboardController extends Controller
         $this->cacheService->invalidateAllCaches();
 
         return back()->with('message', 'Job berhasil dihapus!');
-    }
-
-    public function settings()
-    {
-        /** @var User $user */
-        $user = Auth::user();
-        if (!$user->can('change-settings') && !$user->hasRole('admin')) {
-            abort(403, 'Unauthorized to access settings');
-        }
-
-        return Inertia::render('Admin/Settings', [
-            'analytics' => $this->getAnalyticsData()
-        ]);
     }
 
     /**

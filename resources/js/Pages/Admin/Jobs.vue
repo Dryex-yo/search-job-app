@@ -9,8 +9,14 @@ const props = defineProps({
         required: true
     },
     jobs: {
-        type: Array,
-        default: () => []
+        type: Object,
+        default: () => ({
+            data: [],
+            current_page: 1,
+            per_page: 15,
+            total: 0,
+            last_page: 1,
+        })
     },
     filters: {
         type: Object,
@@ -18,6 +24,7 @@ const props = defineProps({
             search: '',
             status: '',
             type: '',
+            per_page: 15,
         })
     }
 });
@@ -43,27 +50,55 @@ const form = useForm({
 const searchQuery = ref(props.filters.search || '');
 const statusFilter = ref(props.filters.status || '');
 const typeFilter = ref(props.filters.type || '');
+const perPageJobs = ref(props.filters.per_page || 15);
 
-// Computed properties
+// Pagination computed properties
+const currentPage = computed(() => props.jobs?.current_page || 1);
+const perPage = computed(() => props.jobs?.per_page || 15);
+const totalJobs = computed(() => props.jobs?.total || 0);
+const lastPage = computed(() => props.jobs?.last_page || 1);
+
+const jobsList = computed(() => {
+    // If jobs is an array directly
+    if (Array.isArray(props.jobs)) {
+        return props.jobs;
+    }
+    // If jobs is paginated object with data property
+    return props.jobs?.data || [];
+});
+
+const pageNumbers = computed(() => {
+    const pages = [];
+    const maxPages = 5;
+    let start = Math.max(1, currentPage.value - Math.floor(maxPages / 2));
+    let end = Math.min(lastPage.value, start + maxPages - 1);
+    
+    if (end - start < maxPages - 1) {
+        start = Math.max(1, end - maxPages + 1);
+    }
+    
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+    return pages;
+});
+
+const startRecord = computed(() => {
+    return (currentPage.value - 1) * perPage.value + 1;
+});
+
+const endRecord = computed(() => {
+    return Math.min(currentPage.value * perPage.value, totalJobs.value);
+});
+
+// Computed properties for filtering (client-side)
+
+
+// Filtered jobs using server-side pagination
 const filteredJobs = computed(() => {
-    let filtered = props.jobs;
-
-    if (searchQuery.value) {
-        filtered = filtered.filter(job =>
-            job.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            job.location.toLowerCase().includes(searchQuery.value.toLowerCase())
-        );
-    }
-
-    if (statusFilter.value) {
-        filtered = filtered.filter(job => job.status === statusFilter.value);
-    }
-
-    if (typeFilter.value) {
-        filtered = filtered.filter(job => job.type === typeFilter.value);
-    }
-
-    return filtered;
+    // Since we're using server-side pagination, just return jobsList
+    // The backend already filters based on search/status/type
+    return jobsList.value;
 });
 
 // Methods
@@ -182,6 +217,8 @@ const applyFilters = () => {
         search: searchQuery.value,
         status: statusFilter.value,
         type: typeFilter.value,
+        per_page: perPageJobs.value,
+        page: 1,
     });
 };
 
@@ -190,6 +227,41 @@ const resetFilters = () => {
     statusFilter.value = '';
     typeFilter.value = '';
     router.get(route('admin.jobs'));
+};
+
+// Pagination navigation
+const goToPage = (page) => {
+    if (page < 1 || page > lastPage.value) return;
+    
+    router.get(route('admin.jobs'), {
+        search: searchQuery.value,
+        status: statusFilter.value,
+        type: typeFilter.value,
+        per_page: perPageJobs.value,
+        page,
+    });
+};
+
+const nextPage = () => {
+    if (currentPage.value < lastPage.value) {
+        goToPage(currentPage.value + 1);
+    }
+};
+
+const prevPage = () => {
+    if (currentPage.value > 1) {
+        goToPage(currentPage.value - 1);
+    }
+};
+
+const changePerPage = () => {
+    router.get(route('admin.jobs'), {
+        search: searchQuery.value,
+        status: statusFilter.value,
+        type: typeFilter.value,
+        per_page: perPageJobs.value,
+        page: 1,
+    });
 };
 </script>
 
@@ -344,6 +416,29 @@ const resetFilters = () => {
 
         <!-- Jobs Table Section -->
         <div class="bg-white/[0.01] border border-white/10 rounded-[2.5rem] p-8">
+            <!-- Results Count & Per Page -->
+            <div class="mb-6 flex items-center justify-between flex-wrap gap-4">
+                <div class="text-sm text-gray-400">
+                    Tampilkan <span class="font-bold text-cyan-400">{{ startRecord }}-{{ endRecord }}</span> dari <span class="font-bold text-cyan-400">{{ totalJobs }}</span> pekerjaan
+                    <span class="text-gray-500 ml-2">(Halaman {{ currentPage }} dari {{ lastPage }})</span>
+                </div>
+                
+                <!-- Per Page Selector -->
+                <div class="flex items-center gap-3">
+                    <label class="text-sm text-gray-400">Items per halaman:</label>
+                    <select
+                        v-model="perPageJobs"
+                        @change="changePerPage"
+                        class="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400/50 focus:bg-white/[0.05] transition-all"
+                    >
+                        <option value="15" class="bg-gray-900">15</option>
+                        <option value="25" class="bg-gray-900">25</option>
+                        <option value="50" class="bg-gray-900">50</option>
+                        <option value="100" class="bg-gray-900">100</option>
+                    </select>
+                </div>
+            </div>
+
             <h4 class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.5em] mb-8 italic">📊 All Jobs ({{ filteredJobs.length }})</h4>
             
             <div v-if="filteredJobs.length === 0" class="text-center py-12">
@@ -417,6 +512,76 @@ const resetFilters = () => {
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div v-if="lastPage > 1" class="mt-8 flex items-center justify-center gap-1 flex-wrap">
+                <!-- Previous Button -->
+                <button
+                    @click="prevPage"
+                    :disabled="currentPage === 1"
+                    class="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed border border-white/20 rounded-lg text-white font-semibold transition-colors"
+                >
+                    ← Previous
+                </button>
+
+                <!-- First Page (if not visible in range) -->
+                <button
+                    v-if="pageNumbers[0] > 1"
+                    @click="goToPage(1)"
+                    :class="[
+                        'px-3 py-2 rounded-lg font-semibold transition-colors',
+                        currentPage === 1
+                            ? 'bg-cyan-600 text-white'
+                            : 'bg-white/10 hover:bg-white/20 text-gray-300 border border-white/20'
+                    ]"
+                >
+                    1
+                </button>
+
+                <!-- Ellipsis (left) -->
+                <span v-if="pageNumbers[0] > 2" class="px-2 text-gray-400">...</span>
+
+                <!-- Page Numbers -->
+                <button
+                    v-for="page in pageNumbers"
+                    :key="page"
+                    @click="goToPage(page)"
+                    :class="[
+                        'px-3 py-2 rounded-lg font-semibold transition-colors',
+                        page === currentPage
+                            ? 'bg-cyan-600 text-white'
+                            : 'bg-white/10 hover:bg-white/20 text-gray-300 border border-white/20'
+                    ]"
+                >
+                    {{ page }}
+                </button>
+
+                <!-- Ellipsis (right) -->
+                <span v-if="pageNumbers[pageNumbers.length - 1] < lastPage - 1" class="px-2 text-gray-400">...</span>
+
+                <!-- Last Page (if not visible in range) -->
+                <button
+                    v-if="pageNumbers[pageNumbers.length - 1] < lastPage"
+                    @click="goToPage(lastPage)"
+                    :class="[
+                        'px-3 py-2 rounded-lg font-semibold transition-colors',
+                        currentPage === lastPage
+                            ? 'bg-cyan-600 text-white'
+                            : 'bg-white/10 hover:bg-white/20 text-gray-300 border border-white/20'
+                    ]"
+                >
+                    {{ lastPage }}
+                </button>
+
+                <!-- Next Button -->
+                <button
+                    @click="nextPage"
+                    :disabled="currentPage === lastPage"
+                    class="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed border border-white/20 rounded-lg text-white font-semibold transition-colors"
+                >
+                    Next →
+                </button>
             </div>
         </div>
     </AdminPageLayout>

@@ -64,17 +64,84 @@ const handleSearch = () => {
     router.get(route('admin.users.index'), {
         search: searchQuery.value,
         role: filterRole.value,
+        per_page: perPageUsers.value,
         page: 1
     });
 };
 
-// Pagination
+// Per page handling
+const perPageUsers = ref(props.pagination?.per_page || 15);
+
+const changePerPage = () => {
+    router.get(route('admin.users.index'), {
+        search: searchQuery.value,
+        role: filterRole.value,
+        per_page: perPageUsers.value,
+        page: 1
+    });
+};
+
+// Pagination computed properties
+const currentPage = computed(() => props.pagination?.current_page || 1);
+const perPage = computed(() => props.pagination?.per_page || 15);
+const totalUsers = computed(() => props.pagination?.total || 0);
+const lastPage = computed(() => props.pagination?.last_page || 1);
+
+const usersList = computed(() => {
+    // If users is an array directly
+    if (Array.isArray(props.users)) {
+        return props.users;
+    }
+    // If users is paginated object with data property
+    return props.users?.data || [];
+});
+
+const pageNumbers = computed(() => {
+    const pages = [];
+    const maxPages = 5;
+    let start = Math.max(1, currentPage.value - Math.floor(maxPages / 2));
+    let end = Math.min(lastPage.value, start + maxPages - 1);
+    
+    if (end - start < maxPages - 1) {
+        start = Math.max(1, end - maxPages + 1);
+    }
+    
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+    return pages;
+});
+
+const startRecord = computed(() => {
+    return (currentPage.value - 1) * perPage.value + 1;
+});
+
+const endRecord = computed(() => {
+    return Math.min(currentPage.value * perPage.value, totalUsers.value);
+});
+
+// Pagination navigation
 const goToPage = (page) => {
+    if (page < 1 || page > lastPage.value) return;
+    
     router.visit(route('admin.users.index', { 
         page,
         search: searchQuery.value,
-        role: filterRole.value
+        role: filterRole.value,
+        per_page: perPageUsers.value
     }));
+};
+
+const nextPage = () => {
+    if (currentPage.value < lastPage.value) {
+        goToPage(currentPage.value + 1);
+    }
+};
+
+const prevPage = () => {
+    if (currentPage.value > 1) {
+        goToPage(currentPage.value - 1);
+    }
 };
 
 // Open edit modal
@@ -226,9 +293,27 @@ const getRoleLabel = (role) => {
             </div>
         </div>
 
-        <!-- Results Count -->
-        <div class="mb-4 text-sm text-gray-400">
-            Total <span class="font-bold text-cyan-400">{{ pagination.total }}</span> user ditemukan
+        <!-- Results Count & Per Page -->
+        <div class="mb-4 flex items-center justify-between flex-wrap gap-4">
+            <div class="text-sm text-gray-400">
+                Tampilkan <span class="font-bold text-cyan-400">{{ startRecord }}-{{ endRecord }}</span> dari <span class="font-bold text-cyan-400">{{ totalUsers }}</span> user
+                <span class="text-gray-500 ml-2">(Halaman {{ currentPage }} dari {{ lastPage }})</span>
+            </div>
+            
+            <!-- Per Page Selector -->
+            <div class="flex items-center gap-3">
+                <label class="text-sm text-gray-400">Items per halaman:</label>
+                <select
+                    v-model="perPageUsers"
+                    @change="changePerPage"
+                    class="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400/50 focus:bg-white/[0.05] transition-all"
+                >
+                    <option value="15" class="bg-gray-900">15</option>
+                    <option value="25" class="bg-gray-900">25</option>
+                    <option value="50" class="bg-gray-900">50</option>
+                    <option value="100" class="bg-gray-900">100</option>
+                </select>
+            </div>
         </div>
 
         <!-- Users Table -->
@@ -247,7 +332,7 @@ const getRoleLabel = (role) => {
                     </thead>
                     <tbody>
                         <tr
-                            v-for="user in users"
+                            v-for="user in usersList"
                             :key="user.id"
                             class="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
                         >
@@ -304,7 +389,7 @@ const getRoleLabel = (role) => {
                         </tr>
 
                         <!-- Empty State -->
-                        <tr v-if="users.length === 0">
+                        <tr v-if="usersList.length === 0">
                             <td colspan="6" class="px-6 py-12 text-center">
                                 <p class="text-gray-400 font-medium">Tidak ada user ditemukan</p>
                             </td>
@@ -314,39 +399,71 @@ const getRoleLabel = (role) => {
             </div>
         </div>
 
-        <!-- Pagination -->
-        <div v-if="pagination.last_page > 1" class="flex items-center justify-center gap-2 mb-8">
-            <!-- Previous -->
+        <!-- Pagination Controls -->
+        <div v-if="lastPage > 1" class="flex items-center justify-center gap-1 mb-8 flex-wrap">
+            <!-- Previous Button -->
             <button
-                v-if="pagination.current_page > 1"
-                @click="goToPage(pagination.current_page - 1)"
-                class="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white font-semibold transition-colors"
+                @click="prevPage"
+                :disabled="currentPage === 1"
+                class="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed border border-white/20 rounded-lg text-white font-semibold transition-colors"
             >
                 ← Previous
             </button>
 
-            <!-- Page Numbers -->
-            <div class="flex gap-1">
-                <button
-                    v-for="page in pagination.last_page"
-                    :key="page"
-                    @click="goToPage(page)"
-                    :class="[
-                        'px-3 py-2 rounded-lg font-semibold transition-colors',
-                        page === pagination.current_page
-                            ? 'bg-cyan-600 text-white'
-                            : 'bg-white/10 hover:bg-white/20 text-gray-300 border border-white/20'
-                    ]"
-                >
-                    {{ page }}
-                </button>
-            </div>
-
-            <!-- Next -->
+            <!-- First Page (if not visible in range) -->
             <button
-                v-if="pagination.current_page < pagination.last_page"
-                @click="goToPage(pagination.current_page + 1)"
-                class="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white font-semibold transition-colors"
+                v-if="pageNumbers[0] > 1"
+                @click="goToPage(1)"
+                :class="[
+                    'px-3 py-2 rounded-lg font-semibold transition-colors',
+                    currentPage === 1
+                        ? 'bg-cyan-600 text-white'
+                        : 'bg-white/10 hover:bg-white/20 text-gray-300 border border-white/20'
+                ]"
+            >
+                1
+            </button>
+
+            <!-- Ellipsis (left) -->
+            <span v-if="pageNumbers[0] > 2" class="px-2 text-gray-400">...</span>
+
+            <!-- Page Numbers -->
+            <button
+                v-for="page in pageNumbers"
+                :key="page"
+                @click="goToPage(page)"
+                :class="[
+                    'px-3 py-2 rounded-lg font-semibold transition-colors',
+                    page === currentPage
+                        ? 'bg-cyan-600 text-white'
+                        : 'bg-white/10 hover:bg-white/20 text-gray-300 border border-white/20'
+                ]"
+            >
+                {{ page }}
+            </button>
+
+            <!-- Ellipsis (right) -->
+            <span v-if="pageNumbers[pageNumbers.length - 1] < lastPage - 1" class="px-2 text-gray-400">...</span>
+
+            <!-- Last Page (if not visible in range) -->
+            <button
+                v-if="pageNumbers[pageNumbers.length - 1] < lastPage"
+                @click="goToPage(lastPage)"
+                :class="[
+                    'px-3 py-2 rounded-lg font-semibold transition-colors',
+                    currentPage === lastPage
+                        ? 'bg-cyan-600 text-white'
+                        : 'bg-white/10 hover:bg-white/20 text-gray-300 border border-white/20'
+                ]"
+            >
+                {{ lastPage }}
+            </button>
+
+            <!-- Next Button -->
+            <button
+                @click="nextPage"
+                :disabled="currentPage === lastPage"
+                class="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed border border-white/20 rounded-lg text-white font-semibold transition-colors"
             >
                 Next →
             </button>

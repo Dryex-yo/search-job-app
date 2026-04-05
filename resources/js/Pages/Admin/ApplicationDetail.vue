@@ -25,6 +25,23 @@ const statusForm = ref({
 });
 const isEditingNotes = ref(false);
 
+// Interview state
+const hasUpcomingInterview = computed(() => {
+    return props.application?.interview_scheduled_at && !props.application?.interview_cancelled_at;
+});
+
+const isInterviewPassed = computed(() => {
+    if (!props.application?.interview_scheduled_at) return false;
+    return new Date(props.application.interview_scheduled_at) < new Date();
+});
+
+const interviewStatus = computed(() => {
+    if (props.application?.interview_cancelled_at) return 'Cancelled';
+    if (!props.application?.interview_scheduled_at) return 'Not Scheduled';
+    if (isInterviewPassed.value) return 'Completed';
+    return 'Upcoming';
+});
+
 // Debug: Log received application data only in development
 if (process.env.NODE_ENV === 'development') {
     console.log('ApplicationDetail - Received props:', {
@@ -151,6 +168,15 @@ const formatDate = (date) => {
     />
 
     <AdminPageLayout :title="`${application.user_name} 👤`" :subtitle="`Melamar untuk: ${application.job_title}`">
+        <!-- Breadcrumb Navigation -->
+        <nav class="flex items-center gap-2 mb-6 text-sm">
+            <Link href="/admin/applicants" class="text-cyan-400 hover:text-cyan-300 transition-colors">
+                📋 Applicants
+            </Link>
+            <span class="text-gray-600">/</span>
+            <span class="text-gray-400">{{ application.user_name }}</span>
+        </nav>
+
         <!-- Back Button & Status -->
         <div class="flex items-center justify-between mb-8">
             <Link 
@@ -244,6 +270,77 @@ const formatDate = (date) => {
                                 {{ displayCoverLetter }}
                             </p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Interview Scheduling Section -->
+                <div class="bg-white/[0.003] border border-white/10 rounded-2xl p-6 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <span>📞</span> Interview Scheduling
+                        </h2>
+                        <span :class="['text-xs px-3 py-1 rounded-full border', 
+                            interviewStatus === 'Upcoming' ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300' :
+                            interviewStatus === 'Completed' ? 'bg-green-500/20 border-green-500/50 text-green-300' :
+                            interviewStatus === 'Cancelled' ? 'bg-red-500/20 border-red-500/50 text-red-300' :
+                            'bg-gray-500/20 border-gray-500/50 text-gray-300'
+                        ]">
+                            {{ interviewStatus }}
+                        </span>
+                    </div>
+                    
+                    <div v-if="hasUpcomingInterview" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs uppercase tracking-widest text-gray-700 dark:text-gray-500 mb-2">Date & Time</p>
+                            <p class="text-white font-semibold">{{ formatDate(application.interview_scheduled_at) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs uppercase tracking-widest text-gray-700 dark:text-gray-500 mb-2">Duration</p>
+                            <p class="text-white font-semibold">{{ application.interview_duration_minutes }} minutes</p>
+                        </div>
+                        <div>
+                            <p class="text-xs uppercase tracking-widest text-gray-700 dark:text-gray-500 mb-2">Type</p>
+                            <p class="text-white font-semibold capitalize">{{ application.interview_type || 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs uppercase tracking-widest text-gray-700 dark:text-gray-500 mb-2">Provider</p>
+                            <p class="text-white font-semibold capitalize">{{ application.interview_meeting_provider || 'N/A' }}</p>
+                        </div>
+                    </div>
+                    <div v-if="application.interview_meeting_link" class="pt-2">
+                        <p class="text-xs uppercase tracking-widest text-gray-700 dark:text-gray-500 mb-2">Meeting Link</p>
+                        <a :href="application.interview_meeting_link" target="_blank" class="text-cyan-400 hover:text-cyan-300 break-all text-sm">
+                            {{ application.interview_meeting_link }}
+                        </a>
+                    </div>
+                    <div v-if="application.interview_notes" class="pt-2">
+                        <p class="text-xs uppercase tracking-widest text-gray-700 dark:text-gray-500 mb-2">Notes</p>
+                        <p class="text-gray-300 text-sm whitespace-pre-wrap">{{ application.interview_notes }}</p>
+                    </div>
+                    <div v-if="!hasUpcomingInterview" class="pt-2">
+                        <p class="text-gray-500 text-sm italic">No interview scheduled yet</p>
+                    </div>
+                </div>
+
+                <!-- AI Match Score Section -->
+                <div v-if="application.ai_match_score !== null && application.ai_match_score !== undefined" class="bg-white/[0.003] border border-white/10 rounded-2xl p-6 space-y-4">
+                    <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <span>🤖</span> AI Match Analysis
+                    </h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs uppercase tracking-widest text-gray-700 dark:text-gray-500 mb-2">Match Score</p>
+                            <p class="text-3xl font-bold" :class="application.ai_match_score >= 80 ? 'text-green-400' : application.ai_match_score >= 60 ? 'text-yellow-400' : 'text-red-400'">
+                                {{ application.ai_match_score }}/100
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs uppercase tracking-widest text-gray-700 dark:text-gray-500 mb-2">Status</p>
+                            <p class="text-white font-semibold capitalize">{{ application.ai_analysis_status }}</p>
+                        </div>
+                    </div>
+                    <div v-if="application.ai_analysis_details" class="bg-white/[0.005] border border-white/10 rounded-lg p-4">
+                        <p class="text-sm text-gray-300 whitespace-pre-wrap">{{ application.ai_analysis_details }}</p>
                     </div>
                 </div>
 

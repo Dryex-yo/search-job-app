@@ -1,14 +1,22 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AdminPageLayout from '@/Layouts/AdminPageLayout.vue';
+import NotificationContainer from '@/Components/NotificationContainer.vue';
+import { useNotification } from '@/Composables/useNotification';
 
-defineProps({
+const props = defineProps({
+    settings: {
+        type: Object,
+        required: true
+    },
     analytics: {
         type: Object,
         required: true
     }
 });
+
+const { success: showSuccess, error: showError } = useNotification();
 
 const currentRoute = computed(() => route().current());
 
@@ -20,28 +28,43 @@ const menus = [
     { name: 'Settings', icon: '⚙️', route: 'admin.settings' },
 ];
 
-const settingsSaved = ref(false);
+// Form state
+const form = ref({
+    platform_name: props.settings?.platform_name || 'DRYEX',
+    support_email: props.settings?.support_email || 'support@dryex.com',
+    max_file_upload_mb: props.settings?.max_file_upload_mb || 10,
+    email_new_applications: props.settings?.email_new_applications ?? true,
+    email_job_expiry: props.settings?.email_job_expiry ?? true,
+    email_weekly_reports: props.settings?.email_weekly_reports ?? true,
+    email_user_feedback: props.settings?.email_user_feedback ?? false,
+    two_factor_enabled: props.settings?.two_factor_enabled ?? false,
+    hiring_fee_per_person: props.settings?.hiring_fee_per_person || 500.00,
+});
+
+const isSaving = ref(false);
 
 const handleSave = () => {
-    settingsSaved.value = true;
-    setTimeout(() => {
-        settingsSaved.value = false;
-    }, 3000);
+    isSaving.value = true;
+    router.patch(route('admin.settings.update'), form.value, {
+        onSuccess: () => {
+            isSaving.value = false;
+            showSuccess('Berhasil Disimpan', 'Pengaturan platform berhasil diperbarui!');
+        },
+        onError: (errors) => {
+            isSaving.value = false;
+            const errorMsg = Object.values(errors)[0] || 'Terjadi kesalahan saat menyimpan pengaturan';
+            showError('Gagal Disimpan', errorMsg);
+        }
+    });
 };
+
 </script>
 
 <template>
     <Head title="Dryex Admin - Settings" />
 
     <AdminPageLayout title="Settings ⚙️" subtitle="Configure platform settings and preferences">
-                    <!-- Success Message -->
-                    <div v-if="settingsSaved" class="mb-8 p-4 bg-green-500/20 border border-green-500/30 rounded-2xl flex items-center gap-3 animate-pulse">
-                        <span class="text-2xl">✅</span>
-                        <div>
-                            <p class="font-bold text-green-300">Settings Saved</p>
-                            <p class="text-xs text-green-400">Your changes have been saved successfully</p>
-                        </div>
-                    </div>
+                    <NotificationContainer />
 
                     <!-- Platform Settings -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
@@ -52,20 +75,27 @@ const handleSave = () => {
                             <div class="space-y-6">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Platform Name</label>
-                                    <input type="text" value="DRYEX" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-cyan-500/50" />
+                                    <input v-model="form.platform_name" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-cyan-500/50" />
                                 </div>
 
                                 <div>
                                     <label class="block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Support Email</label>
-                                    <input type="email" value="support@dryex.com" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-cyan-500/50" />
+                                    <input v-model="form.support_email" type="email" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-cyan-500/50" />
                                 </div>
 
                                 <div>
                                     <label class="block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Max File Upload (MB)</label>
-                                    <input type="number" value="10" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-cyan-500/50" />
+                                    <input v-model.number="form.max_file_upload_mb" type="number" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-cyan-500/50" />
                                 </div>
 
-                                <button @click="handleSave" class="w-full mt-6 bg-cyan-500 hover:bg-cyan-600 text-slate-900 py-3 rounded-2xl font-bold uppercase tracking-widest transition-all">Save Changes</button>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Hiring Fee Per Person ($)</label>
+                                    <input v-model.number="form.hiring_fee_per_person" type="number" step="0.01" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-cyan-500/50" />
+                                </div>
+
+                                <button @click="handleSave" :disabled="isSaving" class="w-full mt-6 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 text-slate-900 py-3 rounded-2xl font-bold uppercase tracking-widest transition-all">
+                                    {{ isSaving ? 'Menyimpan...' : 'Save Changes' }}
+                                </button>
                             </div>
                         </div>
 
@@ -75,24 +105,28 @@ const handleSave = () => {
                             
                             <div class="space-y-4">
                                 <label class="flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl cursor-pointer transition-all">
-                                    <input type="checkbox" checked class="w-5 h-5 rounded border-white/20" />
+                                    <input v-model="form.email_new_applications" type="checkbox" class="w-5 h-5 rounded border-white/20" />
                                     <span class="font-medium">New Applications</span>
                                 </label>
 
                                 <label class="flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl cursor-pointer transition-all">
-                                    <input type="checkbox" checked class="w-5 h-5 rounded border-white/20" />
+                                    <input v-model="form.email_job_expiry" type="checkbox" class="w-5 h-5 rounded border-white/20" />
                                     <span class="font-medium">Job Expiry Reminders</span>
                                 </label>
 
                                 <label class="flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl cursor-pointer transition-all">
-                                    <input type="checkbox" checked class="w-5 h-5 rounded border-white/20" />
+                                    <input v-model="form.email_weekly_reports" type="checkbox" class="w-5 h-5 rounded border-white/20" />
                                     <span class="font-medium">Weekly Reports</span>
                                 </label>
 
                                 <label class="flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl cursor-pointer transition-all">
-                                    <input type="checkbox" class="w-5 h-5 rounded border-white/20" />
+                                    <input v-model="form.email_user_feedback" type="checkbox" class="w-5 h-5 rounded border-white/20" />
                                     <span class="font-medium">User Feedback</span>
                                 </label>
+
+                                <button @click="handleSave" :disabled="isSaving" class="w-full mt-6 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 text-slate-900 py-3 rounded-2xl font-bold uppercase tracking-widest transition-all">
+                                    {{ isSaving ? 'Menyimpan...' : 'Save Changes' }}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -104,7 +138,10 @@ const handleSave = () => {
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div class="border border-white/10 rounded-2xl p-6">
                                 <p class="text-sm font-bold text-gray-700 dark:text-gray-400 mb-4">Two-Factor Auth</p>
-                                <button class="w-full bg-white/10 hover:bg-white/20 border border-white/10 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all">Enable</button>
+                                <label class="flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl cursor-pointer transition-all">
+                                    <input v-model="form.two_factor_enabled" type="checkbox" class="w-5 h-5 rounded border-white/20" />
+                                    <span class="font-medium text-xs">{{ form.two_factor_enabled ? '✓ Enabled' : 'Disabled' }}</span>
+                                </label>
                             </div>
 
                             <div class="border border-white/10 rounded-2xl p-6">

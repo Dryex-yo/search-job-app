@@ -22,7 +22,9 @@ class UserManagementController extends Controller
 
         // Get all users with pagination
         $page = $request->get('page', 1);
-        $perPage = 15;
+        $perPage = $request->get('per_page', 15);
+        // Validate per_page to prevent abuse
+        $perPage = in_array((int)$perPage, [15, 25, 50, 100]) ? (int)$perPage : 15;
         $searchQuery = $request->get('search', '');
         $filterRole = $request->get('role', '');
 

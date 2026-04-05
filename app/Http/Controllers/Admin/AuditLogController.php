@@ -22,7 +22,9 @@ class AuditLogController extends Controller
 
         // Get all activities with pagination
         $page = $request->get('page', 1);
-        $perPage = 15;
+        $perPage = $request->get('per_page', 15);
+        // Validate per_page to prevent abuse
+        $perPage = in_array((int)$perPage, [15, 25, 50, 100]) ? (int)$perPage : 15;
 
         $activities = Activity::query()
             ->with(['subject', 'causer'])

@@ -24,10 +24,25 @@ const selectedLog = ref(null);
 const showDetailModal = ref(false);
 const searchQuery = ref('');
 const filterType = ref('all');
+const perPageLogs = ref(props.pagination?.per_page || 15);
 
 // Computed
+const currentPage = computed(() => props.pagination?.current_page || 1);
+const perPage = computed(() => props.pagination?.per_page || 15);
+const totalLogs = computed(() => props.pagination?.total || 0);
+const lastPage = computed(() => props.pagination?.last_page || 1);
+
+const logsList = computed(() => {
+    // If logs is an array directly
+    if (Array.isArray(props.logs)) {
+        return props.logs;
+    }
+    // If logs is paginated object with data property
+    return props.logs?.data || [];
+});
+
 const filteredLogs = computed(() => {
-    return props.logs.filter(log => {
+    return logsList.value.filter(log => {
         const matchesSearch = !searchQuery.value || 
             log.description.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
             log.causer_name.toLowerCase().includes(searchQuery.value.toLowerCase());
@@ -36,6 +51,30 @@ const filteredLogs = computed(() => {
         
         return matchesSearch && matchesFilter;
     });
+});
+
+const pageNumbers = computed(() => {
+    const pages = [];
+    const maxPages = 5;
+    let start = Math.max(1, currentPage.value - Math.floor(maxPages / 2));
+    let end = Math.min(lastPage.value, start + maxPages - 1);
+    
+    if (end - start < maxPages - 1) {
+        start = Math.max(1, end - maxPages + 1);
+    }
+    
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+    return pages;
+});
+
+const startRecord = computed(() => {
+    return (currentPage.value - 1) * perPage.value + 1;
+});
+
+const endRecord = computed(() => {
+    return Math.min(currentPage.value * perPage.value, totalLogs.value);
 });
 
 // Get action badge color
@@ -60,7 +99,30 @@ const getSubjectTypeColor = (type) => {
 
 // Handle pagination
 const goToPage = (page) => {
-    router.visit(route('admin.audit-logs.index', { page }));
+    if (page < 1 || page > lastPage.value) return;
+    router.visit(route('admin.audit-logs.index', { 
+        page,
+        per_page: perPageLogs.value
+    }));
+};
+
+const nextPage = () => {
+    if (currentPage.value < lastPage.value) {
+        goToPage(currentPage.value + 1);
+    }
+};
+
+const prevPage = () => {
+    if (currentPage.value > 1) {
+        goToPage(currentPage.value - 1);
+    }
+};
+
+const changePerPage = () => {
+    router.get(route('admin.audit-logs.index'), {
+        per_page: perPageLogs.value,
+        page: 1
+    });
 };
 
 // Show details
@@ -107,9 +169,27 @@ const formatChangeValue = (value) => {
             </div>
         </div>
 
-        <!-- Results Count -->
-        <div class="mb-4 text-sm text-gray-400">
-            Showing <span class="font-bold text-cyan-400">{{ filteredLogs.length }}</span> of <span class="font-bold text-cyan-400">{{ pagination.total }}</span> audit logs
+        <!-- Results Count & Per Page -->
+        <div class="mb-4 flex items-center justify-between flex-wrap gap-4">
+            <div class="text-sm text-gray-400">
+                Tampilkan <span class="font-bold text-cyan-400">{{ startRecord }}-{{ endRecord }}</span> dari <span class="font-bold text-cyan-400">{{ totalLogs }}</span> audit log
+                <span class="text-gray-500 ml-2">(Halaman {{ currentPage }} dari {{ lastPage }})</span>
+            </div>
+            
+            <!-- Per Page Selector -->
+            <div class="flex items-center gap-3">
+                <label class="text-sm text-gray-400">Items per halaman:</label>
+                <select
+                    v-model="perPageLogs"
+                    @change="changePerPage"
+                    class="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-400/50 focus:bg-white/[0.05] transition-all"
+                >
+                    <option value="15" class="bg-gray-900">15</option>
+                    <option value="25" class="bg-gray-900">25</option>
+                    <option value="50" class="bg-gray-900">50</option>
+                    <option value="100" class="bg-gray-900">100</option>
+                </select>
+            </div>
         </div>
 
         <!-- Audit Logs Table -->
@@ -189,39 +269,71 @@ const formatChangeValue = (value) => {
             </div>
         </div>
 
-        <!-- Pagination -->
-        <div v-if="pagination.last_page > 1" class="flex items-center justify-center gap-2 mb-8">
-            <!-- Previous -->
+        <!-- Pagination Controls -->
+        <div v-if="lastPage > 1" class="flex items-center justify-center gap-1 mb-8 flex-wrap">
+            <!-- Previous Button -->
             <button
-                v-if="pagination.current_page > 1"
-                @click="goToPage(pagination.current_page - 1)"
-                class="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white font-semibold transition-colors"
+                @click="prevPage"
+                :disabled="currentPage === 1"
+                class="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed border border-white/20 rounded-lg text-white font-semibold transition-colors"
             >
                 ← Previous
             </button>
 
-            <!-- Page Numbers -->
-            <div class="flex gap-1">
-                <button
-                    v-for="page in pagination.last_page"
-                    :key="page"
-                    @click="goToPage(page)"
-                    :class="[
-                        'px-3 py-2 rounded-lg font-semibold transition-colors',
-                        page === pagination.current_page
-                            ? 'bg-cyan-600 text-white'
-                            : 'bg-white/10 hover:bg-white/20 text-gray-300 border border-white/20'
-                    ]"
-                >
-                    {{ page }}
-                </button>
-            </div>
-
-            <!-- Next -->
+            <!-- First Page (if not visible in range) -->
             <button
-                v-if="pagination.current_page < pagination.last_page"
-                @click="goToPage(pagination.current_page + 1)"
-                class="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white font-semibold transition-colors"
+                v-if="pageNumbers[0] > 1"
+                @click="goToPage(1)"
+                :class="[
+                    'px-3 py-2 rounded-lg font-semibold transition-colors',
+                    currentPage === 1
+                        ? 'bg-cyan-600 text-white'
+                        : 'bg-white/10 hover:bg-white/20 text-gray-300 border border-white/20'
+                ]"
+            >
+                1
+            </button>
+
+            <!-- Ellipsis (left) -->
+            <span v-if="pageNumbers[0] > 2" class="px-2 text-gray-400">...</span>
+
+            <!-- Page Numbers -->
+            <button
+                v-for="page in pageNumbers"
+                :key="page"
+                @click="goToPage(page)"
+                :class="[
+                    'px-3 py-2 rounded-lg font-semibold transition-colors',
+                    page === currentPage
+                        ? 'bg-cyan-600 text-white'
+                        : 'bg-white/10 hover:bg-white/20 text-gray-300 border border-white/20'
+                ]"
+            >
+                {{ page }}
+            </button>
+
+            <!-- Ellipsis (right) -->
+            <span v-if="pageNumbers[pageNumbers.length - 1] < lastPage - 1" class="px-2 text-gray-400">...</span>
+
+            <!-- Last Page (if not visible in range) -->
+            <button
+                v-if="pageNumbers[pageNumbers.length - 1] < lastPage"
+                @click="goToPage(lastPage)"
+                :class="[
+                    'px-3 py-2 rounded-lg font-semibold transition-colors',
+                    currentPage === lastPage
+                        ? 'bg-cyan-600 text-white'
+                        : 'bg-white/10 hover:bg-white/20 text-gray-300 border border-white/20'
+                ]"
+            >
+                {{ lastPage }}
+            </button>
+
+            <!-- Next Button -->
+            <button
+                @click="nextPage"
+                :disabled="currentPage === lastPage"
+                class="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed border border-white/20 rounded-lg text-white font-semibold transition-colors"
             >
                 Next →
             </button>

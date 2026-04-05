@@ -9,8 +9,18 @@ import { useNotification } from '@/Composables/useNotification';
 
 const props = defineProps({
     applicants: {
-        type: Array,
-        default: () => []
+        type: Object,  // Changed from Array to Object (pagination object)
+        default: () => ({
+            data: [],
+            current_page: 1,
+            per_page: 15,
+            total: 0,
+            last_page: 1,
+        })
+    },
+    filters: {
+        type: Object,
+        default: () => ({})
     }
 });
 
@@ -27,12 +37,118 @@ const selectedApplicantNameForLetter = ref('');
 // Sorting state
 const sortOrder = ref('default'); // 'default', 'highest', 'lowest'
 
+// Filter state
+const filterForm = ref({
+    search: props.filters?.search || '',
+    status: props.filters?.status || '',
+    score_min: props.filters?.score_min || '',
+    score_max: props.filters?.score_max || '',
+    date_from: props.filters?.date_from || '',
+    date_to: props.filters?.date_to || '',
+    sort: props.filters?.sort || 'latest',
+    per_page: props.filters?.per_page || 15,
+});
+
+const showFilters = ref(false);
+
 // Initialize notification
 const { success: showSuccess, error: showError, info: showInfo } = useNotification();
 
-// Computed property untuk sorted applicants
+// Apply filters
+const applyFilters = () => {
+    router.get(route('admin.applicants'), filterForm.value, {
+        preserveState: false,
+    });
+};
+
+// Reset filters
+const resetFilters = () => {
+    filterForm.value = {
+        search: '',
+        status: '',
+        score_min: '',
+        score_max: '',
+        date_from: '',
+        date_to: '',
+        sort: 'latest',
+    };
+    router.get(route('admin.applicants'), {}, {
+        preserveState: false,
+    });
+};
+
+// Check if any filter is active
+const hasActiveFilters = computed(() => {
+    return filterForm.value.search || 
+           filterForm.value.status || 
+           filterForm.value.score_min || 
+           filterForm.value.score_max ||
+           filterForm.value.date_from ||
+           filterForm.value.date_to;
+});
+
+// Pagination computed
+const applicantsList = computed(() => props.applicants?.data || []);
+const currentPage = computed(() => props.applicants?.current_page || 1);
+const perPage = computed(() => props.applicants?.per_page || 15);
+const totalApplicants = computed(() => props.applicants?.total || 0);
+const lastPage = computed(() => props.applicants?.last_page || 1);
+const startRecord = computed(() => (currentPage.value - 1) * perPage.value + 1);
+const endRecord = computed(() => Math.min(currentPage.value * perPage.value, totalApplicants.value));
+
+// Generate page numbers for pagination
+const pageNumbers = computed(() => {
+    const pages = [];
+    const maxPages = 5; // Show 5 page numbers max
+    let start = Math.max(1, currentPage.value - Math.floor(maxPages / 2));
+    let end = Math.min(lastPage.value, start + maxPages - 1);
+    
+    if (end - start < maxPages - 1) {
+        start = Math.max(1, end - maxPages + 1);
+    }
+    
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+    return pages;
+});
+
+// Pagination methods
+const goToPage = (page) => {
+    router.get(route('admin.applicants'), {
+        ...filterForm.value,
+        page: page
+    }, {
+        preserveState: false,
+    });
+};
+
+const nextPage = () => {
+    if (currentPage.value < lastPage.value) {
+        goToPage(currentPage.value + 1);
+    }
+};
+
+const prevPage = () => {
+    if (currentPage.value > 1) {
+        goToPage(currentPage.value - 1);
+    }
+};
+
+// Change per page
+const changePerPage = () => {
+    router.get(route('admin.applicants'), {
+        ...filterForm.value,
+        per_page: filterForm.value.per_page,
+        page: 1
+    }, {
+        preserveState: false,
+    });
+};
+
+// Computed property untuk sorted applicants (client-side additional sorting)
 const sortedApplicants = computed(() => {
-    let sorted = [...props.applicants];
+    let sorted = [...applicantsList.value];
     
     if (sortOrder.value === 'highest') {
         sorted.sort((a, b) => (b.ai_match_score || 0) - (a.ai_match_score || 0));
@@ -161,7 +277,18 @@ const exportToExcel = () => {
     <NotificationContainer />
 
     <AdminPageLayout title="Manage Applicants" subtitle="Review and track your job candidates efficiently.">
-        <div class="flex justify-end mb-6">
+        <!-- Action Buttons -->
+        <div class="flex justify-between items-center mb-6 gap-4">
+            <div class="flex items-center gap-2">
+                <button @click="showFilters = !showFilters"
+                    class="px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/40 border border-cyan-500/50 rounded-2xl text-sm font-bold text-cyan-400 uppercase tracking-widest transition-all duration-300 flex items-center gap-2">
+                    <span>🔍</span>
+                    {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+                </button>
+                <span v-if="hasActiveFilters" class="text-xs bg-cyan-500/30 text-cyan-300 px-3 py-1 rounded-full border border-cyan-500/50">
+                    Active Filters
+                </span>
+            </div>
             <button @click="exportToExcel"
                 class="px-6 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/50 rounded-2xl text-sm font-bold text-green-400 uppercase tracking-widest hover:from-green-500/30 hover:to-emerald-500/30 hover:border-green-500/70 transition-all duration-300 flex items-center gap-2 shadow-lg shadow-green-500/10">
                 <span>📊</span>
@@ -169,12 +296,124 @@ const exportToExcel = () => {
             </button>
         </div>
 
+        <!-- Filter Panel -->
+        <div v-show="showFilters" class="bg-white/[0.01] border border-white/10 rounded-[2rem] p-8 mb-6 shadow-inner">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Search -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Search</label>
+                    <input 
+                        v-model="filterForm.search" 
+                        type="text" 
+                        placeholder="Name, email, or job title..."
+                        @keyup.enter="applyFilters"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50" 
+                    />
+                </div>
+
+                <!-- Status Filter -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Status</label>
+                    <select 
+                        v-model="filterForm.status"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-cyan-500/50"
+                    >
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="interview">Interview</option>
+                        <option value="shortlisted">Shortlisted</option>
+                        <option value="hired">Hired</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+
+                <!-- Score Min -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Min Score</label>
+                    <input 
+                        v-model.number="filterForm.score_min" 
+                        type="number" 
+                        min="0" 
+                        max="100"
+                        placeholder="0"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50" 
+                    />
+                </div>
+
+                <!-- Score Max -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Max Score</label>
+                    <input 
+                        v-model.number="filterForm.score_max" 
+                        type="number" 
+                        min="0" 
+                        max="100"
+                        placeholder="100"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50" 
+                    />
+                </div>
+
+                <!-- Date From -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">From Date</label>
+                    <input 
+                        v-model="filterForm.date_from" 
+                        type="date"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-cyan-500/50" 
+                    />
+                </div>
+
+                <!-- Date To -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">To Date</label>
+                    <input 
+                        v-model="filterForm.date_to" 
+                        type="date"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-cyan-500/50" 
+                    />
+                </div>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="flex gap-3 mt-6 justify-end">
+                <button 
+                    @click="resetFilters"
+                    class="px-6 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-bold text-white uppercase tracking-widest transition-all"
+                >
+                    Reset
+                </button>
+                <button 
+                    @click="applyFilters"
+                    class="px-6 py-2 bg-cyan-500 hover:bg-cyan-600 border border-cyan-500 rounded-xl text-sm font-bold text-slate-900 uppercase tracking-widest transition-all"
+                >
+                    Apply Filters
+                </button>
+            </div>
+
+            <!-- Per Page Selector -->
+            <div class="flex items-center gap-3 mt-6 pt-6 border-t border-white/10">
+                <label class="text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider">Show per page:</label>
+                <select 
+                    v-model.number="filterForm.per_page"
+                    @change="changePerPage"
+                    class="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 text-sm"
+                >
+                    <option :value="15">15 items</option>
+                    <option :value="25">25 items</option>
+                    <option :value="50">50 items</option>
+                    <option :value="100">100 items</option>
+                </select>
+            </div>
+        </div>
+
         <div class="bg-white/[0.01] border border-white/10 rounded-[3rem] p-10 shadow-inner glass-grain relative overflow-hidden">
             <!-- Scroll Indicator (Top) -->
             <div class="mb-3 flex items-center justify-between px-2">
                 <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Geser ke kanan untuk melihat lebih banyak →</span>
                 <div class="flex items-center gap-3">
-                    <span class="text-[10px] text-gray-500">{{ applicants.length }} Pelamar</span>
+                    <span class="text-[10px] text-gray-500">
+                        Showing {{ startRecord }} - {{ endRecord }} of {{ totalApplicants }} Pelamar
+                    </span>
                     <div class="text-[10px] font-semibold text-cyan-400 bg-cyan-400/20 px-2 py-1 rounded border border-cyan-400/30 cursor-pointer hover:bg-cyan-400/30 transition-all" @click="toggleSort" title="Klik untuk mengubah urutan">
                         {{ getSortIcon() }} {{ getSortLabel() }}
                     </div>
@@ -260,7 +499,7 @@ const exportToExcel = () => {
                                     </button>
                                     <select @change="updateStatus(applicant.id, $event.target.value)" 
                                         :value="applicant.status"
-                                        class="px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg text-xs font-bold text-black cursor-pointer hover:bg-white/20 transition-all flex-shrink-0">
+                                        class="px-3 py-1.5 bg-white/10 border border-black/20 rounded-lg text-xs font-bold text-white cursor-pointer hover:bg-black/20 transition-all flex-shrink-0">
                                         <option value="pending">Pending</option>
                                         <option value="interview">Interview</option>
                                         <option value="shortlisted">Shortlisted</option>
@@ -273,8 +512,84 @@ const exportToExcel = () => {
                     </tbody>
                 </table>
 
-                <div v-if="applicants.length === 0" class="text-center py-12">
+                <div v-if="applicantsList.length === 0" class="text-center py-12">
                     <p class="text-gray-600 dark:text-gray-400 text-sm">No applicants found</p>
+                </div>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div v-if="totalApplicants > perPage" class="mt-8 flex items-center justify-between">
+                <!-- Page Info -->
+                <div class="text-sm text-gray-500">
+                    Page <span class="font-bold text-white">{{ currentPage }}</span> of <span class="font-bold text-white">{{ lastPage }}</span>
+                </div>
+
+                <!-- Pagination Buttons -->
+                <div class="flex items-center gap-2">
+                    <!-- Previous Button -->
+                    <button 
+                        @click="prevPage"
+                        :disabled="currentPage === 1"
+                        class="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:opacity-50 border border-white/20 rounded-lg text-sm font-bold text-white uppercase tracking-wider transition-all disabled:cursor-not-allowed"
+                    >
+                        ← Prev
+                    </button>
+
+                    <!-- Page Numbers -->
+                    <div class="flex gap-1">
+                        <!-- First Page -->
+                        <button 
+                            v-if="pageNumbers[0] > 1"
+                            @click="goToPage(1)"
+                            class="px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm font-bold text-white transition-all"
+                        >
+                            1
+                        </button>
+
+                        <!-- Ellipsis -->
+                        <span v-if="pageNumbers[0] > 2" class="px-2 py-2 text-gray-500">...</span>
+
+                        <!-- Page Number Buttons -->
+                        <button 
+                            v-for="page in pageNumbers" 
+                            :key="page"
+                            @click="goToPage(page)"
+                            :class="[
+                                'px-3 py-2 rounded-lg text-sm font-bold transition-all',
+                                currentPage === page 
+                                    ? 'bg-cyan-500 text-slate-900 border border-cyan-500' 
+                                    : 'bg-white/10 hover:bg-white/20 border border-white/20 text-white'
+                            ]"
+                        >
+                            {{ page }}
+                        </button>
+
+                        <!-- Ellipsis -->
+                        <span v-if="pageNumbers[pageNumbers.length - 1] < lastPage - 1" class="px-2 py-2 text-gray-500">...</span>
+
+                        <!-- Last Page -->
+                        <button 
+                            v-if="pageNumbers[pageNumbers.length - 1] < lastPage"
+                            @click="goToPage(lastPage)"
+                            class="px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm font-bold text-white transition-all"
+                        >
+                            {{ lastPage }}
+                        </button>
+                    </div>
+
+                    <!-- Next Button -->
+                    <button 
+                        @click="nextPage"
+                        :disabled="currentPage === lastPage"
+                        class="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:opacity-50 border border-white/20 rounded-lg text-sm font-bold text-white uppercase tracking-wider transition-all disabled:cursor-not-allowed"
+                    >
+                        Next →
+                    </button>
+                </div>
+
+                <!-- Showing Info -->
+                <div class="text-sm text-gray-500 text-right">
+                    <span class="font-bold text-white">{{ startRecord }}-{{ endRecord }}</span> of <span class="font-bold text-white">{{ totalApplicants }}</span>
                 </div>
             </div>
         </div>

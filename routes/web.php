@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\RegisteredRecruiterController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\InterviewSchedulingController;
+use App\Http\Controllers\Admin\SettingsController;
 
 // --- Public Routes ---
 Route::get('/', [JobController::class, 'index'])->name('jobs.index');
@@ -53,7 +54,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
     Route::post('/users/{user}/password', [UserManagementController::class, 'updatePassword'])->name('users.update-password');
 
-    Route::get('/settings', [AdminDashboard::class, 'settings'])->name('settings');
+    Route::get('/settings', [SettingsController::class, 'show'])->name('settings');
+    Route::patch('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
     // Audit logs routes - Admin only
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');

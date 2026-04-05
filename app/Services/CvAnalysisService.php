@@ -2,138 +2,201 @@
 
 namespace App\Services;
 
-use OpenAI\Client;
+use OpenAI\Client as OpenAIClient;
 use Exception;
 
 class CvAnalysisService
 {
-    private ?Client $client = null;
-    private string $model = 'gpt-3.5-turbo';
+    private ?OpenAIClient $openaiClient = null;
+    private ?string $geminiApiKey = null;
+    private string $geminiModel = 'gemini-2.0-flash';
     private int $maxRetries = 3;
-    private int $retryDelay = 5; // seconds
-    private bool $apiKeyValid = false;
+    private int $retryDelay = 5;
+    private string $selectedProvider = 'none';
+    private array $availableProviders = [];
 
     public function __construct()
     {
-        $apiKey = config('services.openai.api_key') ?: env('OPENAI_API_KEY');
-        
-        // Check if API key exists and is not disabled/empty
-        if ($apiKey && !in_array($apiKey, ['disabled', ''], true)) {
+        $openaiKey = config('services.openai.api_key') ?: env('OPENAI_API_KEY');
+        $geminiKey = config('services.gemini.api_key') ?: env('GEMINI_API_KEY');
+
+        if ($openaiKey && !in_array($openaiKey, ['disabled', ''], true)) {
             try {
-                $this->client = \OpenAI::client($apiKey);
-                $this->apiKeyValid = true;
+                $this->openaiClient = \OpenAI::client($openaiKey);
+                $this->availableProviders['openai'] = true;
             } catch (Exception $e) {
-                // API key invalid, fallback will be used
-                $this->apiKeyValid = false;
+                $this->availableProviders['openai'] = false;
             }
         } else {
-            // No API key or disabled
-            $this->apiKeyValid = false;
+            $this->availableProviders['openai'] = false;
         }
+
+        if ($geminiKey && !in_array($geminiKey, ['disabled', ''], true)) {
+            $this->geminiApiKey = $geminiKey;
+            $this->geminiModel = config('services.gemini.model', 'gemini-2.0-flash');
+            $this->availableProviders['gemini'] = true;
+        } else {
+            $this->availableProviders['gemini'] = false;
+        }
+
+        if ($this->availableProviders['openai']) {
+            $this->selectedProvider = 'openai';
+        } elseif ($this->availableProviders['gemini']) {
+            $this->selectedProvider = 'gemini';
+        } else {
+            $this->selectedProvider = 'none';
+        }
+
+        \Illuminate\Support\Facades\Log::info('CvAnalysisService initialized', [
+            'selected_provider' => $this->selectedProvider,
+            'available_providers' => $this->availableProviders
+        ]);
     }
 
-    /**
-     * Analyze CV against job description and return match score
-     *
-     * @param string $cvText Extracted CV text
-     * @param string $jobTitle Job title
-     * @param string $jobDescription Job description
-     * @return array ['score' => 0-100, 'analysis' => 'detailed analysis text']
-     * @throws Exception
-     */
     public function analyzeMatch(string $cvText, string $jobTitle, string $jobDescription): array
     {
-        // If API key is not valid, use fallback immediately
-        if (!$this->apiKeyValid || !$this->client) {
-            \Illuminate\Support\Facades\Log::info('OpenAI API key not configured, using fallback score', [
+        if ($this->selectedProvider === 'none') {
+            \Illuminate\Support\Facades\Log::info('No AI provider configured, using fallback score', [
                 'title' => $jobTitle
             ]);
-            
-            // Return basic match score based on text similarity
             return $this->getFallbackScore($cvText, $jobTitle, $jobDescription);
         }
 
         $lastException = null;
 
-        // Retry with exponential backoff
         for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
             try {
-                // Truncate texts if too long to avoid token limits
-                $cvText = $this->truncateText($cvText, 1500);
-                $jobDescription = $this->truncateText($jobDescription, 800);
+                $cvTextTruncated = $this->truncateText($cvText, 1500);
+                $jobDescriptionTruncated = $this->truncateText($jobDescription, 800);
+                $prompt = $this->buildPrompt($cvTextTruncated, $jobTitle, $jobDescriptionTruncated);
 
-                $prompt = $this->buildPrompt($cvText, $jobTitle, $jobDescription);
+                if ($this->selectedProvider === 'openai') {
+                    $response = $this->analyzeWithOpenAI($prompt);
+                } else {
+                    $response = $this->analyzeWithGemini($prompt);
+                }
 
-                $response = $this->client->chat()->create([
-                    'model' => $this->model,
-                    'messages' => [
-                        [
-                            'role' => 'system',
-                            'content' => 'You are an HR analyst. Analyze CV vs job description. Return ONLY valid JSON.'
-                        ],
-                        [
-                            'role' => 'user',
-                            'content' => $prompt
-                        ]
-                    ],
-                    'temperature' => 0.3,  // Lower temperature for consistent scoring
-                    'max_tokens' => 300,  // Reduced for faster response
-                ]);
-
-                $responseText = $response->choices[0]->message->content;
-                
-                // Parse JSON response
-                return $this->parseAiResponse($responseText);
+                return $this->parseAiResponse($response);
             } catch (Exception $e) {
                 $lastException = $e;
                 $errorMsg = $e->getMessage();
 
-                // Check if it's a rate limit error
                 $isRateLimit = stripos($errorMsg, 'rate limit') !== false || 
                               stripos($errorMsg, 'quota') !== false ||
-                              stripos($errorMsg, '429') !== false;
+                              stripos($errorMsg, '429') !== false ||
+                              stripos($errorMsg, '503') !== false;
 
-                \Illuminate\Support\Facades\Log::warning("AI analysis attempt {$attempt} failed", [
+                \Illuminate\Support\Facades\Log::warning("AI analysis attempt {$attempt} failed with {$this->selectedProvider}", [
                     'error' => $errorMsg,
                     'attempt' => $attempt,
-                    'is_rate_limit' => $isRateLimit
+                    'is_rate_limit' => $isRateLimit,
                 ]);
 
-                // If rate limit and not last attempt, wait and retry
+                if ($attempt === 1) {
+                    if ($this->selectedProvider === 'openai' && $this->availableProviders['gemini']) {
+                        \Illuminate\Support\Facades\Log::info('OpenAI failed, switching to Gemini');
+                        $this->selectedProvider = 'gemini';
+                        continue;
+                    } elseif ($this->selectedProvider === 'gemini' && $this->availableProviders['openai']) {
+                        \Illuminate\Support\Facades\Log::info('Gemini failed, switching to OpenAI');
+                        $this->selectedProvider = 'openai';
+                        continue;
+                    }
+                }
+
                 if ($isRateLimit && $attempt < $this->maxRetries) {
-                    $delay = $this->retryDelay * pow(2, $attempt - 1); // Exponential backoff
+                    $delay = $this->retryDelay * pow(2, $attempt - 1);
                     sleep($delay);
                     continue;
                 }
 
-                // If it's the last attempt and it's a rate limit, use fallback
                 if ($attempt === $this->maxRetries && $isRateLimit) {
-                    \Illuminate\Support\Facades\Log::warning('OpenAI rate limit exceeded, using fallback score', [
-                        'title' => $jobTitle,
-                        'error' => $errorMsg
-                    ]);
-                    
-                    // Return basic match score based on text similarity
+                    \Illuminate\Support\Facades\Log::warning('All AI providers rate limited, using fallback score');
                     return $this->getFallbackScore($cvText, $jobTitle, $jobDescription);
                 }
 
-                // For other errors, throw exception
                 throw new Exception("AI analysis failed: " . $errorMsg);
             }
         }
 
-        // Final fallback
         throw new Exception("AI analysis failed: " . ($lastException ? $lastException->getMessage() : 'Unknown error'));
     }
 
-    /**
-     * Build the prompt for AI analysis
-     *
-     * @param string $cvText CV text
-     * @param string $jobTitle Job title
-     * @param string $jobDescription Job description
-     * @return string Prompt for AI
-     */
+    private function analyzeWithOpenAI(string $prompt): string
+    {
+        if (!$this->openaiClient) {
+            throw new Exception("OpenAI client not initialized");
+        }
+
+        $response = $this->openaiClient->chat()->create([
+            'model' => 'gpt-3.5-turbo',
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => 'You are an HR analyst. Analyze CV vs job description. Return ONLY valid JSON.'
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
+            ],
+            'temperature' => 0.3,
+            'max_tokens' => 300,
+        ]);
+
+        return $response->choices[0]->message->content;
+    }
+
+    private function analyzeWithGemini(string $prompt): string
+    {
+        if (!$this->geminiApiKey) {
+            throw new Exception("Gemini API key not configured");
+        }
+
+        $url = 'https://generativelanguage.googleapis.com/v1/models/' . $this->geminiModel . ':generateContent?key=' . urlencode($this->geminiApiKey);
+
+        $data = [
+            'contents' => [[
+                'parts' => [[
+                    'text' => $prompt
+                ]]
+            ]],
+            'generationConfig' => [
+                'temperature' => 0.3,
+                'maxOutputTokens' => 300,
+            ]
+        ];
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($error) {
+            throw new Exception("Gemini API request failed: " . $error);
+        }
+
+        if ($httpCode !== 200) {
+            $errorBody = json_decode($response, true);
+            $errorMsg = $errorBody['error']['message'] ?? 'Unknown error';
+            throw new Exception("Gemini API error (HTTP $httpCode): " . $errorMsg);
+        }
+
+        $responseData = json_decode($response, true);
+        if (!isset($responseData['candidates'][0]['content']['parts'][0]['text'])) {
+            throw new Exception("Invalid Gemini response format");
+        }
+
+        return $responseData['candidates'][0]['content']['parts'][0]['text'];
+    }
+
     private function buildPrompt(string $cvText, string $jobTitle, string $jobDescription): string
     {
         return <<<PROMPT
@@ -145,27 +208,19 @@ $cvText
 **Job:**
 $jobDescription
 
-Return JSON:
+Return ONLY valid JSON (no other text):
 {
   "score": <0-100>,
-  "matching_skills": [list top 3],
-  "missing_skills": [list top 2],
+  "matching_skills": ["skill1", "skill2", "skill3"],
+  "missing_skills": ["skill1", "skill2"],
   "summary": "1-2 sentence fit analysis"
 }
 PROMPT;
     }
 
-    /**
-     * Parse AI response and extract score and analysis
-     *
-     * @param string $response AI response text
-     * @return array ['score' => number, 'analysis' => string]
-     * @throws Exception
-     */
     private function parseAiResponse(string $response): array
     {
         try {
-            // Extract JSON from response (in case there's extra text)
             if (preg_match('/\{.*\}/s', $response, $matches)) {
                 $response = $matches[0];
             }
@@ -177,25 +232,16 @@ PROMPT;
             }
 
             $score = intval($data['score']);
-            $score = max(0, min(100, $score)); // Ensure score is 0-100
+            $score = max(0, min(100, $score));
 
             $analysis = $this->buildAnalysisSummary($data);
 
-            return [
-                'score' => $score,
-                'analysis' => $analysis
-            ];
+            return ['score' => $score, 'analysis' => $analysis];
         } catch (Exception $e) {
             throw new Exception("Failed to parse AI response: " . $e->getMessage());
         }
     }
 
-    /**
-     * Build a summary analysis from AI response
-     *
-     * @param array $data Parsed AI response data
-     * @return string Summary text
-     */
     private function buildAnalysisSummary(array $data): string
     {
         $summary = $data['summary'] ?? 'Analysis completed.';
@@ -213,42 +259,22 @@ PROMPT;
         return $summary;
     }
 
-    /**
-     * Truncate text to specified character limit
-     *
-     * @param string $text Text to truncate
-     * @param int $limit Character limit
-     * @return string Truncated text
-     */
     private function truncateText(string $text, int $limit): string
     {
         if (strlen($text) <= $limit) {
             return $text;
         }
-
         return substr($text, 0, $limit) . '...';
     }
 
-    /**
-     * Get fallback score when OpenAI API fails (rate limit, quota exceeded)
-     * Uses simple text similarity matching
-     *
-     * @param string $cvText CV text
-     * @param string $jobTitle Job title
-     * @param string $jobDescription Job description
-     * @return array ['score' => 0-100, 'analysis' => 'text']
-     */
     private function getFallbackScore(string $cvText, string $jobTitle, string $jobDescription): array
     {
-        // Convert to lowercase for comparison
         $cvLower = strtolower($cvText);
         $jobLower = strtolower($jobDescription);
         $titleLower = strtolower($jobTitle);
 
-        // Extract common keywords from job description
         $jobKeywords = $this->extractKeywords($jobLower);
         
-        // Count matches in CV
         $matchCount = 0;
         foreach ($jobKeywords as $keyword) {
             if (stripos($cvLower, $keyword) !== false) {
@@ -256,39 +282,27 @@ PROMPT;
             }
         }
 
-        // Calculate percentage match
         $score = $jobKeywords ? (int) (($matchCount / count($jobKeywords)) * 100) : 50;
-        $score = max(0, min(100, $score)); // Ensure 0-100
+        $score = max(0, min(100, $score));
 
-        $analysis = "Fallback Score (OpenAI unavailable)\n\n";
-        $analysis .= "Based on keyword matching: {$score}% match\n\n";
-        $analysis .= "Job: " . $titleLower . "\n";
+        $analysis = "Fallback Score (Keyword Matching)\n\n";
+        $analysis .= "Match Score: {$score}%\n\n";
+        $analysis .= "Job Title: " . ucwords(str_replace('_', ' ', $titleLower)) . "\n";
         $analysis .= "Keywords matched: {$matchCount} / " . count($jobKeywords);
 
-        return [
-            'score' => $score,
-            'analysis' => $analysis
-        ];
+        return ['score' => $score, 'analysis' => $analysis];
     }
 
-    /**
-     * Extract keywords from text (simple implementation)
-     *
-     * @param string $text Text to extract from
-     * @return array Keywords
-     */
     private function extractKeywords(string $text): array
     {
-        // Split by common word boundaries
-        $words = preg_split('/[\s,\.\-\/]+/', $text, -1, PREG_SPLIT_NO_EMPTY);
+        $words = preg_split('/[\s,\.\-\/\+\(\)]+/', $text, -1, PREG_SPLIT_NO_EMPTY);
         
-        // Filter common words and short words
-        $keywords = array_filter($words, function($word) {
-            $common = ['the', 'a', 'an', 'and', 'or', 'of', 'in', 'to', 'for', 'is', 'are', 'be'];
-            return strlen($word) > 2 && !in_array($word, $common);
+        $common = ['the', 'a', 'an', 'and', 'or', 'of', 'in', 'to', 'for', 'is', 'are', 'be', 'at', 'by', 'as', 'with', 'from', 'on', 'have', 'has', 'can', 'will', 'would', 'should', 'could'];
+        
+        $keywords = array_filter($words, function($word) use ($common) {
+            return strlen($word) > 2 && !in_array(strtolower($word), $common);
         });
 
-        // Return unique keywords, limit to 20
         return array_slice(array_unique($keywords), 0, 20);
     }
 }
