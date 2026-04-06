@@ -10,7 +10,7 @@ class ListAvailableJobsAction
     /**
      * Mengambil daftar lowongan dengan filter search dan filter lainnya.
      * 
-     * @param array $filters Filter yang berisi keys: search, type, location, salary_min, salary_max
+     * @param array $filters Filter yang berisi keys: search, type, location, status, salary_min, salary_max
      * @return Collection
      */
     public function execute(?array $filters = null): Collection
@@ -42,6 +42,11 @@ class ListAvailableJobsAction
         // Filter: Lokasi
         if (!empty($filters['location'])) {
             $query->where('location', 'like', "%{$filters['location']}%");
+        }
+
+        // Filter: Status (active, closed)
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
         }
 
         // Filter: Salary range (mengasumsikan salary disimpan sebagai numerik atau string yang bisa diparse)

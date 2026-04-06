@@ -22,6 +22,7 @@ const { success: showSuccess, error: showError, warning: showWarning, info: show
 const search = ref(props.filters?.search || '');
 const selectedType = ref(props.filters?.type || '');
 const selectedLocation = ref(props.filters?.location || '');
+const selectedStatus = ref(props.filters?.status || '');
 const salaryMin = ref(props.filters?.salary_min || '');
 const salaryMax = ref(props.filters?.salary_max || '');
 const showFilters = ref(false);
@@ -33,7 +34,7 @@ const previewResumePath = ref(null);
 
 // 3. Computed Property: Check if any filter is active
 const hasActiveFilters = computed(() => {
-    return search.value || selectedType.value || selectedLocation.value || salaryMin.value || salaryMax.value;
+    return search.value || selectedType.value || selectedLocation.value || selectedStatus.value || salaryMin.value || salaryMax.value;
 });
 
 // 4. Apply Filters function (define before using in watch)
@@ -43,6 +44,7 @@ const applyFilters = () => {
     if (search.value) filterParams.search = search.value;
     if (selectedType.value) filterParams.type = selectedType.value;
     if (selectedLocation.value) filterParams.location = selectedLocation.value;
+    if (selectedStatus.value) filterParams.status = selectedStatus.value;
     if (salaryMin.value) filterParams.salary_min = salaryMin.value;
     if (salaryMax.value) filterParams.salary_max = salaryMax.value;
     
@@ -58,13 +60,14 @@ const debouncedSearch = debounce(() => {
 }, 300);
 
 watch(search, debouncedSearch);
-watch([selectedType, selectedLocation, salaryMin, salaryMax], applyFilters);
+watch([selectedType, selectedLocation, selectedStatus, salaryMin, salaryMax], applyFilters);
 
 // 6. Reset Filters
 const resetFilters = () => {
     search.value = '';
     selectedType.value = '';
     selectedLocation.value = '';
+    selectedStatus.value = '';
     salaryMin.value = '';
     salaryMax.value = '';
     router.get('/', {}, {
@@ -183,7 +186,7 @@ const closeCVPreview = () => {
                 </div>
 
                 <!-- Filter Options -->
-                <div v-if="showFilters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-6 animate-in fade-in slide-in-from-top-2">
+                <div v-if="showFilters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mt-6 animate-in fade-in slide-in-from-top-2">
                     
                     <!-- Filter: Job Type -->
                     <div>
@@ -214,6 +217,21 @@ const closeCVPreview = () => {
                             <option v-for="location in locations" :key="location" :value="location">
                                 {{ location }}
                             </option>
+                        </select>
+                    </div>
+
+                    <!-- Filter: Status -->
+                    <div>
+                        <label for="filter-status" class="block text-[10px] text-slate-400 dark:text-gray-400 uppercase font-black mb-2 ml-1">Status</label>
+                        <select 
+                            id="filter-status"
+                            v-model="selectedStatus"
+                            aria-label="Filter berdasarkan status pekerjaan"
+                            class="w-full bg-slate-50 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all cursor-pointer"
+                        >
+                            <option value="">Semua Status</option>
+                            <option value="active">Aktif</option>
+                            <option value="closed">Tertutup</option>
                         </select>
                     </div>
 
@@ -256,6 +274,9 @@ const closeCVPreview = () => {
                 </span>
                 <span v-if="selectedLocation" class="bg-cyan-100 dark:bg-cyan-500/20 border border-cyan-200 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-300 px-2 sm:px-3 py-1 rounded-full text-xs font-medium transition-colors duration-300">
                     📍 {{ selectedLocation }}
+                </span>
+                <span v-if="selectedStatus" class="bg-cyan-100 dark:bg-cyan-500/20 border border-cyan-200 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-300 px-2 sm:px-3 py-1 rounded-full text-xs font-medium transition-colors duration-300">
+                    🔔 {{ selectedStatus === 'active' ? 'Aktif' : 'Tertutup' }}
                 </span>
                 <span v-if="salaryMin || salaryMax" class="bg-cyan-100 dark:bg-cyan-500/20 border border-cyan-200 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-300 px-2 sm:px-3 py-1 rounded-full text-xs font-medium transition-colors duration-300">
                     💰 {{ salaryMin || 'Min' }} - {{ salaryMax || 'Max' }}
@@ -303,6 +324,12 @@ const closeCVPreview = () => {
                         <div class="flex items-center gap-1.5 mt-2 text-slate-400 dark:text-gray-500">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                             <span class="text-xs font-medium truncate">{{ job.location }}</span>
+                        </div>
+                        <!-- Status Badge -->
+                        <div class="mt-3 flex items-center gap-2">
+                            <span :class="job.status === 'active' ? 'bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-400'" class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors duration-300">
+                                {{ job.status === 'active' ? '✓ Aktif' : '✕ Tertutup' }}
+                            </span>
                         </div>
                     </div>
 

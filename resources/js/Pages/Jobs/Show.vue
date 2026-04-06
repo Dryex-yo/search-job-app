@@ -96,8 +96,15 @@ const previewCV = () => {
     }
 };
 
-// Submit application
-const submitApplication = () => {
+// Submit application with debouncing to prevent duplicate submissions
+let submissionInProgress = false;
+
+const submitApplication = async () => {
+    // Prevent duplicate submissions
+    if (isSubmitting.value || submissionInProgress) {
+        return;
+    }
+
     if (!isAuthenticated.value) {
         showWarning('Login Diperlukan', 'Silakan login terlebih dahulu untuk melamar lowongan ini.');
         return;
@@ -130,31 +137,41 @@ const submitApplication = () => {
         return;
     }
 
+    // Set submission flags
+    submissionInProgress = true;
     isSubmitting.value = true;
     
-    // Ensure job_id and cover_letter are properly set
-    // This prevents any potential issue with form data mutation or state loss
-    applyForm.job_id = props.job.id;
-    applyForm.cover_letter = coverLetterValue;
-    
-    // Use uploaded file if available, otherwise use profile CV
-    if (cvFile.value) {
-        applyForm.resume = cvFile.value;
-    }
-
-    applyForm.post(route('jobs.apply'), {
-        onSuccess: () => {
-            isSubmitting.value = false;
-            showSuccess('Lamaran Terkirim!', 'Lamaran Anda telah berhasil dikirim. Semoga berhasil!');
-            clearCV();
-            applyForm.reset();
-        },
-        onError: (errors) => {
-            isSubmitting.value = false;
-            const errorMessage = Object.values(errors).flat().join(', ');
-            showError('Gagal Mengirim Lamaran', errorMessage || 'Terjadi kesalahan. Silakan coba lagi.');
+    try {
+        // Prepare form data efficiently
+        applyForm.job_id = props.job.id;
+        applyForm.cover_letter = coverLetterValue;
+        
+        // Use uploaded file if available, otherwise use profile CV
+        if (cvFile.value) {
+            applyForm.resume = cvFile.value;
         }
-    });
+
+        // Submit form with timeout protection
+        applyForm.post(route('jobs.apply'), {
+            onSuccess: () => {
+                showSuccess('Lamaran Terkirim!', 'Lamaran Anda telah berhasil dikirim. Semoga berhasil!');
+                clearCV();
+                applyForm.reset();
+            },
+            onError: (errors) => {
+                const errorMessage = Object.values(errors).flat().join(', ');
+                showError('Gagal Mengirim Lamaran', errorMessage || 'Terjadi kesalahan. Silakan coba lagi.');
+            },
+            onFinish: () => {
+                isSubmitting.value = false;
+                submissionInProgress = false;
+            }
+        });
+    } catch (err) {
+        isSubmitting.value = false;
+        submissionInProgress = false;
+        showError('Error Sistem', 'Terjadi kesalahan. Silakan coba lagi.');
+    }
 };
 
 // Utility functions
@@ -435,7 +452,7 @@ const formatDate = (date) => {
                                     </button>
 
                                     <!-- Info Text -->
-                                    <p class="text-xs text-slate-500 dark:text-gray-500 text-center transition-colors duration-300">
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 text-center transition-colors duration-300">
                                         {{ isProfileComplete 
                                             ? 'Dengan mengirim lamaran, Anda menerima Kebijakan Privasi kami.' 
                                             : 'Lengkapi profil Anda untuk dapat melamar pekerjaan' 

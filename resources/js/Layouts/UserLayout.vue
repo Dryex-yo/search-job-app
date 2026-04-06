@@ -26,7 +26,7 @@ const handleLogout = () => {
 </script>
 
 <template>
-    <div class="overflow-x-hidden relative">
+    <div class="overflow-x-hidden relative bg-white dark:bg-slate-900 transition-colors duration-300">
         <!-- Galaxy Background -->
         <GalaxyBackground />
         
@@ -216,7 +216,7 @@ const handleLogout = () => {
             </nav>
 
             <!-- Page Content -->
-            <main class="min-h-[calc(100vh-64px)]">
+            <main class="min-h-[calc(100vh-64px)] bg-gradient-to-br from-white via-gray-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors duration-300">
                 <slot />
             </main>
         </div>

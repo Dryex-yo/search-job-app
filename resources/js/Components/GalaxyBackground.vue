@@ -263,6 +263,14 @@ const particleStyle = (particle) => {
     pointer-events: none;
     overflow: hidden;
     z-index: 0;
+    background: white;
+    /* Dark mode background */
+}
+
+@media (prefers-color-scheme: dark) {
+    .galaxy-container {
+        background: #0f172a;
+    }
 }
 
 .galaxy-canvas {

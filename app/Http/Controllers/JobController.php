@@ -26,6 +26,7 @@ class JobController extends Controller
             'search' => 'nullable|string|max:255',
             'type' => 'nullable|string|max:50',
             'location' => 'nullable|string|max:255',
+            'status' => 'nullable|string|in:active,closed',
             'salary_min' => 'nullable|numeric|min:0',
             'salary_max' => 'nullable|numeric|min:0',
         ]);
@@ -59,10 +60,12 @@ class JobController extends Controller
             $profileCompletion = $this->calculateProfileCompletion($user);
         }
 
+        // Set browser cache for 5 minutes (job details don't change frequently)
+        // This reduces database queries on page refreshes
         return Inertia::render('Jobs/Show', [
             'job' => $job,
             'profileCompletion' => $profileCompletion,
-        ]);
+        ])->withViewData(['cacheControl' => 'public, max-age=300']);
     }
 
     public function apply(Request $request, SubmitApplicationAction $submitAction)
