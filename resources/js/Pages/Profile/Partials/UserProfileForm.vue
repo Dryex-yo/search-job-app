@@ -3,7 +3,7 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { useForm, usePage } from '@inertiajs/vue3';
+import { useForm, usePage, router } from '@inertiajs/vue3';
 import { watch, ref, computed, onBeforeUnmount, onMounted } from 'vue';
 
 defineProps({
@@ -85,28 +85,23 @@ const uploadProfilePhoto = () => {
     
     photoUploadLoading.value = true;
     
-    const formData = new FormData();
-    formData.append('profile_photo', photoForm.profile_photo);
-    formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
-    
-    fetch(route('profile.upload-photo'), {
-        method: 'POST',
-        body: formData,
-    })
-    .then((res) => {
-        photoUploadLoading.value = false;
-        if (res.ok) {
-            // Success - reload page
-            window.location.href = route('profile.edit');
-        } else {
-            alert('Gagal mengupload foto. Silakan coba lagi.');
+    // Use Inertia's router.post with file support
+    router.post(route('profile.upload-photo'), 
+        { profile_photo: photoForm.profile_photo },
+        {
+            onSuccess: () => {
+                // Clear and reload
+                clearPhotoSelection();
+                photoUploadLoading.value = false;
+            },
+            onError: (errors) => {
+                photoUploadLoading.value = false;
+                console.error('Upload errors:', errors);
+                const errorMsg = errors.profile_photo || 'Gagal mengupload foto. Silakan coba lagi.';
+                alert(Array.isArray(errorMsg) ? errorMsg[0] : errorMsg);
+            }
         }
-    })
-    .catch((error) => {
-        photoUploadLoading.value = false;
-        console.error('Upload failed:', error);
-        alert('Terjadi kesalahan saat mengupload foto.');
-    });
+    );
 };
 
 // Clear photo selection

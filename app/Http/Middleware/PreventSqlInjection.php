@@ -42,10 +42,11 @@ class PreventSqlInjection
      */
     public function handle(Request $request, Closure $next)
     {
-        // Skip SQL injection check for file upload routes
+        // Skip SQL injection check for file upload routes and profile updates
         $excludedRoutes = [
             'profile.upload-photo',
             'profile.upload-resume',
+            'profile.update',
         ];
 
         if (!in_array($request->route()?->getName(), $excludedRoutes)) {

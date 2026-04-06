@@ -9,14 +9,15 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Spatie\Multitenancy\Jobs\TenantAware;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
-class AnalyzeApplicationJob implements ShouldQueue
+class AnalyzeApplicationJob implements ShouldQueue, TenantAware
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $applicationId;
+    protected Application $application;
     
     // Retry configuration
     public $tries = 5;  // Increased to 5 retries
@@ -26,9 +27,9 @@ class AnalyzeApplicationJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct($applicationId)
+    public function __construct(Application $application)
     {
-        $this->applicationId = $applicationId;
+        $this->application = $application;
     }
 
     /**
@@ -37,18 +38,15 @@ class AnalyzeApplicationJob implements ShouldQueue
     public function handle(AnalyzeApplicationAction $analyzeAction): void
     {
         try {
-            $application = Application::findOrFail($this->applicationId);
-            $analyzeAction->execute($application);
+            $analyzeAction->execute($this->application);
         } catch (Exception $e) {
             Log::error('Failed to analyze application in queue', [
-                'application_id' => $this->applicationId,
+                'application_id' => $this->application->id,
                 'error' => $e->getMessage()
             ]);
             
             // Update application status to failed
-            if (isset($application)) {
-                $application->update(['ai_analysis_status' => 'failed']);
-            }
+            $this->application->update(['ai_analysis_status' => 'failed']);
         }
     }
 }

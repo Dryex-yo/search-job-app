@@ -11,6 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
+            \App\Http\Middleware\EnsureTenantContextMiddleware::class,
             \App\Http\Middleware\PerformanceHeaders::class,
             \App\Http\Middleware\PreventSqlInjection::class,
             \App\Http\Middleware\RateLimitMiddleware::class,

@@ -4,15 +4,11 @@ namespace App\Listeners;
 
 use App\Events\InterviewScheduled;
 use App\Mail\InterviewScheduledMail;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
-class SendInterviewScheduledEmail implements ShouldQueue
+class SendInterviewScheduledEmail
 {
-    use InteractsWithQueue;
-
     /**
      * Create the event listener.
      */
@@ -26,6 +22,13 @@ class SendInterviewScheduledEmail implements ShouldQueue
     public function handle(InterviewScheduled $event): void
     {
         try {
+            if (!$event->application->tenant_id) {
+                Log::warning('SendInterviewScheduledEmail: Application missing tenant_id', [
+                    'application_id' => $event->application->id,
+                ]);
+                return;
+            }
+
             $application = $event->application;
             
             // Send email to applicant

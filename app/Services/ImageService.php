@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\GdDriver;
+use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -19,9 +19,9 @@ class ImageService
     {
         try {
             // Create image manager with GD driver
-            $manager = new ImageManager(driver: 'gd');
+            $manager = new ImageManager(new GdDriver());
             
-            // Load and process image
+            // Load, resize and compress image
             $image = $manager->read($file->getPathname())
                 ->cover(500, 500)
                 ->toJpeg(quality: 85);
@@ -29,10 +29,10 @@ class ImageService
             // Generate unique filename
             $filename = 'profile_' . time() . '_' . uniqid() . '.jpg';
             
-            // Store in public disk
+            // Store encoded image to disk
             Storage::disk('public')->put(
                 'profile-photos/' . $filename,
-                $image
+                (string) $image
             );
             
             return 'profile-photos/' . $filename;

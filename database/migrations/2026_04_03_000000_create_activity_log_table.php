@@ -13,7 +13,9 @@ return new class extends Migration
             $table->string('log_name')->default('default')->index();
             $table->text('description');
             $table->nullableMorphs('subject');
+            $table->string('event')->nullable();
             $table->nullableMorphs('causer');
+            $table->uuid('batch_uuid')->nullable()->index();
             $table->json('properties')->nullable();
             $table->timestamps();
             $table->index('created_at');

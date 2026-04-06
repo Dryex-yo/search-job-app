@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Services\DashboardCacheService;
 use App\Services\ImageService;
+use Exception;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -91,9 +92,13 @@ class ProfileController extends Controller
             // Invalidate dashboard cache
             $this->cacheService->invalidateCache($user->id);
 
+            \Illuminate\Support\Facades\Log::info('Profile photo uploaded successfully for user ' . $user->id . ': ' . $path);
+
             return Redirect::route('profile.edit')->with('status', 'Foto profil berhasil diupload');
-        } catch (\Exception $e) {
-            return Redirect::route('profile.edit')->withErrors(['profile_photo' => 'Gagal mengupload foto. Silakan coba lagi.']);
+        } catch (Exception $e) {
+            $errorMsg = 'Upload photo error: ' . $e->getMessage();
+            \Illuminate\Support\Facades\Log::error($errorMsg);
+            return Redirect::route('profile.edit')->withErrors(['profile_photo' => 'Gagal mengupload foto: ' . $e->getMessage()]);
         }
     }
 

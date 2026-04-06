@@ -52,6 +52,23 @@ class Application extends Model
     protected static function booted(): void
     {
         /**
+         * Ensure tenant_id is always set when creating an application
+         */
+        static::creating(function (Application $application) {
+            if (!$application->tenant_id) {
+                try {
+                    $tenantManager = app('tenancy');
+                    $currentTenant = $tenantManager->tenant();
+                    if ($currentTenant) {
+                        $application->tenant_id = $currentTenant->id;
+                    }
+                } catch (\Exception $e) {
+                    // Tenant context not available, let UsesTenantConnection handle it
+                }
+            }
+        });
+
+        /**
          * Handle status change event
          */
         static::updating(function (Application $application) {

@@ -14,9 +14,14 @@ class CvAnalysisService
     private int $retryDelay = 5;
     private string $selectedProvider = 'none';
     private array $availableProviders = [];
+    private AnalysisCacheService $cacheService;
+    private RateLimiterService $rateLimiter;
 
     public function __construct()
     {
+        $this->cacheService = new AnalysisCacheService();
+        $this->rateLimiter = new RateLimiterService();
+
         $openaiKey = config('services.openai.api_key') ?: env('OPENAI_API_KEY');
         $geminiKey = config('services.gemini.api_key') ?: env('GEMINI_API_KEY');
 
@@ -62,12 +67,32 @@ class CvAnalysisService
             return $this->getFallbackScore($cvText, $jobTitle, $jobDescription);
         }
 
+        // Check cache first
+        $cached = $this->cacheService->get($cvText, $jobTitle, $jobDescription);
+        if ($cached) {
+            OptimizationStatsService::recordCacheHit();
+            return $cached;
+        }
+
+        OptimizationStatsService::recordCacheMiss();
+
         $lastException = null;
 
         for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
             try {
-                $cvTextTruncated = $this->truncateText($cvText, 1500);
-                $jobDescriptionTruncated = $this->truncateText($jobDescription, 800);
+                // Check rate limit before making request
+                OptimizationStatsService::recordRateLimitCheck();
+                if (!$this->rateLimiter->canMakeRequest($this->selectedProvider)) {
+                    $waitTime = $this->rateLimiter->getWaitTime($this->selectedProvider);
+                    \Illuminate\Support\Facades\Log::warning("Rate limit approaching, waiting", [
+                        'provider' => $this->selectedProvider,
+                        'wait_seconds' => $waitTime
+                    ]);
+                    sleep(min($waitTime, 5));
+                }
+
+                $cvTextTruncated = $this->smartTruncateText($cvText, 1500);
+                $jobDescriptionTruncated = $this->smartTruncateText($jobDescription, 800);
                 $prompt = $this->buildPrompt($cvTextTruncated, $jobTitle, $jobDescriptionTruncated);
 
                 if ($this->selectedProvider === 'openai') {
@@ -76,7 +101,15 @@ class CvAnalysisService
                     $response = $this->analyzeWithGemini($prompt);
                 }
 
-                return $this->parseAiResponse($response);
+                $result = $this->parseAiResponse($response);
+                
+                // Cache the result
+                $this->cacheService->put($cvText, $jobTitle, $jobDescription, $result);
+                
+                // Record successful request
+                $this->rateLimiter->recordRequest($this->selectedProvider, 200);
+
+                return $result;
             } catch (Exception $e) {
                 $lastException = $e;
                 $errorMsg = $e->getMessage();
@@ -91,6 +124,10 @@ class CvAnalysisService
                     'attempt' => $attempt,
                     'is_rate_limit' => $isRateLimit,
                 ]);
+
+                if ($isRateLimit) {
+                    $this->rateLimiter->recordRateLimit($this->selectedProvider, 60 * $attempt);
+                }
 
                 if ($attempt === 1) {
                     if ($this->selectedProvider === 'openai' && $this->availableProviders['gemini']) {
@@ -149,6 +186,8 @@ class CvAnalysisService
 
     private function analyzeWithGemini(string $prompt): string
     {
+        OptimizationStatsService::recordApiCall();
+
         if (!$this->geminiApiKey) {
             throw new Exception("Gemini API key not configured");
         }
@@ -168,11 +207,23 @@ class CvAnalysisService
         ];
 
         $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        
+        // Optimized curl options
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Connection: keep-alive'
+            ],
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_2_0, // Use HTTP/2 for better performance
+            CURLOPT_DNS_CACHE_TIMEOUT => 3600, // Cache DNS for 1 hour
+            CURLOPT_TCP_KEEPALIVE => 1,
+            CURLOPT_TCP_KEEPIDLE => 120,
+        ]);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -183,8 +234,19 @@ class CvAnalysisService
             throw new Exception("Gemini API request failed: " . $error);
         }
 
-        if ($httpCode !== 200) {
-            $errorBody = json_decode($response, true);
+        // Parse HTTP error codes
+        if ($httpCode === 429) {
+            throw new Exception("Gemini API error (429 - Too Many Requests / Rate Limited)");
+        } elseif ($httpCode === 503) {
+            throw new Exception("Gemini API error (503 - Service Temporarily Unavailable)");
+        } elseif ($httpCode === 401) {
+            throw new Exception("Gemini API error (401 - Unauthorized: Invalid API key)");
+        } elseif ($httpCode === 400) {
+            $errorBody = @json_decode($response, true);
+            $errorMsg = $errorBody['error']['message'] ?? $response;
+            throw new Exception("Gemini API error (400 - Bad Request): " . $errorMsg);
+        } elseif ($httpCode !== 200) {
+            $errorBody = @json_decode($response, true);
             $errorMsg = $errorBody['error']['message'] ?? 'Unknown error';
             throw new Exception("Gemini API error (HTTP $httpCode): " . $errorMsg);
         }
@@ -259,6 +321,42 @@ PROMPT;
         return $summary;
     }
 
+    public function smartTruncateText(string $text, int $limit): string
+    {
+        if (strlen($text) <= $limit) {
+            return $text;
+        }
+
+        // Try to truncate at sentence boundary
+        $truncated = substr($text, 0, $limit);
+        
+        // Look for last period, exclamation, or question mark
+        $lastPunctuation = max(
+            strrpos($truncated, '.'),
+            strrpos($truncated, '!'),
+            strrpos($truncated, '?')
+        );
+
+        if ($lastPunctuation !== false && $lastPunctuation > $limit * 0.75) {
+            // If punctuation found in last 25% of truncated text, use it
+            return substr($truncated, 0, $lastPunctuation + 1);
+        }
+
+        // Look for last newline
+        $lastNewline = strrpos($truncated, "\n");
+        if ($lastNewline !== false && $lastNewline > $limit * 0.8) {
+            return substr($truncated, 0, $lastNewline);
+        }
+
+        // Look for last space
+        $lastSpace = strrpos($truncated, ' ');
+        if ($lastSpace !== false) {
+            return substr($truncated, 0, $lastSpace);
+        }
+
+        return $truncated . '...';
+    }
+
     private function truncateText(string $text, int $limit): string
     {
         if (strlen($text) <= $limit) {
@@ -269,6 +367,8 @@ PROMPT;
 
     private function getFallbackScore(string $cvText, string $jobTitle, string $jobDescription): array
     {
+        OptimizationStatsService::recordFallbackScore();
+
         $cvLower = strtolower($cvText);
         $jobLower = strtolower($jobDescription);
         $titleLower = strtolower($jobTitle);
