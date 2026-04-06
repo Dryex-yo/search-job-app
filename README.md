@@ -1405,7 +1405,7 @@ redis-cli FLUSHALL
 ### Getting Help
 - **Documentation**: Check README and docs/
 - **Issues**: GitHub Issues for bugs/requests
-- **Email**: support@yourdomain.com
+- **Email**: derysupriyadi1@gmail.com
 - **Chat**: Discord community (coming soon)
 
 ### Reporting Bugs
