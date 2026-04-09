@@ -35,8 +35,14 @@ class EnsureTenantContextMiddleware
         ]);
 
         try {
-            // Check current tenant context from app container
-            $currentTenant = Tenant::current();
+            // Check current tenant context from app container using Tenancy facade
+            $currentTenant = null;
+            try {
+                $tenantManager = app('tenancy');
+                $currentTenant = $tenantManager->tenant();
+            } catch (\Exception $e) {
+                // No tenancy context available
+            }
 
             Log::debug('EnsureTenantContextMiddleware - Current tenant check', [
                 'has_tenant' => $currentTenant ? true : false,

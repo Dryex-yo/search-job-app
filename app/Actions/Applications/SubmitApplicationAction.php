@@ -12,9 +12,14 @@ class SubmitApplicationAction
 {
     use CalculatesProfileCompletion;
     
+    private $data = [];
+    
     public function execute(array $data): Application
     {
         $user = Auth::user();
+        
+        // Store data for use in getTenantId method
+        $this->data = $data;
 
         // Check if user profile is 100% complete
         $profileCompletion = $this->calculateProfileCompletion($user);
@@ -78,18 +83,60 @@ class SubmitApplicationAction
             $tenantManager = app('tenancy');
             $currentTenant = $tenantManager->tenant();
             if ($currentTenant) {
+                Log::debug('getTenantId - Found from tenancy container', [
+                    'tenant_id' => $currentTenant->id,
+                ]);
                 return $currentTenant->id;
             }
         } catch (\Exception $e) {
             // Tenancy container not available, try fallback
+            Log::debug('getTenantId - Tenancy container failed: ' . $e->getMessage());
         }
 
         // Second try: Get from authenticated user object (cached in memory)
         if ($user?->tenant_id) {
+            Log::debug('getTenantId - Found from user object', [
+                'tenant_id' => $user->tenant_id,
+                'user_id' => $user->id,
+            ]);
             return $user->tenant_id;
         }
 
+        // Third try: Query user from database directly
+        $dbUser = \App\Models\User::find($user->id);
+        if ($dbUser?->tenant_id) {
+            Log::debug('getTenantId - Found from database query', [
+                'tenant_id' => $dbUser->tenant_id,
+                'user_id' => $user->id,
+            ]);
+            return $dbUser->tenant_id;
+        }
+
+        // Fourth try: Get tenant from the job being applied to
+        if (isset($this->data['job_id'])) {
+            $job = \App\Models\Job::find($this->data['job_id']);
+            if ($job?->tenant_id) {
+                Log::debug('getTenantId - Found from job', [
+                    'tenant_id' => $job->tenant_id,
+                    'job_id' => $job->id,
+                ]);
+                return $job->tenant_id;
+            }
+        }
+
         // Final fallback: Query first tenant (for development/simple setups)
-        return \App\Models\Tenant::query()->value('id');
+        $firstTenant = \App\Models\Tenant::query()->value('id');
+        if ($firstTenant) {
+            Log::warning('getTenantId - Using first tenant as fallback', [
+                'tenant_id' => $firstTenant,
+                'user_id' => Auth::id(),
+            ]);
+            return $firstTenant;
+        }
+
+        Log::error('getTenantId - No tenant found through any method', [
+            'user_id' => Auth::id(),
+        ]);
+        return null;
     }
 }

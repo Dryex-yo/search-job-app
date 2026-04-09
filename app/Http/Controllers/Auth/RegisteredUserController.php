@@ -37,10 +37,29 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // Assign tenant_id to user
+        // If there are existing tenants, use the first one (development mode)
+        // In production, users may be invited to specific tenants
+        $tenantId = null;
+        $existingTenant = \App\Models\Tenant::first();
+        if ($existingTenant) {
+            $tenantId = $existingTenant->id;
+        } else {
+            // Fallback: create a default tenant for standalone setups
+            $defaultTenant = \App\Models\Tenant::create([
+                'name' => 'Default Company',
+                'domain' => 'localhost',
+                'database' => null,
+                'status' => 'active',
+            ]);
+            $tenantId = $defaultTenant->id;
+        }
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'tenant_id' => $tenantId,
         ]);
 
         event(new Registered($user));
