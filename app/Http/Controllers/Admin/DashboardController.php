@@ -171,6 +171,73 @@ class DashboardController extends Controller
     }
 
     /**
+     * Bulk update multiple applications status
+     */
+    public function bulkUpdate(Request $request, UpdateApplicationStatusAction $updateStatus)
+    {
+        // Validate input strictly
+        $request->validate([
+            'application_ids' => 'required|array|min:1|max:100',
+            'application_ids.*' => 'integer|min:1',
+            'status' => 'required|string|in:pending,shortlisted,rejected,interview,hired',
+        ]);
+
+        try {
+            // Get the current authenticated user
+            /** @var User $user */
+            $user = Auth::user();
+            
+            // Check if user has permission
+            if (!($user->hasRole('admin') || $user->can('update-applicants'))) {
+                abort(403, 'Unauthorized to update applications');
+            }
+
+            $applicationIds = $request->input('application_ids');
+            $newStatus = $request->input('status');
+            
+            // Validate all IDs exist in database before proceeding
+            $existingIds = Application::whereIn('id', $applicationIds)->pluck('id')->toArray();
+            $invalidIds = array_diff($applicationIds, $existingIds);
+            
+            if (!empty($invalidIds)) {
+                return back()->withErrors([
+                    'error' => 'Some applications not found: ' . implode(', ', $invalidIds)
+                ]);
+            }
+            
+            // Bulk update all applications
+            $updateCount = 0;
+            DB::transaction(function () use ($applicationIds, $newStatus, $updateStatus, &$updateCount) {
+                foreach ($applicationIds as $id) {
+                    // Verify application exists and update using the action for status
+                    $updateStatus->execute($id, $newStatus);
+                    $updateCount++;
+                }
+            });
+
+            // Invalidate admin caches when status changes
+            $this->cacheService->invalidateAllCaches();
+
+            $statusLabel = ucfirst($newStatus);
+
+            return redirect()->route('admin.applicants')->with(
+                'message', 
+                "{$updateCount} pelamar berhasil diupdate menjadi {$statusLabel}!"
+            );
+        } catch (\Throwable $e) {
+            \Log::error('Bulk update failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id(),
+            ]);
+            
+            return back()->withErrors([
+                'error' => 'Gagal melakukan bulk update. ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Show detailed view of a single application
      */
     public function show($id)

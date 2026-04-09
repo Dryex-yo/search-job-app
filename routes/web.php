@@ -83,6 +83,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::get('/applicants/{id}', [AdminDashboard::class, 'show'])->name('applicants.show');
         Route::get('/applicants/download/{id}', [AdminDashboard::class, 'downloadResume'])->name('applicants.download');
         Route::get('/applicants/export/excel', [AdminDashboard::class, 'exportExcel'])->name('applicants.export.excel');
+        // Bulk update must come BEFORE {id} route to match it first
+        Route::patch('/applications/bulk-update', [AdminDashboard::class, 'bulkUpdate'])->name('applications.bulk-update');
         Route::patch('/applications/{id}', [AdminDashboard::class, 'update'])->name('applications.update');
 
         // Interview scheduling routes

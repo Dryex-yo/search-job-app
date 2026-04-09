@@ -63,6 +63,11 @@ const skeletonRows = ref(Array.from({ length: 5 }, (_, i) => i));
 const searchTimeout = ref(null);
 const isSearching = ref(false);
 
+// Bulk selection state
+const selectedIds = ref(new Set());
+const bulkStatus = ref('');
+const isUpdatingBulk = ref(false);
+
 // Initialize notification
 const { success: showSuccess, error: showError, info: showInfo } = useNotification();
 
@@ -248,6 +253,70 @@ const updateStatus = (id, newStatus) => {
         },
         onError: (errors) => {
             showError('Gagal Memperbarui', 'Terjadi kesalahan saat memperbarui status. Silakan coba lagi.');
+        }
+    });
+};
+
+// Bulk selection computed properties
+const selectedCount = computed(() => selectedIds.value.size);
+const isAllSelected = computed(() => {
+    return applicantsList.value.length > 0 && selectedIds.value.size === applicantsList.value.length;
+});
+const isPartialSelected = computed(() => {
+    return selectedIds.value.size > 0 && selectedIds.value.size < applicantsList.value.length;
+});
+
+// Bulk selection methods
+const toggleSelectAll = () => {
+    if (isAllSelected.value) {
+        selectedIds.value.clear();
+    } else {
+        selectedIds.value.clear();
+        applicantsList.value.forEach(app => selectedIds.value.add(app.id));
+    }
+};
+
+const toggleSelect = (id) => {
+    if (selectedIds.value.has(id)) {
+        selectedIds.value.delete(id);
+    } else {
+        selectedIds.value.add(id);
+    }
+};
+
+const clearSelection = () => {
+    selectedIds.value.clear();
+    bulkStatus.value = '';
+};
+
+const bulkUpdateApplicants = () => {
+    if (selectedIds.value.size === 0 || !bulkStatus.value) {
+        showError('Perhatian', 'Pilih pelamar dan status untuk update');
+        return;
+    }
+
+    isUpdatingBulk.value = true;
+
+    router.patch(route('admin.applications.bulk-update'), {
+        application_ids: Array.from(selectedIds.value),
+        status: bulkStatus.value
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            const statusLabel = bulkStatus.value.charAt(0).toUpperCase() + bulkStatus.value.slice(1);
+            showSuccess(
+                'Bulk Update Berhasil',
+                `${selectedIds.value.size} pelamar berhasil diubah menjadi ${statusLabel}`
+            );
+            clearSelection();
+        },
+        onError: (errors) => {
+            console.error('Bulk update error:', errors);
+            const errorMessage = errors?.error || 'Terjadi kesalahan saat memperbarui. Silakan coba lagi.';
+            showError('Gagal Bulk Update', errorMessage);
+        },
+        onFinish: () => {
+            isUpdatingBulk.value = false;
         }
     });
 };
@@ -483,6 +552,46 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="bg-white/[0.01] border border-white/10 rounded-[3rem] p-10 shadow-inner glass-grain relative overflow-hidden">
+            <!-- Bulk Action Panel -->
+            <div v-if="selectedCount > 0" class="mb-6 p-4 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-400/50 rounded-2xl shadow-lg shadow-cyan-500/20 animate-in slide-in-from-top duration-300">
+                <div class="flex items-center justify-between gap-4 flex-wrap">
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-bold text-cyan-300 bg-cyan-500/30 px-3 py-1 rounded-full border border-cyan-400/50">
+                            {{ selectedCount }} Pelamar Terpilih
+                        </span>
+                        <span class="text-xs text-cyan-200">Pilih status untuk update</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select 
+                            v-model="bulkStatus"
+                            class="px-4 py-2 bg-white/10 border border-cyan-400/50 rounded-lg text-sm font-semibold text-white focus:outline-none focus:border-cyan-400 transition-colors"
+                        >
+                            <option value="">-- Pilih Status --</option>
+                            <option value="pending">Pending</option>
+                            <option value="interview">Interview</option>
+                            <option value="shortlisted">Shortlisted</option>
+                            <option value="hired">Hired</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                        <button 
+                            @click="bulkUpdateApplicants"
+                            :disabled="!bulkStatus || isUpdatingBulk"
+                            class="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-600 text-white font-bold rounded-lg text-sm transition-all duration-300 flex items-center gap-2"
+                        >
+                            <span v-if="isUpdatingBulk" class="inline-block animate-spin">⟳</span>
+                            <span v-else>✓</span>
+                            {{ isUpdatingBulk ? 'Updating...' : 'Update' }}
+                        </button>
+                        <button 
+                            @click="clearSelection"
+                            class="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold rounded-lg text-sm transition-all"
+                        >
+                            ✕ Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Scroll Indicator (Top) -->
             <div class="mb-3 flex items-center justify-between px-2">
                 <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Geser ke kanan untuk melihat lebih banyak →</span>
@@ -501,6 +610,16 @@ onBeforeUnmount(() => {
                 <table class="w-full text-left border-separate border-spacing-y-2 min-w-max">
                     <thead>
                         <tr class="text-[10px] font-black text-gray-700 dark:text-gray-400 uppercase tracking-[0.4em] italic sticky top-0 bg-white/5 backdrop-blur-sm">
+                            <th class="pb-8 px-2 whitespace-nowrap text-center w-12">
+                                <input 
+                                    type="checkbox" 
+                                    :checked="isAllSelected"
+                                    :indeterminate="isPartialSelected"
+                                    @change="toggleSelectAll"
+                                    class="w-4 h-4 cursor-pointer accent-cyan-400"
+                                    title="Select / Deselect All"
+                                />
+                            </th>
                             <th class="pb-8 px-6 whitespace-nowrap">Candidate</th>
                             <th class="pb-8 px-6 whitespace-nowrap">Applied Role</th>
                             <th class="pb-8 px-6 whitespace-nowrap">Status</th>
@@ -519,7 +638,27 @@ onBeforeUnmount(() => {
                         <TableRowSkeleton v-for="(_, index) in skeletonRows" v-show="isLoading" :key="`skeleton-${index}`" />
 
                         <!-- Data Rows - Show when loading is complete -->
-                        <tr v-for="applicant in sortedApplicants" v-show="!isLoading" :key="applicant.id" class="group hover:bg-white/[0.02] transition-all duration-300 cursor-pointer">
+                        <tr 
+                            v-for="applicant in sortedApplicants" 
+                            v-show="!isLoading" 
+                            :key="applicant.id" 
+                            :class="[
+                                'group transition-all duration-300 cursor-pointer',
+                                selectedIds.has(applicant.id)
+                                    ? 'bg-cyan-400/20 border border-cyan-400/30 hover:bg-cyan-400/30' 
+                                    : 'hover:bg-white/[0.02]'
+                            ]"
+                        >
+                            <!-- Checkbox Column -->
+                            <td class="py-7 px-2 whitespace-nowrap text-center">
+                                <input 
+                                    type="checkbox" 
+                                    :checked="selectedIds.has(applicant.id)"
+                                    @change="toggleSelect(applicant.id)"
+                                    @click.stop
+                                    class="w-4 h-4 cursor-pointer accent-cyan-400"
+                                />
+                            </td>
                             <td class="py-7 px-6 whitespace-nowrap">
                                 <div class="flex items-center gap-4">
                                     <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white text-sm flex-shrink-0">
