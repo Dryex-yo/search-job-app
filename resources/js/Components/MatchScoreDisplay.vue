@@ -92,12 +92,19 @@ const getScoreCategory = computed(() => {
 
     <!-- Score Display State -->
     <div v-else-if="props.score !== null && props.score !== undefined" class="space-y-2">
-        <!-- Score with Gradient Text -->
-        <div class="flex items-center gap-2">
-            <span :class="[getScoreColor.text, 'font-black text-lg tracking-tight']">
+        <!-- Score with Gradient Text and Tooltip -->
+        <div class="flex items-center gap-2 relative group">
+            <span :class="[getScoreColor.text, 'font-black text-lg tracking-tight cursor-help']">
                 {{ props.score }}
             </span>
             <span class="text-gray-500 text-xs font-semibold">/100</span>
+            
+            <!-- Tooltip (Hidden by default, shown on hover) -->
+            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-100 font-medium w-max max-w-xs pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-lg z-50">
+                Skor dihitung berdasarkan kesesuaian Skill, Pengalaman, dan Pendidikan menggunakan Gemini AI
+                <!-- Tooltip Arrow -->
+                <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-800 border-r border-t border-gray-700"></div>
+            </div>
             
             <!-- Category Badge -->
             <span v-if="getScoreCategory" :class="[
