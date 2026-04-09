@@ -5,6 +5,7 @@ import CVPreviewModal from '@/Components/CVPreviewModal.vue';
 import CoverLetterModal from '@/Components/CoverLetterModal.vue';
 import NotificationContainer from '@/Components/NotificationContainer.vue';
 import AdminPageLayout from '@/Layouts/AdminPageLayout.vue';
+import MatchScoreDisplay from '@/Components/MatchScoreDisplay.vue';
 import { useNotification } from '@/Composables/useNotification';
 
 const props = defineProps({
@@ -193,37 +194,6 @@ const getStatusClass = (status) => {
         case 'pending': return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20 shadow-[0_0_15px_rgba(250,204,21,0.1)]';
         case 'rejected': return 'text-red-400 bg-red-400/10 border-red-400/20 shadow-[0_0_15px_rgba(248,113,113,0.1)]';
         default: return 'text-gray-400 bg-gray-400/10 border-gray-400/20';
-    }
-};
-
-const getScoreClass = (score) => {
-    if (!score) return 'text-gray-500';
-    if (score >= 80) return 'text-green-400';
-    if (score >= 60) return 'text-yellow-400';
-    if (score >= 40) return 'text-orange-400';
-    return 'text-red-400';
-};
-
-const getProgressBarClass = (score) => {
-    if (!score) return 'bg-gray-600 shadow-[0_0_10px_rgba(75,85,99,0.3)]';
-    if (score >= 80) return 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.6)]';
-    if (score >= 60) return 'bg-gradient-to-r from-yellow-500 to-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.6)]';
-    if (score >= 40) return 'bg-gradient-to-r from-orange-500 to-red-400 shadow-[0_0_20px_rgba(249,115,22,0.6)]';
-    return 'bg-gradient-to-r from-red-500 to-red-600 shadow-[0_0_20px_rgba(239,68,68,0.6)]';
-};
-
-const getAnalysisStatus = (status) => {
-    switch (status) {
-        case 'completed':
-            return 'Analyzed';
-        case 'analyzing':
-            return 'Analyzing...';
-        case 'pending':
-            return 'Pending';
-        case 'failed':
-            return 'Failed';
-        default:
-            return '-';
     }
 };
 
@@ -460,29 +430,10 @@ const exportToExcel = () => {
                                 </span>
                             </td>
                             <td class="py-7 px-6 whitespace-nowrap">
-                                <div v-if="applicant.ai_match_score !== null && applicant.ai_match_score !== undefined" class="space-y-2">
-                                    <div class="flex items-center gap-2">
-                                        <span :class="[getScoreClass(applicant.ai_match_score), 'font-bold text-lg']">
-                                            {{ applicant.ai_match_score }}
-                                        </span>
-                                        <span class="text-gray-500 text-sm">/100</span>
-                                    </div>
-                                    <div class="w-24 bg-gray-700/50 rounded-full h-1.5 overflow-hidden border border-gray-600/50">
-                                        <div 
-                                            :class="getProgressBarClass(applicant.ai_match_score)"
-                                            :style="{ width: applicant.ai_match_score + '%' }"
-                                            class="h-full transition-all duration-300"
-                                        />
-                                    </div>
-                                    <p class="text-xs text-gray-500">{{ getAnalysisStatus(applicant.ai_analysis_status) }}</p>
-                                </div>
-                                <div v-else-if="applicant.ai_analysis_status === 'analyzing'" class="flex items-center gap-2">
-                                    <div class="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-                                    <span class="text-xs text-cyan-400">Analyzing...</span>
-                                </div>
-                                <div v-else class="text-xs text-gray-500">
-                                    {{ getAnalysisStatus(applicant.ai_analysis_status) }}
-                                </div>
+                                <MatchScoreDisplay
+                                    :score="applicant.ai_match_score"
+                                    :analysis-status="applicant.ai_analysis_status || 'pending'"
+                                />
                             </td>
                             <td class="py-7 px-6 whitespace-nowrap text-right">
                                 <p class="text-xs text-gray-600 dark:text-gray-400">{{ new Date(applicant.created_at).toLocaleDateString() }}</p>
