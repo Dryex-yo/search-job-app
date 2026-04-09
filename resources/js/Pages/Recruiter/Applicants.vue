@@ -1,9 +1,10 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import CVPreviewModal from '@/Components/CVPreviewModal.vue';
 import CoverLetterModal from '@/Components/CoverLetterModal.vue';
 import NotificationContainer from '@/Components/NotificationContainer.vue';
+import RecruiterTableRowSkeleton from '@/Components/RecruiterTableRowSkeleton.vue';
 import RecruiterPageLayout from '@/Layouts/RecruiterPageLayout.vue';
 import { useNotification } from '@/Composables/useNotification';
 
@@ -13,6 +14,10 @@ const props = defineProps({
         default: () => []
     }
 });
+
+// Loading state untuk skeleton
+const isLoading = ref(true);
+const skeletonRows = ref(Array.from({ length: 5 }, (_, i) => i));
 
 // State untuk CV Preview Modal
 const showCVPreview = ref(false);
@@ -81,6 +86,14 @@ const closeCoverLetterModal = () => {
 const exportToExcel = () => {
     window.location.href = route('recruiter.applicants.export');
 };
+
+// Set loading state to false after component mounts (since data is already available)
+onMounted(() => {
+    // Simulate brief loading state for skeleton animation effect (optional: adjust timing as needed)
+    setTimeout(() => {
+        isLoading.value = false;
+    }, 300);
+});
 </script>
 
 <template>
@@ -110,7 +123,11 @@ const exportToExcel = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="applicant in props.applicants" :key="applicant.id" class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <!-- Skeleton Rows - Show during initial load -->
+                        <RecruiterTableRowSkeleton v-for="(_, index) in skeletonRows" v-show="isLoading" :key="`skeleton-${index}`" />
+
+                        <!-- Data Rows - Show when loading is complete -->
+                        <tr v-for="applicant in props.applicants" v-show="!isLoading" :key="applicant.id" class="border-b border-white/5 hover:bg-white/5 transition-colors">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-white">
@@ -148,7 +165,7 @@ const exportToExcel = () => {
                 </table>
             </div>
 
-            <div v-if="props.applicants.length === 0" class="text-center py-12">
+            <div v-show="!isLoading && props.applicants.length === 0" class="text-center py-12">
                 <p class="text-gray-400 text-lg">No applicants found</p>
             </div>
         </div>

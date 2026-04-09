@@ -1,11 +1,12 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import CVPreviewModal from '@/Components/CVPreviewModal.vue';
 import CoverLetterModal from '@/Components/CoverLetterModal.vue';
 import NotificationContainer from '@/Components/NotificationContainer.vue';
 import AdminPageLayout from '@/Layouts/AdminPageLayout.vue';
 import MatchScoreDisplay from '@/Components/MatchScoreDisplay.vue';
+import TableRowSkeleton from '@/Components/TableRowSkeleton.vue';
 import { useNotification } from '@/Composables/useNotification';
 
 const props = defineProps({
@@ -51,6 +52,10 @@ const filterForm = ref({
 });
 
 const showFilters = ref(false);
+
+// Loading state untuk skeleton
+const isLoading = ref(true);
+const skeletonRows = ref(Array.from({ length: 5 }, (_, i) => i));
 
 // Initialize notification
 const { success: showSuccess, error: showError, info: showInfo } = useNotification();
@@ -239,6 +244,22 @@ const closeCoverLetterModal = () => {
 const exportToExcel = () => {
     window.location.href = route('admin.applicants.export.excel');
 };
+
+// Set loading state to false after component mounts (since data is already available)
+onMounted(() => {
+    // Simulate brief loading state for skeleton animation effect (optional: adjust timing as needed)
+    // Remove setTimeout if immediate load is preferred
+    setTimeout(() => {
+        isLoading.value = false;
+    }, 300);
+});
+
+// Also watch for applicants data changes to disable loading
+watch(() => props.applicants?.data?.length, (newLength) => {
+    if (newLength > 0) {
+        isLoading.value = false;
+    }
+});
 </script>
 
 <template>
@@ -409,7 +430,11 @@ const exportToExcel = () => {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-white/5">
-                        <tr v-for="applicant in sortedApplicants" :key="applicant.id" class="group hover:bg-white/[0.02] transition-all duration-300 cursor-pointer">
+                        <!-- Skeleton Rows - Show during initial load -->
+                        <TableRowSkeleton v-for="(_, index) in skeletonRows" v-show="isLoading" :key="`skeleton-${index}`" />
+
+                        <!-- Data Rows - Show when loading is complete -->
+                        <tr v-for="applicant in sortedApplicants" v-show="!isLoading" :key="applicant.id" class="group hover:bg-white/[0.02] transition-all duration-300 cursor-pointer">
                             <td class="py-7 px-6 whitespace-nowrap">
                                 <div class="flex items-center gap-4">
                                     <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white text-sm flex-shrink-0">
@@ -463,7 +488,7 @@ const exportToExcel = () => {
                     </tbody>
                 </table>
 
-                <div v-if="applicantsList.length === 0" class="text-center py-12">
+                <div v-show="!isLoading && applicantsList.length === 0" class="text-center py-12">
                     <p class="text-gray-600 dark:text-gray-400 text-sm">No applicants found</p>
                 </div>
             </div>
