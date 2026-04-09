@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted, watch } from 'vue';
+import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import CVPreviewModal from '@/Components/CVPreviewModal.vue';
 import CoverLetterModal from '@/Components/CoverLetterModal.vue';
@@ -8,6 +8,8 @@ import AdminPageLayout from '@/Layouts/AdminPageLayout.vue';
 import MatchScoreDisplay from '@/Components/MatchScoreDisplay.vue';
 import TableRowSkeleton from '@/Components/TableRowSkeleton.vue';
 import { useNotification } from '@/Composables/useNotification';
+import { useRealtimeEvents } from '@/Composables/useRealtimeEvents';
+import { useSoundNotification } from '@/Composables/useSoundNotification';
 
 const props = defineProps({
     applicants: {
@@ -57,8 +59,16 @@ const showFilters = ref(false);
 const isLoading = ref(true);
 const skeletonRows = ref(Array.from({ length: 5 }, (_, i) => i));
 
+// Debounce state untuk search input (300ms)
+const searchTimeout = ref(null);
+const isSearching = ref(false);
+
 // Initialize notification
 const { success: showSuccess, error: showError, info: showInfo } = useNotification();
+
+// Initialize real-time events
+const { listenToApplications, stopListeningToApplications } = useRealtimeEvents();
+const { notify: playSound } = useSoundNotification();
 
 // Apply filters
 const applyFilters = () => {
@@ -66,6 +76,31 @@ const applyFilters = () => {
         preserveState: false,
     });
 };
+
+// Debounce search dengan 300ms delay
+watch(() => filterForm.value.search, (newSearch) => {
+    // Clear previous timeout
+    if (searchTimeout.value) {
+        clearTimeout(searchTimeout.value);
+    }
+
+    // Set loading indicator
+    isSearching.value = true;
+
+    // Set new timeout untuk debounce
+    searchTimeout.value = setTimeout(() => {
+        // Reset ke halaman 1 saat searching
+        router.get(route('admin.applicants'), {
+            ...filterForm.value,
+            page: 1
+        }, {
+            preserveState: false,
+            onSuccess: () => {
+                isSearching.value = false;
+            }
+        });
+    }, 300);
+});
 
 // Reset filters
 const resetFilters = () => {
@@ -245,6 +280,34 @@ const exportToExcel = () => {
     window.location.href = route('admin.applicants.export.excel');
 };
 
+/**
+ * Handle real-time application events
+ */
+const handleApplicationEvent = (event) => {
+    const { type, data } = event;
+
+    if (type === 'application.submitted') {
+        // Play notification sound
+        playSound();
+        
+        // Show toast notification
+        showSuccess(
+            '📨 Pelamar Baru!',
+            `${data.user.name} melamar untuk "${data.job.title}"`,
+            5000
+        );
+
+        console.log('✨ Pelamar baru diterima:', data);
+    } else if (type === 'application.status-changed') {
+        // Show status change notification if applicable
+        showInfo(
+            '📊 Status Perubahan',
+            `Perubahan status pelamar berhasil diproses`,
+            4000
+        );
+    }
+};
+
 // Set loading state to false after component mounts (since data is already available)
 onMounted(() => {
     // Simulate brief loading state for skeleton animation effect (optional: adjust timing as needed)
@@ -252,6 +315,9 @@ onMounted(() => {
     setTimeout(() => {
         isLoading.value = false;
     }, 300);
+
+    // Set up real-time event listener for new applications
+    listenToApplications(handleApplicationEvent);
 });
 
 // Also watch for applicants data changes to disable loading
@@ -259,6 +325,16 @@ watch(() => props.applicants?.data?.length, (newLength) => {
     if (newLength > 0) {
         isLoading.value = false;
     }
+});
+
+// Cleanup debounce timeout and real-time listeners on component unmount
+onBeforeUnmount(() => {
+    if (searchTimeout.value) {
+        clearTimeout(searchTimeout.value);
+    }
+    
+    // Stop listening to real-time events
+    stopListeningToApplications();
 });
 </script>
 
@@ -293,13 +369,22 @@ watch(() => props.applicants?.data?.length, (newLength) => {
                 <!-- Search -->
                 <div>
                     <label class="block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mb-2">Search</label>
-                    <input 
-                        v-model="filterForm.search" 
-                        type="text" 
-                        placeholder="Name, email, or job title..."
-                        @keyup.enter="applyFilters"
-                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50" 
-                    />
+                    <div class="relative">
+                        <input 
+                            v-model="filterForm.search" 
+                            type="text" 
+                            placeholder="Name, email, or job title..."
+                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors" 
+                        />
+                        <!-- Search indicator -->
+                        <div v-if="isSearching" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                            <div class="animate-spin">
+                                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Status Filter -->
