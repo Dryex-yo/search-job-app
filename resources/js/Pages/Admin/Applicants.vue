@@ -481,6 +481,27 @@ onBeforeUnmount(() => {
     // Stop listening to real-time events
     stopListeningToApplications();
 });
+
+/**
+ * Helper function to highlight search term in text
+ * Returns HTML string with matching text wrapped in <mark> tags
+ */
+const highlightSearchTerm = (text, searchTerm) => {
+    if (!text || !searchTerm) {
+        return text;
+    }
+    
+    // Escape special regex characters
+    const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    // Create case-insensitive regex
+    const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
+    
+    // Replace matching text with <mark> tag
+    const highlighted = String(text).replace(regex, '<mark>$1</mark>');
+    
+    return highlighted;
+};
 </script>
 
 <template>
@@ -751,13 +772,13 @@ onBeforeUnmount(() => {
                                         {{ applicant.name?.charAt(0) || 'A' }}
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="font-bold text-white text-sm truncate">{{ applicant.name }}</p>
+                                        <p class="font-bold text-white text-sm truncate" v-html="highlightSearchTerm(applicant.name, filterForm.search)"></p>
                                         <p class="text-xs text-gray-600 dark:text-gray-400 truncate">{{ applicant.email }}</p>
                                     </div>
                                 </div>
                             </td>
                             <td class="py-7 px-6 whitespace-nowrap">
-                                <p class="font-semibold text-white text-sm truncate">{{ applicant.job?.title || 'N/A' }}</p>
+                                <p class="font-semibold text-white text-sm truncate" v-html="highlightSearchTerm(applicant.job?.title || 'N/A', filterForm.search)"></p>
                             </td>
                             <td class="py-7 px-6 whitespace-nowrap">
                                 <span :class="getStatusClass(applicant.status)" class="px-3 py-1 rounded-full text-xs font-bold border inline-block">
@@ -907,6 +928,16 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* Highlight styling untuk search results */
+::v-deep mark {
+    background-color: rgba(250, 204, 21, 0.3);
+    color: inherit;
+    font-weight: 700;
+    padding: 0 2px;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.5);
+}
+
 /* Custom scrollbar untuk horizontal scroll */
 .scrollbar-thin::-webkit-scrollbar {
     height: 6px;
