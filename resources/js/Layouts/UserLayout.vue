@@ -23,6 +23,25 @@ const auth = computed(() => {
 const handleLogout = () => {
     router.post(route('logout'));
 };
+
+const profilePhotoUrl = computed(() => {
+    if (auth.value.user?.profile_photo_path) {
+        return `/storage/${auth.value.user.profile_photo_path}`;
+    }
+    return null;
+});
+
+const userInitials = computed(() => {
+    if (auth.value.user?.name) {
+        return auth.value.user.name
+            .split(' ')
+            .map(n => n.charAt(0))
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    }
+    return 'U';
+});
 </script>
 
 <template>
@@ -80,9 +99,16 @@ const handleLogout = () => {
                                     <template #trigger>
                                         <button
                                             type="button"
-                                            class="inline-flex items-center gap-1 rounded-md border border-transparent bg-gray-200 dark:bg-slate-700 px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium leading-4 text-gray-700 dark:text-slate-100 transition duration-150 ease-in-out hover:bg-gray-300 dark:hover:bg-slate-600 hover:text-gray-900 dark:hover:text-white focus:outline-none"
+                                            class="inline-flex items-center gap-2 rounded-lg border border-transparent bg-gray-200 dark:bg-slate-700 px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium leading-4 text-gray-700 dark:text-slate-100 transition duration-150 ease-in-out hover:bg-gray-300 dark:hover:bg-slate-600 hover:text-gray-900 dark:hover:text-white focus:outline-none"
                                         >
-                                            <span class="truncate">{{ auth.user.name }}</span>
+                                            <!-- Profile Photo or Avatar -->
+                                            <div v-if="profilePhotoUrl" class="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden border border-gray-300 dark:border-slate-600">
+                                                <img :src="profilePhotoUrl" :alt="auth.user.name" class="w-full h-full object-cover">
+                                            </div>
+                                            <div v-else class="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white text-xs flex-shrink-0">
+                                                {{ userInitials }}
+                                            </div>
+                                            <span class="truncate hidden sm:inline">{{ auth.user.name }}</span>
                                             <svg
                                                 class="-me-0.5 ms-1 h-4 w-4"
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -99,6 +125,27 @@ const handleLogout = () => {
                                     </template>
 
                                     <template #content>
+                                        <!-- Dropdown Header with Profile -->
+                                        <div class="px-4 py-3 border-b border-gray-200 dark:border-slate-600">
+                                            <div class="flex items-center gap-3">
+                                                <!-- Profile Photo or Avatar -->
+                                                <div v-if="profilePhotoUrl" class="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden border border-gray-300 dark:border-slate-500">
+                                                    <img :src="profilePhotoUrl" :alt="auth.user.name" class="w-full h-full object-cover">
+                                                </div>
+                                                <div v-else class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white flex-shrink-0">
+                                                    {{ userInitials }}
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <p class="font-semibold text-gray-900 dark:text-white text-sm truncate">{{ auth.user.name }}</p>
+                                                    <p class="text-xs text-gray-600 dark:text-slate-400 truncate">{{ auth.user.email }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Menu Items -->
+                                        <DropdownLink href="/dashboard">
+                                            {{ t('Dashboard') || 'Dashboard' }}
+                                        </DropdownLink>
                                         <DropdownLink href="/">
                                             {{ t('navigation.jobs') }}
                                         </DropdownLink>

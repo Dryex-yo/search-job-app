@@ -768,7 +768,11 @@ const highlightSearchTerm = (text, searchTerm) => {
                             </td>
                             <td class="py-7 px-6 whitespace-nowrap">
                                 <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white text-sm flex-shrink-0">
+                                    <!-- Profile Photo or Avatar -->
+                                    <div v-if="applicant.profile_photo_path" class="w-10 h-10 rounded-lg flex-shrink-0 overflow-hidden border border-white/10 shadow-md">
+                                        <img :src="`/storage/${applicant.profile_photo_path}`" :alt="applicant.name" class="w-full h-full object-cover">
+                                    </div>
+                                    <div v-else class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white text-sm flex-shrink-0">
                                         {{ applicant.name?.charAt(0) || 'A' }}
                                     </div>
                                     <div class="min-w-0">
@@ -929,7 +933,7 @@ const highlightSearchTerm = (text, searchTerm) => {
 
 <style scoped>
 /* Highlight styling untuk search results */
-::v-deep mark {
+:deep(mark) {
     background-color: rgba(250, 204, 21, 0.3);
     color: inherit;
     font-weight: 700;

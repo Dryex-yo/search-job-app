@@ -254,7 +254,11 @@ onBeforeUnmount(() => {
                         <tr v-for="applicant in allApplicants" v-show="!isInitialLoading" :key="applicant.id" class="border-b border-white/5 hover:bg-white/5 transition-colors">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-white">
+                                    <!-- Profile Photo or Avatar -->
+                                    <div v-if="applicant.profile_photo_path" class="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden border border-white/10 shadow-md">
+                                        <img :src="`/storage/${applicant.profile_photo_path}`" :alt="applicant.name" class="w-full h-full object-cover">
+                                    </div>
+                                    <div v-else class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-white">
                                         {{ applicant.avatar }}
                                     </div>
                                     <span class="font-semibold text-white">{{ applicant.name }}</span>

@@ -13,11 +13,32 @@ const user = computed(() => {
     return auth.value.user || {};
 });
 
-const userInitial = computed(() => {
-    if (user.value.name) {
-        return user.value.name.charAt(0).toUpperCase();
-    }
-    return 'D';
+// Generate user initials from full name
+const userInitials = computed(() => {
+    if (!user.value.name) return 'U';
+    const names = user.value.name.split(' ');
+    const initials = (names[0]?.charAt(0) || '') + (names[1]?.charAt(0) || '');
+    return initials.toUpperCase();
+});
+
+// Get user's full name
+const userFullName = computed(() => {
+    return user.value.name || 'User';
+});
+
+// Get profile photo URL or null
+const profilePhotoUrl = computed(() => {
+    return user.value.profile_photo_path ? `/storage/${user.value.profile_photo_path}` : null;
+});
+
+// Check if user is admin
+const isAdmin = computed(() => {
+    return user.value.role === 'admin' || user.value.roles?.includes('admin');
+});
+
+// Check if user is authenticated
+const isAuthenticated = computed(() => {
+    return !!user.value.id;
 });
 
 const handleLogout = () => {
@@ -40,12 +61,30 @@ const closeDropdown = () => {
             @click="toggleDropdown"
             class="flex items-center gap-3 sm:gap-5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/10 hover:border-white/20 p-2 sm:p-2.5 pr-4 sm:pr-8 rounded-2xl sm:rounded-3xl shadow-inner transition-all duration-300 cursor-pointer group"
         >
-            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white text-sm sm:text-base shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition-all">
-                {{ userInitial }}
+            <!-- Profile Photo or Avatar -->
+            <div 
+                v-if="profilePhotoUrl"
+                class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex-shrink-0 overflow-hidden shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition-all"
+            >
+                <img 
+                    :src="profilePhotoUrl" 
+                    :alt="userFullName"
+                    class="w-full h-full object-cover"
+                />
             </div>
-            <div class="text-left leading-tight hidden sm:block">
-                <p class="text-xs font-black text-white truncate">{{ user.name || 'Administrator' }}</p>
-                <p class="text-[9px] text-cyan-400 uppercase tracking-[0.2em] font-black italic">Administrator</p>
+            <div 
+                v-else
+                class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white text-sm sm:text-base shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition-all flex-shrink-0"
+            >
+                {{ userInitials }}
+            </div>
+
+            <!-- User Info -->
+            <div class="text-left leading-tight hidden sm:flex flex-col min-w-0">
+                <p class="text-xs font-black text-white truncate">{{ userFullName }}</p>
+                <p class="text-[9px] text-cyan-400 uppercase tracking-[0.2em] font-black italic">
+                    {{ isAdmin ? 'Administrator' : 'User' }}
+                </p>
             </div>
             <span class="hidden sm:inline text-gray-500 group-hover:text-white transition-colors">
                 <svg class="w-4 h-4" :class="{ 'rotate-180': showDropdown }" fill="currentColor" viewBox="0 0 24 24">
@@ -68,14 +107,38 @@ const closeDropdown = () => {
                 class="absolute right-0 mt-3 w-56 bg-white/[0.05] dark:bg-white/[0.08] backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl shadow-black/50 py-2 z-50"
                 @click="closeDropdown"
             >
-                <!-- User Info -->
-                <div class="px-4 py-3 border-b border-white/10">
-                    <p class="text-sm font-black text-white">{{ user.name || 'Administrator' }}</p>
-                    <p class="text-xs text-gray-400 mt-1">{{ user.email || 'admin@dryex.com' }}</p>
+                <!-- User Info Header -->
+                <div class="px-4 py-3 border-b border-white/10 flex items-center gap-3">
+                    <!-- Profile Photo or Avatar in Header -->
+                    <div>
+                        <div 
+                            v-if="profilePhotoUrl"
+                            class="w-12 h-12 rounded-lg overflow-hidden shadow-md"
+                        >
+                            <img 
+                                :src="profilePhotoUrl" 
+                                :alt="userFullName"
+                                class="w-full h-full object-cover"
+                            />
+                        </div>
+                        <div 
+                            v-else
+                            class="w-12 h-12 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white shadow-md"
+                        >
+                            {{ userInitials }}
+                        </div>
+                    </div>
+                    <!-- User Details -->
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-black text-white truncate">{{ userFullName }}</p>
+                        <p class="text-xs text-gray-400 mt-1 truncate">{{ user.email }}</p>
+                    </div>
                 </div>
 
                 <!-- Menu Items -->
+                <!-- Dashboard - Only show if user is admin or authenticated -->
                 <Link
+                    v-if="isAuthenticated && isAdmin"
                     :href="route('admin.dashboard')"
                     class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
                 >

@@ -53,6 +53,7 @@ class RecruiterController extends Controller
                 'avatar' => strtoupper(substr($app->user->name ?? '??', 0, 2)),
                 'resume_path' => $app->resume_path,
                 'cover_letter' => $app->cover_letter ?? null,
+                'profile_photo_path' => $app->user->profile_photo_path,
             ];
         })->toArray();
 

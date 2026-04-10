@@ -129,6 +129,7 @@ class DashboardController extends Controller
                 'ai_match_score' => $app->ai_match_score,
                 'ai_analysis_status' => $app->ai_analysis_status,
                 'ai_analysis_details' => $app->ai_analysis_details,
+                'profile_photo_path' => $app->user->profile_photo_path,
             ];
         });
 

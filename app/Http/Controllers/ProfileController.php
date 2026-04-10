@@ -62,7 +62,7 @@ class ProfileController extends Controller
     /**
      * Upload user's profile photo
      */
-    public function uploadProfilePhoto(Request $request): RedirectResponse
+    public function uploadProfilePhoto(Request $request)
     {
         $request->validate([
             'profile_photo' => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:5120', 'dimensions:min_width=100,min_height=100'],
@@ -89,16 +89,36 @@ class ProfileController extends Controller
                 'profile_photo_path' => $path,
             ]);
 
+            // Refresh user instance to get updated data
+            $user->refresh();
+
             // Invalidate dashboard cache
             $this->cacheService->invalidateCache($user->id);
 
             \Illuminate\Support\Facades\Log::info('Profile photo uploaded successfully for user ' . $user->id . ': ' . $path);
 
-            return Redirect::route('profile.edit')->with('status', 'Foto profil berhasil diupload');
+            // Return JSON response for AJAX/Inertia handling
+            return response()->json([
+                'success' => true,
+                'message' => 'Foto profil berhasil diupload',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'profile_photo_path' => $user->profile_photo_path,
+                    'role' => $user->role,
+                ],
+                'photo_url' => $user->profile_photo_path ? "/storage/{$user->profile_photo_path}" : null,
+            ], 200);
         } catch (Exception $e) {
             $errorMsg = 'Upload photo error: ' . $e->getMessage();
             \Illuminate\Support\Facades\Log::error($errorMsg);
-            return Redirect::route('profile.edit')->withErrors(['profile_photo' => 'Gagal mengupload foto: ' . $e->getMessage()]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengupload foto: ' . $e->getMessage(),
+                'error' => $e->getMessage(),
+            ], 422);
         }
     }
 

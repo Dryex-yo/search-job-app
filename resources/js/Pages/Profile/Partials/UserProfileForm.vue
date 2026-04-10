@@ -27,6 +27,8 @@ const photoPreviewUrl = ref(user.profile_photo_path ? `/storage/${user.profile_p
 const photoInputRef = ref(null);
 const photoFileSize = ref(null);
 const photoUploadLoading = ref(false);
+const photoUploadError = ref(null);
+const photoUploadSuccess = ref(false);
 
 const form = useForm({
     name: user.name || '',
@@ -80,28 +82,66 @@ const handlePhotoSelect = (event) => {
 };
 
 // Upload profile photo
-const uploadProfilePhoto = () => {
+const uploadProfilePhoto = async () => {
     if (!photoForm.profile_photo) return;
     
     photoUploadLoading.value = true;
+    photoUploadError.value = null;
+    photoUploadSuccess.value = false;
     
-    // Use Inertia's router.post with file support
-    router.post(route('profile.upload-photo'), 
-        { profile_photo: photoForm.profile_photo },
-        {
-            onSuccess: () => {
-                // Clear and reload
-                clearPhotoSelection();
-                photoUploadLoading.value = false;
+    try {
+        // Create FormData untuk multipart/form-data
+        const formData = new FormData();
+        formData.append('profile_photo', photoForm.profile_photo);
+        
+        // Use native fetch untuk handle FormData dengan benar
+        const response = await fetch(route('profile.upload-photo'), {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
             },
-            onError: (errors) => {
-                photoUploadLoading.value = false;
-                console.error('Upload errors:', errors);
-                const errorMsg = errors.profile_photo || 'Gagal mengupload foto. Silakan coba lagi.';
-                alert(Array.isArray(errorMsg) ? errorMsg[0] : errorMsg);
-            }
+        });
+        
+        const responseData = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(responseData.message || 'Gagal mengupload foto');
         }
-    );
+        
+        // Update Inertia user data untuk reactive sync ke navbar dan komponen lain
+        if (responseData.user) {
+            // Update local page props
+            page.props.auth.user = {
+                ...page.props.auth.user,
+                ...responseData.user,
+            };
+            
+            // Update form value
+            form.profile_photo_path = responseData.user.profile_photo_path;
+        }
+        
+        // Show success message
+        photoUploadSuccess.value = true;
+        
+        // Clear selection setelah 1.5 detik
+        setTimeout(() => {
+            clearPhotoSelection();
+            photoUploadSuccess.value = false;
+        }, 1500);
+        
+        console.log('Profile photo uploaded successfully:', responseData);
+    } catch (error) {
+        console.error('Upload error:', error);
+        photoUploadError.value = error.message || 'Gagal mengupload foto. Silakan coba lagi.';
+        
+        // Hide error message setelah 4 detik
+        setTimeout(() => {
+            photoUploadError.value = null;
+        }, 4000);
+    } finally {
+        photoUploadLoading.value = false;
+    }
 };
 
 // Clear photo selection
@@ -124,6 +164,20 @@ const newExperience = ref({
 });
 
 const showNewExperienceForm = ref(false);
+
+// Watch untuk sync profile photo path ketika berubah (dari upload)
+watch(
+    () => page.props.auth.user?.profile_photo_path,
+    (newPhotoPath) => {
+        if (newPhotoPath && isMounted.value) {
+            // Update photo preview URL
+            photoPreviewUrl.value = `/storage/${newPhotoPath}`;
+            // Update form value
+            form.profile_photo_path = newPhotoPath;
+            console.log('Profile photo synced from page props:', newPhotoPath);
+        }
+    }
+);
 
 // Watch untuk reset form ketika user data berubah dari server
 // Hanya watch user.id untuk avoid deep reactive issues
@@ -355,6 +409,34 @@ const getGenderLabel = (value) => {
                     <h3 class="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-4 flex items-center gap-2">
                         <span class="text-2xl">🖼️</span> Foto Profil
                     </h3>
+
+                    <!-- Upload Error Message -->
+                    <Transition
+                        enter-active-class="transition ease-out duration-300"
+                        enter-from-class="opacity-0 translate-y-2"
+                        leave-active-class="transition ease-in duration-200"
+                        leave-to-class="opacity-0 translate-y-2"
+                    >
+                        <div v-if="photoUploadError" class="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg">
+                            <p class="text-red-700 dark:text-red-300 text-sm font-medium flex items-center gap-2">
+                                <span>⚠️</span> {{ photoUploadError }}
+                            </p>
+                        </div>
+                    </Transition>
+
+                    <!-- Upload Success Message -->
+                    <Transition
+                        enter-active-class="transition ease-out duration-300"
+                        enter-from-class="opacity-0 translate-y-2"
+                        leave-active-class="transition ease-in duration-200"
+                        leave-to-class="opacity-0 translate-y-2"
+                    >
+                        <div v-if="photoUploadSuccess" class="mb-4 p-3 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg">
+                            <p class="text-green-700 dark:text-green-300 text-sm font-medium flex items-center gap-2">
+                                <span>✓</span> Foto profil berhasil diupload!
+                            </p>
+                        </div>
+                    </Transition>
                     
                     <div v-if="!photoForm.profile_photo" class="space-y-4 flex-grow flex flex-col">
                         <label 

@@ -1,6 +1,7 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { usePage } from '@inertiajs/vue3';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import DarkModeToggle from '@/Components/DarkModeToggle.vue';
 import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
@@ -12,7 +13,36 @@ import GalaxyBackground from '@/Components/GalaxyBackground.vue';
 import { Link } from '@inertiajs/vue3';
 
 const { t } = useI18n();
+const page = usePage();
 const showingNavigationDropdown = ref(false);
+
+// Computed properties for user profile
+const userFullName = computed(() => {
+    return page.props.auth.user?.name || 'User';
+});
+
+const userInitials = computed(() => {
+    const name = page.props.auth.user?.name || '';
+    if (!name) return 'U';
+    const names = name.split(' ');
+    const initials = (names[0]?.charAt(0) || '') + (names[1]?.charAt(0) || '');
+    return initials.toUpperCase();
+});
+
+const profilePhotoUrl = computed(() => {
+    return page.props.auth.user?.profile_photo_path 
+        ? `/storage/${page.props.auth.user.profile_photo_path}` 
+        : null;
+});
+
+const isAdmin = computed(() => {
+    const user = page.props.auth.user;
+    return user?.role === 'admin' || user?.roles?.includes('admin');
+});
+
+const isAuthenticated = computed(() => {
+    return !!page.props.auth.user?.id;
+});
 </script>
 
 <template>
@@ -66,9 +96,26 @@ const showingNavigationDropdown = ref(false);
                                         <span class="inline-flex rounded-md">
                                             <button
                                                 type="button"
-                                                class="inline-flex items-center rounded-lg border border-light-gray-border dark:border-gray-700 bg-light-tertiary dark:bg-gray-800 px-3 py-2 text-sm font-medium leading-4 text-light-gray-text dark:text-gray-400 transition-all duration-300 ease-smooth hover:bg-light-gray-border dark:hover:bg-gray-700 hover:text-light-gray-text dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-light-accent dark:focus:ring-offset-gray-900"
-                                            >
-                                                {{ $page.props.auth.user.name }}
+                                                class="inline-flex items-center gap-2 rounded-lg border border-light-gray-border dark:border-gray-700 bg-light-tertiary dark:bg-gray-800 px-2 sm:px-3 py-2 text-sm font-medium leading-4 text-light-gray-text dark:text-gray-400 transition-all duration-300 ease-smooth hover:bg-light-gray-border dark:hover:bg-gray-700 hover:text-light-gray-text dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-light-accent dark:focus:ring-offset-gray-900"
+                            >
+                                                <!-- Profile Photo or Avatar -->
+                                                <div 
+                                                    v-if="profilePhotoUrl"
+                                                    class="w-7 h-7 rounded overflow-hidden flex-shrink-0"
+                                                >
+                                                    <img 
+                                                        :src="profilePhotoUrl" 
+                                                        :alt="userFullName"
+                                                        class="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                                <div 
+                                                    v-else
+                                                    class="w-7 h-7 rounded bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white text-xs flex-shrink-0"
+                                                >
+                                                    {{ userInitials }}
+                                                </div>
+                                                <span class="hidden sm:inline truncate">{{ userFullName }}</span>
 
                                                 <svg
                                                     class="-me-0.5 ms-2 h-4 w-4"
@@ -87,6 +134,43 @@ const showingNavigationDropdown = ref(false);
                                     </template>
 
                                     <template #content>
+                                        <!-- Profile Header -->
+                                        <div class="px-4 py-3 border-b border-light-gray-border dark:border-gray-700 flex items-center gap-3">
+                                            <!-- Profile Photo or Avatar in Dropdown Header -->
+                                            <div>
+                                                <div 
+                                                    v-if="profilePhotoUrl"
+                                                    class="w-10 h-10 rounded overflow-hidden flex-shrink-0"
+                                                >
+                                                    <img 
+                                                        :src="profilePhotoUrl" 
+                                                        :alt="userFullName"
+                                                        class="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                                <div 
+                                                    v-else
+                                                    class="w-10 h-10 rounded bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white flex-shrink-0"
+                                                >
+                                                    {{ userInitials }}
+                                                </div>
+                                            </div>
+                                            <!-- User Details -->
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-semibold text-light-gray-text dark:text-gray-100 truncate">{{ userFullName }}</p>
+                                                <p class="text-xs text-light-gray-muted dark:text-gray-400 truncate">{{ page.props.auth.user?.email }}</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Dashboard Menu - Only for authenticated users -->
+                                        <DropdownLink
+                                            v-if="isAuthenticated && isAdmin"
+                                            :href="route('admin.dashboard')"
+                                            class="flex items-center gap-2"
+                                        >
+                                            📊 {{ t('Dashboard') }}
+                                        </DropdownLink>
+
                                         <DropdownLink
                                             :href="route('profile.edit')"
                                         >
@@ -174,20 +258,50 @@ const showingNavigationDropdown = ref(false);
                     <div
                         class="border-t border-light-gray-border dark:border-gray-700 pb-2 pt-4"
                     >
-                        <div class="px-4">
-                            <div
-                                class="text-base font-medium text-light-gray-text dark:text-gray-100"
-                            >
-                                {{ $page.props.auth.user.name }}
+                        <!-- User Profile Section -->
+                        <div class="px-4 flex items-center gap-3 mb-4">
+                            <!-- Profile Photo or Avatar -->
+                            <div>
+                                <div 
+                                    v-if="profilePhotoUrl"
+                                    class="w-12 h-12 rounded overflow-hidden flex-shrink-0"
+                                >
+                                    <img 
+                                        :src="profilePhotoUrl" 
+                                        :alt="userFullName"
+                                        class="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <div 
+                                    v-else
+                                    class="w-12 h-12 rounded bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white flex-shrink-0"
+                                >
+                                    {{ userInitials }}
+                                </div>
                             </div>
-                            <div class="text-sm font-medium text-light-gray-muted dark:text-gray-400 truncate">
-                                {{ $page.props.auth.user.email }}
+                            <!-- User Details -->
+                            <div class="flex-1 min-w-0">
+                                <div
+                                    class="text-base font-medium text-light-gray-text dark:text-gray-100 truncate"
+                                >
+                                    {{ userFullName }}
+                                </div>
+                                <div class="text-sm font-medium text-light-gray-muted dark:text-gray-400 truncate">
+                                    {{ page.props.auth.user?.email }}
+                                </div>
                             </div>
+                        </div>
+
+                        <!-- Dashboard Link for Admin Users -->
+                        <div v-if="isAuthenticated && isAdmin" class="px-2 mb-2">
+                            <ResponsiveNavLink :href="route('admin.dashboard')" class="flex items-center gap-2">
+                                📊 Dashboard
+                            </ResponsiveNavLink>
                         </div>
 
                         <div class="mt-3 space-y-1">
                             <ResponsiveNavLink :href="route('profile.edit')">
-                                Profile
+                                {{ t('navigation.myProfile') }}
                             </ResponsiveNavLink>
                             <ResponsiveNavLink
                                 :href="route('logout')"
