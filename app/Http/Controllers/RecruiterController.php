@@ -29,29 +29,42 @@ class RecruiterController extends Controller
     }
 
     /**
-     * Show applicants list for recruiter
+     * Show applicants list for recruiter (with pagination for infinite scroll)
      */
-    public function applicants()
+    public function applicants(Request $request)
     {
-        // Get all applications with their details
-        $applicants = Application::with(['user', 'job'])
+        // Support pagination with 20 items per page
+        $perPage = (int) $request->input('per_page', 20);
+        $page = (int) $request->input('page', 1);
+
+        // Get paginated applications with their details
+        $paginatedApplicants = Application::with(['user', 'job'])
             ->latest()
-            ->get()
-            ->map(function ($app) {
-                return [
-                    'id' => $app->id,
-                    'name' => $app->user->name ?? 'Unknown User',
-                    'role' => $app->job->title ?? 'Unknown Role', 
-                    'status' => ucfirst($app->status), 
-                    'date' => $app->created_at->format('d M Y'),
-                    'avatar' => strtoupper(substr($app->user->name ?? '??', 0, 2)),
-                    'resume_path' => $app->resume_path,
-                    'cover_letter' => $app->cover_letter ?? null,
-                ];
-            });
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        // Transform data for frontend
+        $applicants = $paginatedApplicants->map(function ($app) {
+            return [
+                'id' => $app->id,
+                'name' => $app->user->name ?? 'Unknown User',
+                'role' => $app->job->title ?? 'Unknown Role', 
+                'status' => ucfirst($app->status), 
+                'date' => $app->created_at->format('d M Y'),
+                'avatar' => strtoupper(substr($app->user->name ?? '??', 0, 2)),
+                'resume_path' => $app->resume_path,
+                'cover_letter' => $app->cover_letter ?? null,
+            ];
+        })->toArray();
 
         return Inertia::render('Recruiter/Applicants', [
             'applicants' => $applicants,
+            'pagination' => [
+                'current_page' => $paginatedApplicants->currentPage(),
+                'total' => $paginatedApplicants->total(),
+                'per_page' => $paginatedApplicants->perPage(),
+                'has_more' => $paginatedApplicants->hasMorePages(),
+                'next_page' => $paginatedApplicants->currentPage() + 1,
+            ],
             'user' => Auth::user(),
         ]);
     }

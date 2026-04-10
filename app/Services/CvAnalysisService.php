@@ -208,7 +208,7 @@ class CvAnalysisService
 
         $ch = curl_init($url);
         
-        // Optimized curl options
+        // Optimized curl options with explicit timeout handling
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => [
@@ -225,38 +225,60 @@ class CvAnalysisService
             CURLOPT_TCP_KEEPIDLE => 120,
         ]);
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        curl_close($ch);
+        try {
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            $curlError = curl_errno($ch);
+            curl_close($ch);
 
-        if ($error) {
-            throw new Exception("Gemini API request failed: " . $error);
+            // Check for curl errors (timeout, connection errors, etc)
+            if ($error || $curlError !== CURLE_OK) {
+                // Classify curl errors for better user messages
+                if ($curlError === CURLE_OPERATION_TIMEDOUT || $curlError === CURLE_COULDNT_CONNECT) {
+                    throw new Exception("Gemini API request timeout - The service is taking too long to respond");
+                } elseif ($curlError === CURLE_PARTIAL_FILE) {
+                    throw new Exception("Gemini API connection interrupted - Partial file received");
+                } else {
+                    throw new Exception("Gemini API request failed: " . ($error ?: "cURL error $curlError"));
+                }
+            }
+
+            // Parse HTTP error codes
+            if ($httpCode === 429) {
+                throw new Exception("Gemini API error (429 - Rate limit exceeded - Too many requests)");
+            } elseif ($httpCode === 503) {
+                throw new Exception("Gemini API error (503 - Service temporarily unavailable)");
+            } elseif ($httpCode === 401) {
+                throw new Exception("Gemini API error (401 - Unauthorized: Invalid or missing API key)");
+            } elseif ($httpCode === 400) {
+                $errorBody = @json_decode($response, true);
+                $errorMsg = $errorBody['error']['message'] ?? $response;
+                throw new Exception("Gemini API error (400 - Bad request): " . $errorMsg);
+            } elseif ($httpCode !== 200) {
+                $errorBody = @json_decode($response, true);
+                $errorMsg = $errorBody['error']['message'] ?? 'Unknown error';
+                throw new Exception("Gemini API error (HTTP $httpCode): " . $errorMsg);
+            }
+
+            // Validate response
+            if (empty($response)) {
+                throw new Exception("Gemini API returned empty response");
+            }
+
+            $responseData = json_decode($response, true);
+            if (!isset($responseData['candidates'][0]['content']['parts'][0]['text'])) {
+                throw new Exception("Invalid Gemini response format - missing analysis data");
+            }
+
+            return $responseData['candidates'][0]['content']['parts'][0]['text'];
+        } catch (Exception $e) {
+            // Clean up curl resource if not already closed
+            if (is_resource($ch)) {
+                curl_close($ch);
+            }
+            throw $e;
         }
-
-        // Parse HTTP error codes
-        if ($httpCode === 429) {
-            throw new Exception("Gemini API error (429 - Too Many Requests / Rate Limited)");
-        } elseif ($httpCode === 503) {
-            throw new Exception("Gemini API error (503 - Service Temporarily Unavailable)");
-        } elseif ($httpCode === 401) {
-            throw new Exception("Gemini API error (401 - Unauthorized: Invalid API key)");
-        } elseif ($httpCode === 400) {
-            $errorBody = @json_decode($response, true);
-            $errorMsg = $errorBody['error']['message'] ?? $response;
-            throw new Exception("Gemini API error (400 - Bad Request): " . $errorMsg);
-        } elseif ($httpCode !== 200) {
-            $errorBody = @json_decode($response, true);
-            $errorMsg = $errorBody['error']['message'] ?? 'Unknown error';
-            throw new Exception("Gemini API error (HTTP $httpCode): " . $errorMsg);
-        }
-
-        $responseData = json_decode($response, true);
-        if (!isset($responseData['candidates'][0]['content']['parts'][0]['text'])) {
-            throw new Exception("Invalid Gemini response format");
-        }
-
-        return $responseData['candidates'][0]['content']['parts'][0]['text'];
     }
 
     private function buildPrompt(string $cvText, string $jobTitle, string $jobDescription): string

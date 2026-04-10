@@ -1,6 +1,6 @@
 <script setup>
-import { computed, ref, onMounted } from 'vue';
-import { Head, router } from '@inertiajs/vue3';
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import CVPreviewModal from '@/Components/CVPreviewModal.vue';
 import CoverLetterModal from '@/Components/CoverLetterModal.vue';
 import NotificationContainer from '@/Components/NotificationContainer.vue';
@@ -9,16 +9,30 @@ import EmptyState from '@/Components/EmptyState.vue';
 import RecruiterPageLayout from '@/Layouts/RecruiterPageLayout.vue';
 import { useNotification } from '@/Composables/useNotification';
 
+const page = usePage();
+
 const props = defineProps({
     applicants: {
         type: Array,
         default: () => []
+    },
+    pagination: {
+        type: Object,
+        default: () => ({
+            current_page: 1,
+            total: 0,
+            per_page: 20,
+            has_more: false,
+            next_page: 2,
+        })
     }
 });
 
-// Loading state untuk skeleton
-const isLoading = ref(true);
-const skeletonRows = ref(Array.from({ length: 5 }, (_, i) => i));
+// Reactive state untuk semua applicants yang telah dimuat
+const allApplicants = ref([...props.applicants]);
+const isLoadingMore = ref(false);
+const isInitialLoading = ref(true);
+const paginationData = ref({ ...props.pagination });
 
 // State untuk CV Preview Modal
 const showCVPreview = ref(false);
@@ -32,6 +46,10 @@ const selectedApplicantNameForLetter = ref('');
 
 // State untuk export
 const isExporting = ref(false);
+
+// Intersection Observer reference
+let intersectionObserver = null;
+const sentinelElement = ref(null);
 
 // Initialize notification
 const { success: showSuccess, error: showError } = useNotification();
@@ -103,17 +121,100 @@ const exportToExcel = async () => {
 };
 
 const resetFilters = () => {
+    // Reset ke halaman 1 dan reload data
+    allApplicants.value = [];
+    paginationData.value = {
+        current_page: 1,
+        total: 0,
+        per_page: 20,
+        has_more: false,
+        next_page: 2,
+    };
     router.get(route('recruiter.applicants'), {}, {
         preserveState: false,
     });
 };
 
-// Set loading state to false after component mounts (since data is already available)
+// Load more applicants using Intersection Observer
+const loadMoreApplicants = () => {
+    if (isLoadingMore.value || !paginationData.value.has_more) {
+        return;
+    }
+
+    isLoadingMore.value = true;
+
+    // Gunakan Inertia.reload dengan page parameter dan preserveScroll
+    router.get(
+        route('recruiter.applicants'),
+        { 
+            page: paginationData.value.next_page,
+            per_page: paginationData.value.per_page 
+        },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                // Data baru sudah ada di props, append ke allApplicants
+                const newApplicants = page.props.applicants;
+                const newPagination = page.props.pagination;
+                
+                allApplicants.value.push(...newApplicants);
+                paginationData.value = newPagination;
+                isLoadingMore.value = false;
+            },
+            onError: () => {
+                isLoadingMore.value = false;
+                showError('Gagal Memuat', 'Terjadi kesalahan saat memuat data pelamar. Silakan coba lagi.');
+            }
+        }
+    );
+};
+
+// Setup Intersection Observer untuk infinite scroll
+const setupIntersectionObserver = () => {
+    if (!sentinelElement.value) return;
+
+    const options = {
+        root: null, // viewport
+        rootMargin: '100px', // Trigger 100px sebelum mencapai bawah
+        threshold: 0.1
+    };
+
+    intersectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && paginationData.value.has_more && !isLoadingMore.value) {
+                loadMoreApplicants();
+            }
+        });
+    }, options);
+
+    intersectionObserver.observe(sentinelElement.value);
+};
+
+// Cleanup Intersection Observer
+const cleanupIntersectionObserver = () => {
+    if (intersectionObserver) {
+        intersectionObserver.disconnect();
+        intersectionObserver = null;
+    }
+};
+
 onMounted(() => {
-    // Simulate brief loading state for skeleton animation effect (optional: adjust timing as needed)
+    // Update data dari props
+    allApplicants.value = [...props.applicants];
+    paginationData.value = { ...props.pagination };
+    
+    // Set initial loading ke false setelah component mount
     setTimeout(() => {
-        isLoading.value = false;
+        isInitialLoading.value = false;
     }, 300);
+
+    // Setup intersection observer
+    setupIntersectionObserver();
+});
+
+onBeforeUnmount(() => {
+    cleanupIntersectionObserver();
 });
 </script>
 
@@ -147,10 +248,10 @@ onMounted(() => {
                     </thead>
                     <tbody>
                         <!-- Skeleton Rows - Show during initial load -->
-                        <RecruiterTableRowSkeleton v-for="(_, index) in skeletonRows" v-show="isLoading" :key="`skeleton-${index}`" />
+                        <RecruiterTableRowSkeleton v-for="(_, index) in Array.from({ length: 5 }, (_, i) => i)" v-show="isInitialLoading" :key="`skeleton-${index}`" />
 
                         <!-- Data Rows - Show when loading is complete -->
-                        <tr v-for="applicant in props.applicants" v-show="!isLoading" :key="applicant.id" class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <tr v-for="applicant in allApplicants" v-show="!isInitialLoading" :key="applicant.id" class="border-b border-white/5 hover:bg-white/5 transition-colors">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-white">
@@ -184,18 +285,29 @@ onMounted(() => {
                                 </div>
                             </td>
                         </tr>
+
+                        <!-- Loading skeleton untuk additional items -->
+                        <RecruiterTableRowSkeleton v-for="(_, index) in Array.from({ length: 3 }, (_, i) => i)" v-show="isLoadingMore" :key="`load-more-skeleton-${index}`" />
                     </tbody>
                 </table>
             </div>
 
             <!-- Empty State -->
             <EmptyState 
-                v-show="!isLoading && props.applicants.length === 0"
+                v-show="!isInitialLoading && allApplicants.length === 0"
                 :title="'Oops! Pelamar tidak ditemukan'"
                 :description="'Belum ada pelamar yang mendaftar untuk posisi ini. Tunggu sampai kandidat baru melamar atau bagikan lowongan pekerjaan ke saluran yang lebih luas.'"
                 :onReset="resetFilters"
                 :resetButtonText="'Refresh'"
             />
+
+            <!-- Sentinel element untuk Intersection Observer, trigger load more -->
+            <div v-show="!isInitialLoading && allApplicants.length > 0" ref="sentinelElement" class="h-1 w-full"></div>
+
+            <!-- Loading indicator untuk end of list -->
+            <div v-if="!paginationData.has_more && allApplicants.length > 0 && !isInitialLoading" class="text-center py-8 text-gray-400 text-sm">
+                ✓ Semua pelamar telah dimuat ({{ paginationData.total }} total)
+            </div>
         </div>
 
         <!-- CV Preview Modal -->

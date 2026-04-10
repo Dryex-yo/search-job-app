@@ -1,5 +1,8 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+
+const emit = defineEmits(['retry']);
+const isRetrying = ref(false);
 
 const props = defineProps({
     score: {
@@ -9,8 +12,29 @@ const props = defineProps({
     analysisStatus: {
         type: String,
         default: 'pending' // 'pending', 'analyzing', 'completed', 'failed'
+    },
+    applicantId: {
+        type: [Number, String],
+        default: null
+    },
+    errorDetails: {
+        type: String,
+        default: null
     }
 });
+
+/**
+ * Handle retry analysis
+ */
+const handleRetry = async () => {
+    if (isRetrying.value) return;
+    isRetrying.value = true;
+    try {
+        await emit('retry', props.applicantId);
+    } finally {
+        isRetrying.value = false;
+    }
+};
 
 /**
  * Determine the color scheme based on score value
@@ -137,8 +161,46 @@ const getScoreCategory = computed(() => {
     </div>
 
     <!-- Pending/Failed State -->
+    <div v-else-if="props.analysisStatus === 'failed'" class="space-y-2">
+        <div class="text-xs font-semibold text-red-400 flex items-center gap-1.5">
+            <span class="inline-block">⚠️</span>
+            <span>Analysis Failed</span>
+        </div>
+        
+        <!-- Error Details Tooltip -->
+        <div v-if="props.errorDetails" class="relative group">
+            <button 
+                @click="handleRetry"
+                :disabled="isRetrying"
+                class="text-xs px-2.5 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 hover:border-red-500/60 rounded-md font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5">
+                <span v-if="isRetrying" class="inline-block w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></span>
+                <span v-else>🔄</span>
+                <span>{{ isRetrying ? 'Retrying...' : 'Retry Analysis' }}</span>
+            </button>
+            
+            <!-- Error Details Tooltip (Hidden by default, shown on hover) -->
+            <div class="absolute left-0 bottom-full mb-2 px-3 py-2 bg-gray-900 border border-red-500/30 rounded-lg text-xs text-red-200 font-medium max-w-xs pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-lg z-50 whitespace-normal">
+                {{ props.errorDetails }}
+                <!-- Tooltip Arrow -->
+                <div class="absolute bottom-full left-3 w-2 h-2 bg-gray-900 border-r border-t border-red-500/30 transform rotate-45"></div>
+            </div>
+        </div>
+        
+        <!-- Retry button without error details -->
+        <button 
+            v-else
+            @click="handleRetry"
+            :disabled="isRetrying"
+            class="text-xs px-2.5 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 hover:border-red-500/60 rounded-md font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5">
+            <span v-if="isRetrying" class="inline-block w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></span>
+            <span v-else>🔄</span>
+            <span>{{ isRetrying ? 'Retrying...' : 'Retry Analysis' }}</span>
+        </button>
+    </div>
+
+    <!-- Pending State -->
     <div v-else class="space-y-2">
-        <div class="text-xs font-semibold" :class="props.analysisStatus === 'failed' ? 'text-red-400' : 'text-gray-500'">
+        <div class="text-xs font-semibold text-gray-500">
             {{ getAnalysisStatusText }}
         </div>
     </div>

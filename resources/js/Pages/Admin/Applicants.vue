@@ -80,6 +80,10 @@ const { success: showSuccess, error: showError, info: showInfo } = useNotificati
 const { listenToApplications, stopListeningToApplications } = useRealtimeEvents();
 const { notify: playSound } = useSoundNotification();
 
+// Retry analysis state
+const retryingIds = ref(new Set()); // Track which applicants are being retried
+const analysisErrorDetails = ref(new Map()); // Track error details by applicant ID
+
 // Apply filters
 const applyFilters = () => {
     router.get(route('admin.applicants'), filterForm.value, {
@@ -260,6 +264,50 @@ const updateStatus = (id, newStatus) => {
             showError('Gagal Memperbarui', 'Terjadi kesalahan saat memperbarui status. Silakan coba lagi.');
         }
     });
+};
+
+/**
+ * Handle retry analysis for failed applicants
+ */
+const retryAnalysis = async (applicantId) => {
+    if (!applicantId || retryingIds.value.has(applicantId)) {
+        return;
+    }
+
+    retryingIds.value.add(applicantId);
+    
+    try {
+        const response = await fetch(route('admin.applications.analyze'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+            },
+            body: JSON.stringify({ id: applicantId })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Analisis gagal');
+        }
+
+        // Success - clear error details
+        analysisErrorDetails.value.delete(applicantId);
+        showSuccess('✨ Analisis Berhasil', `Skor Match untuk pelamar berhasil dihitung ulang`);
+
+        // Refresh data untuk menampilkan score terbaru
+        router.reload({ preserveScroll: true });
+    } catch (error) {
+        const errorMessage = error.message || 'Terjadi kesalahan saat melakukan retry analisis';
+        
+        // Store error details for display
+        analysisErrorDetails.value.set(applicantId, errorMessage);
+        
+        showError('❌ Retry Analisis Gagal', errorMessage);
+    } finally {
+        retryingIds.value.delete(applicantId);
+    }
 };
 
 // Bulk selection computed properties
@@ -680,7 +728,9 @@ onBeforeUnmount(() => {
                             :key="applicant.id" 
                             :class="[
                                 'group transition-all duration-300 cursor-pointer',
-                                selectedIds.has(applicant.id)
+                                applicant.ai_analysis_status === 'failed' 
+                                    ? 'ring-2 ring-red-500/50 bg-red-500/5 hover:bg-red-500/10 border border-red-500/30' 
+                                    : selectedIds.has(applicant.id)
                                     ? 'bg-cyan-400/20 border border-cyan-400/30 hover:bg-cyan-400/30' 
                                     : 'hover:bg-white/[0.02]'
                             ]"
@@ -718,6 +768,9 @@ onBeforeUnmount(() => {
                                 <MatchScoreDisplay
                                     :score="applicant.ai_match_score"
                                     :analysis-status="applicant.ai_analysis_status || 'pending'"
+                                    :applicant-id="applicant.id"
+                                    :error-details="analysisErrorDetails.get(applicant.id)"
+                                    @retry="retryAnalysis"
                                 />
                             </td>
                             <td class="py-7 px-6 whitespace-nowrap text-right">
