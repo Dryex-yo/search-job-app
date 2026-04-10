@@ -7,6 +7,7 @@ import NotificationContainer from '@/Components/NotificationContainer.vue';
 import AdminPageLayout from '@/Layouts/AdminPageLayout.vue';
 import MatchScoreDisplay from '@/Components/MatchScoreDisplay.vue';
 import TableRowSkeleton from '@/Components/TableRowSkeleton.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 import { useNotification } from '@/Composables/useNotification';
 import { useRealtimeEvents } from '@/Composables/useRealtimeEvents';
 import { useSoundNotification } from '@/Composables/useSoundNotification';
@@ -712,9 +713,14 @@ onBeforeUnmount(() => {
                     </tbody>
                 </table>
 
-                <div v-show="!isLoading && applicantsList.length === 0" class="text-center py-12">
-                    <p class="text-gray-600 dark:text-gray-400 text-sm">No applicants found</p>
-                </div>
+                <!-- Empty State -->
+                <EmptyState 
+                    v-show="!isLoading && applicantsList.length === 0"
+                    :title="'Oops! Pelamar tidak ditemukan'"
+                    :description="hasActiveFilters ? 'Tidak ada hasil yang sesuai dengan filter Anda. Cobalah sesuaikan pencarian atau tanggal untuk menemukan pelamar.' : 'Belum ada pelamar yang mendaftar untuk pekerjaan ini.'"
+                    :onReset="resetFilters"
+                    :resetButtonText="'Reset Filter'"
+                />
             </div>
 
             <!-- Pagination Controls -->

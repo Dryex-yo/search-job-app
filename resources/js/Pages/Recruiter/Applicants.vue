@@ -5,6 +5,7 @@ import CVPreviewModal from '@/Components/CVPreviewModal.vue';
 import CoverLetterModal from '@/Components/CoverLetterModal.vue';
 import NotificationContainer from '@/Components/NotificationContainer.vue';
 import RecruiterTableRowSkeleton from '@/Components/RecruiterTableRowSkeleton.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 import RecruiterPageLayout from '@/Layouts/RecruiterPageLayout.vue';
 import { useNotification } from '@/Composables/useNotification';
 
@@ -87,6 +88,12 @@ const exportToExcel = () => {
     window.location.href = route('recruiter.applicants.export');
 };
 
+const resetFilters = () => {
+    router.get(route('recruiter.applicants'), {}, {
+        preserveState: false,
+    });
+};
+
 // Set loading state to false after component mounts (since data is already available)
 onMounted(() => {
     // Simulate brief loading state for skeleton animation effect (optional: adjust timing as needed)
@@ -165,9 +172,14 @@ onMounted(() => {
                 </table>
             </div>
 
-            <div v-show="!isLoading && props.applicants.length === 0" class="text-center py-12">
-                <p class="text-gray-400 text-lg">No applicants found</p>
-            </div>
+            <!-- Empty State -->
+            <EmptyState 
+                v-show="!isLoading && props.applicants.length === 0"
+                :title="'Oops! Pelamar tidak ditemukan'"
+                :description="'Belum ada pelamar yang mendaftar untuk posisi ini. Tunggu sampai kandidat baru melamar atau bagikan lowongan pekerjaan ke saluran yang lebih luas.'"
+                :onReset="resetFilters"
+                :resetButtonText="'Refresh'"
+            />
         </div>
 
         <!-- CV Preview Modal -->
