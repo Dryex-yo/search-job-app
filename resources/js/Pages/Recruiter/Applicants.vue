@@ -30,6 +30,9 @@ const showCoverLetterModal = ref(false);
 const selectedApplicantCoverLetter = ref('');
 const selectedApplicantNameForLetter = ref('');
 
+// State untuk export
+const isExporting = ref(false);
+
 // Initialize notification
 const { success: showSuccess, error: showError } = useNotification();
 
@@ -84,8 +87,19 @@ const closeCoverLetterModal = () => {
     selectedApplicantNameForLetter.value = '';
 };
 
-const exportToExcel = () => {
-    window.location.href = route('recruiter.applicants.export');
+const exportToExcel = async () => {
+    try {
+        isExporting.value = true;
+        await new Promise(resolve => setTimeout(resolve, 300)); // Simulasi loading
+        window.location.href = route('recruiter.applicants.export');
+        // Reset loading state after 1 second
+        setTimeout(() => {
+            isExporting.value = false;
+        }, 1000);
+    } catch (error) {
+        isExporting.value = false;
+        showError('Gagal Export', 'Terjadi kesalahan saat export data. Silakan coba lagi.');
+    }
 };
 
 const resetFilters = () => {
@@ -110,10 +124,12 @@ onMounted(() => {
 
     <RecruiterPageLayout title="Review Applicants" subtitle="Manage candidate applications and track their progress.">
         <div class="flex justify-end mb-6">
-            <button @click="exportToExcel"
-                class="px-6 py-3 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/50 rounded-2xl text-sm font-bold text-blue-400 uppercase tracking-widest hover:from-blue-500/30 hover:to-cyan-500/30 hover:border-blue-500/70 transition-all duration-300 flex items-center gap-2 shadow-lg shadow-blue-500/10">
-                <span>📊</span>
-                Export Report
+            <button @click="exportToExcel" :disabled="isExporting"
+                class="px-6 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/50 rounded-2xl text-sm font-bold text-green-400 uppercase tracking-widest hover:from-green-500/30 hover:to-emerald-500/30 hover:border-green-500/70 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-2 shadow-lg shadow-green-500/10">
+                <!-- Spinner yang berputar saat export -->
+                <span v-if="isExporting" class="inline-block animate-spin">⏳</span>
+                <span v-else>📊</span>
+                {{ isExporting ? 'Mempersiapkan...' : 'Export Report' }}
             </button>
         </div>
 

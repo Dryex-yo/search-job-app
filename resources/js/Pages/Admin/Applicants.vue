@@ -69,6 +69,10 @@ const selectedIds = ref(new Set());
 const bulkStatus = ref('');
 const isUpdatingBulk = ref(false);
 
+// Export state
+const isExporting = ref(false);
+const exportFormat = ref('excel'); // 'excel' or 'pdf'
+
 // Initialize notification
 const { success: showSuccess, error: showError, info: showInfo } = useNotification();
 
@@ -346,8 +350,31 @@ const closeCoverLetterModal = () => {
     selectedApplicantNameForLetter.value = '';
 };
 
-const exportToExcel = () => {
-    window.location.href = route('admin.applicants.export.excel');
+const exportToExcel = async () => {
+    try {
+        isExporting.value = true;
+        await new Promise(resolve => setTimeout(resolve, 300)); // Simulasi loading
+        // Export dengan filter parameters jika ada
+        const params = new URLSearchParams();
+        if (filterForm.value.search) params.append('search', filterForm.value.search);
+        if (filterForm.value.status) params.append('status', filterForm.value.status);
+        if (filterForm.value.score_min) params.append('score_min', filterForm.value.score_min);
+        if (filterForm.value.score_max) params.append('score_max', filterForm.value.score_max);
+        if (filterForm.value.date_from) params.append('date_from', filterForm.value.date_from);
+        if (filterForm.value.date_to) params.append('date_to', filterForm.value.date_to);
+        params.append('format', exportFormat.value);
+        
+        const url = route('admin.applicants.export.excel') + (params.toString() ? '?' + params.toString() : '');
+        window.location.href = url;
+        
+        // Reset loading state after 1 second
+        setTimeout(() => {
+            isExporting.value = false;
+        }, 1000);
+    } catch (error) {
+        isExporting.value = false;
+        showError('Gagal Export', 'Terjadi kesalahan saat export data. Silakan coba lagi.');
+    }
 };
 
 /**
@@ -426,10 +453,12 @@ onBeforeUnmount(() => {
                     Active Filters
                 </span>
             </div>
-            <button @click="exportToExcel"
-                class="px-6 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/50 rounded-2xl text-sm font-bold text-green-400 uppercase tracking-widest hover:from-green-500/30 hover:to-emerald-500/30 hover:border-green-500/70 transition-all duration-300 flex items-center gap-2 shadow-lg shadow-green-500/10">
-                <span>📊</span>
-                Export Report
+            <button @click="exportToExcel" :disabled="isExporting"
+                class="px-6 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/50 rounded-2xl text-sm font-bold text-green-400 uppercase tracking-widest hover:from-green-500/30 hover:to-emerald-500/30 hover:border-green-500/70 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-2 shadow-lg shadow-green-500/10">
+                <!-- Spinner yang berputar saat export -->
+                <span v-if="isExporting" class="inline-block animate-spin">⏳</span>
+                <span v-else>📊</span>
+                {{ isExporting ? 'Mempersiapkan...' : 'Export Report' }}
             </button>
         </div>
 
@@ -591,6 +620,12 @@ onBeforeUnmount(() => {
                         </button>
                     </div>
                 </div>
+            </div>
+
+            <!-- Export Info Badge -->
+            <div v-if="hasActiveFilters" class="mb-4 px-3 py-2 bg-amber-500/20 border border-amber-500/50 rounded-lg flex items-center gap-2">
+                <span class="text-xs font-semibold text-amber-300">💡 Tip:</span>
+                <span class="text-xs text-amber-200">Export akan menyertakan data yang sedang difilter saja</span>
             </div>
 
             <!-- Scroll Indicator (Top) -->

@@ -73,17 +73,6 @@ defineProps({
                 </circle>
             </svg>
 
-            <!-- Floating animation style -->
-            <style scoped>
-                @keyframes float {
-                    0%, 100% { transform: translateY(0px); }
-                    50% { transform: translateY(-10px); }
-                }
-                .empty-state-icon {
-                    animation: float 3s ease-in-out infinite;
-                }
-            </style>
-
             <div class="empty-state-icon absolute inset-0"></div>
         </div>
 

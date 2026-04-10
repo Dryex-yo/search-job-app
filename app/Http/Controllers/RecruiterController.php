@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ApplicationsExport;
+use App\Exports\ApplicationsExportWithFilters;
 
 class RecruiterController extends Controller
 {
@@ -123,9 +124,33 @@ class RecruiterController extends Controller
     /**
      * Export applicants to Excel
      */
-    public function exportApplicants()
+    public function exportApplicants(Request $request)
     {
-        return Excel::download(new ApplicationsExport, 'applicants.xlsx');
+        // Validate filter inputs  
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:255',
+            'status' => 'nullable|in:pending,shortlisted,rejected,interview,hired',
+            'score_min' => 'nullable|numeric|min:0|max:100',
+            'score_max' => 'nullable|numeric|min:0|max:100',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date',
+            'format' => 'nullable|in:excel,pdf',
+        ]);
+
+        $timestamp = Carbon::now()->format('d_m_Y_H_i_s');
+        
+        // Prepare filters array
+        $filters = [
+            'search' => $validated['search'] ?? null,
+            'status' => $validated['status'] ?? null,
+            'score_min' => $validated['score_min'] ?? null,
+            'score_max' => $validated['score_max'] ?? null,
+            'date_from' => $validated['date_from'] ?? null,
+            'date_to' => $validated['date_to'] ?? null,
+        ];
+
+        $filename = "applicants_report_{$timestamp}.xlsx";
+        return Excel::download(new ApplicationsExportWithFilters($filters), $filename);
     }
 
     /**

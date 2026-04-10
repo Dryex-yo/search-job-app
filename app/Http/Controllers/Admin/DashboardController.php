@@ -10,6 +10,7 @@ use App\Models\Settings;
 use App\Services\DashboardCacheService;
 use App\Actions\Applications\UpdateApplicationStatusAction;
 use App\Exports\ApplicationsExport;
+use App\Exports\ApplicationsExportWithFilters;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -542,12 +543,42 @@ class DashboardController extends Controller
     }
 
     /**
-     * Export all applications to Excel
+     * Export applications to Excel with optional filters
      */
-    public function exportExcel()
+    public function exportExcel(Request $request)
     {
+        // Validate filter inputs
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:255',
+            'status' => 'nullable|in:pending,shortlisted,rejected,interview,hired',
+            'score_min' => 'nullable|numeric|min:0|max:100',
+            'score_max' => 'nullable|numeric|min:0|max:100',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date',
+            'format' => 'nullable|in:excel,pdf',
+        ]);
+
+        $format = $validated['format'] ?? 'excel';
         $timestamp = Carbon::now()->format('d_m_Y_H_i_s');
-        return Excel::download(new ApplicationsExport, "applicants_report_{$timestamp}.xlsx");
+        
+        // Prepare filters array
+        $filters = [
+            'search' => $validated['search'] ?? null,
+            'status' => $validated['status'] ?? null,
+            'score_min' => $validated['score_min'] ?? null,
+            'score_max' => $validated['score_max'] ?? null,
+            'date_from' => $validated['date_from'] ?? null,
+            'date_to' => $validated['date_to'] ?? null,
+        ];
+
+        // Export to Excel
+        if ($format === 'excel' || $format === null) {
+            $filename = "applicants_report_{$timestamp}.xlsx";
+            return Excel::download(new ApplicationsExportWithFilters($filters), $filename);
+        }
+        
+        // PDF export can be added later when library is installed
+        return response()->json(['error' => 'PDF export not available yet'], 400);
     }
 
     /**
