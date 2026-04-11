@@ -10,6 +10,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Custom EncryptCookies middleware (extends Laravel's EncryptCookies with $except = ['app_locale'])
+        // is automatically detected and used instead of the default one
+
+        // SetLocale MUST run FIRST before EncryptCookies
+        // so it can read the app_locale cookie
+        $middleware->web(prepend: [
+            \App\Http\Middleware\SetLocale::class,
+        ]);
+
         $middleware->web(append: [
             \App\Http\Middleware\EnsureTenantContextMiddleware::class,
             \App\Http\Middleware\PerformanceHeaders::class,

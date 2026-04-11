@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RecruiterController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\TenantRegistrationController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\Admin\RegisteredRecruiterController;
 use App\Http\Controllers\Admin\AuditLogController;
@@ -19,6 +20,9 @@ use App\Http\Controllers\Admin\SettingsController;
 Route::get('/', [JobController::class, 'index'])->name('jobs.index');
 Route::get('/jobs/{id}', [JobController::class, 'show'])->name('jobs.show');
 Route::get('/applications/{id}', [JobController::class, 'trackApplication'])->name('applications.track');
+
+// Set locale route (public)
+Route::get('/locale/{locale}', [LocaleController::class, 'set'])->name('locale.set');
 
 // --- Tenant Registration Routes ---
 Route::get('/tenant/register', [TenantRegistrationController::class, 'showRegistrationForm'])->name('tenant.register.form');
